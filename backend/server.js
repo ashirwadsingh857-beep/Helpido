@@ -35,44 +35,49 @@ app.post('/api/signup', async (req, res) => {
     }
 });
 
-/* ---------------- LOGIN -> GENERATE OTP ---------------- */
+/* ---------------- LOGIN STEP 1: REQUEST OTP ---------------- */
 app.post('/api/login/step1', async (req, res) => {
     const { phone } = req.body;
-    const otp = Math.floor(1000 + Math.random() * 9000).toString();
-    
-    await User.updateOne({ phone }, { $set: { otp } });
 
-    // Since Email is blocked, we send the OTP back in the response 
-    // ONLY for your development/testing phase.
-    res.json({ 
-        message: "Developer Mode: OTP generated", 
-        otp: otp // REMOVE THIS line before you release the app publicly!
-    });
+    try {
+        const user = await User.findOne({ phone });
+        if (!user) return res.status(404).json({ message: "User not found!" });
+
+        // Generate OTP
+        const otp = Math.floor(1000 + Math.random() * 9000).toString();
+        
+        // Save to MongoDB
+        await User.updateOne({ phone }, { $set: { otp: otp } });
+
+        // DEVELOPER MODE: We send the OTP back to the frontend
+        res.json({ 
+            message: "Developer Mode: Check console for OTP", 
+            otp: otp // We will remove this later for security
+        });
+        
+        console.log(`--- OTP for ${phone} is: ${otp}`);
+
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
 });
 
-/* ---------------- VERIFY OTP ---------------- */
-app.post("/api/verify-otp", async (req, res) => {
+/* ---------------- LOGIN STEP 2: VERIFY OTP ---------------- */
+app.post('/api/login/step2', async (req, res) => {
     const { phone, otp } = req.body;
 
     try {
         const user = await User.findOne({ phone });
 
-        if (!user || !user.otp) {
-            return res.status(404).json({ message: "Invalid request" });
+        if (user && user.otp === otp) {
+            // Success! Clear the OTP so it can't be used again
+            await User.updateOne({ phone }, { $set: { otp: null } });
+            res.json({ message: "Login successful!", userId: user._id });
+        } else {
+            res.status(401).json({ message: "Invalid OTP" });
         }
-
-        if (user.otp !== otp) {
-            return res.status(400).json({ message: "Wrong OTP" });
-        }
-
-        // Clear OTP after successful login
-        user.otp = null;
-        await user.save();
-
-        res.json({ message: "Login successful!" });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "OTP verification failed" });
+        res.status(500).json({ message: "Verification error" });
     }
 });
 /* ---------------- TASKS ROUTES ---------------- */

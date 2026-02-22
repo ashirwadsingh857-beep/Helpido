@@ -177,25 +177,24 @@
             } else {
                 // STEP 2: Verify OTP
                 try {
-                    const res = await fetch(`${API_URL}/verify-otp`, {
+                    const res = await fetch(`${API_URL}/login/step2`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ phone: currentPhone, otp: otpInput.value })
                     });
-                    
-                    const data = await res.json();
-                    showToast(data.message, res.ok ? 'success' : 'error');
 
-                    // ALL OF THIS must stay inside the try block!
                     if (res.ok) {
-                        // Save the user session
+                        const data = await res.json();
+                        localStorage.setItem('helpido_user', data.userId);
                         localStorage.setItem('helpido_phone', currentPhone);
-                        // Redirect to the dashboard
-                        window.location.href = 'dashboard.html';
+                        window.location.href = 'dashboard.html'; // Finally go to the app!
+                    } else {
+                        const data = await res.json();
+                        showToast(data.message, "error");
                     }
                 } catch (err) {
                     console.error(err);
-                    showToast("Error: " + err.message, "error");
+                    showToast("Error connecting to server.", "error");
                 }
             }
         });
