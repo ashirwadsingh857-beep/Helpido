@@ -3,6 +3,15 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
 
 // Load .env from the current directory (/backend)
 require("dotenv").config({ path: path.join(__dirname, ".env") });
@@ -65,10 +74,21 @@ app.post("/api/login", async (req, res) => {
         user.otpExpiry = Date.now() + 5 * 60 * 1000; // 5 mins
         await user.save();
 
-        console.log("\n=== OTP SIMULATION ===");
-        console.log("Phone:", phone);
-        console.log("OTP:", otp);
-        console.log("=====================\n");
+        // Replace console.log("OTP for", phone, "is", otp); with this:
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: 'ashirwadrakeshsingh@gmail.com', // Since we don't have user emails yet, we send all OTPs to you for now
+            subject: 'Helpido Login OTP',
+            text: `Your OTP for Helpido login is: ${otp}. This code will expire in 5 minutes.`
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.log("Email error:", error);
+            } else {
+                console.log("OTP Email sent: " + info.response);
+            }
+        });
 
         res.json({ message: "OTP sent to your phone" });
     } catch (err) {
@@ -113,9 +133,9 @@ app.post("/api/verify-otp", async (req, res) => {
 
 // 1. Create a new help request
 app.post("/api/tasks", async (req, res) => {
-    const { title, description, reward, requesterPhone } = req.body;
+    const { title, description, reward, requesterPhone, location } = req.body;
     try {
-        const newTask = new Task({ title, description, reward, requesterPhone });
+        const newTask = new Task({ title, description, reward, requesterPhone, location });
         await newTask.save();
         res.status(201).json({ message: "Task posted successfully!" });
     } catch (err) {
@@ -215,6 +235,25 @@ app.post("/api/tasks/prioritize", async (req, res) => {
         res.json({ message: "Priority updated" });
     } catch (err) {
         res.status(500).json({ message: "Failed to update priority" });
+    }
+});
+
+// 8. Get nearby tasks
+app.get('/api/tasks/nearby', async (req, res) => {
+    const { lat, lng, radius } = req.query;
+    try {
+        const tasks = await Task.find({
+            location: {
+                $near: {
+                    $geometry: { type: "Point", coordinates: [parseFloat(lng), parseFloat(lat)] },
+                    $maxDistance: radius * 1000 // Convert km to meters
+                }
+            },
+            status: 'open'
+        });
+        res.json(tasks);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to fetch nearby tasks" });
     }
 });
 
