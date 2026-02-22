@@ -25,42 +25,30 @@ mongoose.connect(process.env.MONGO_URI)
 
 /* ---------------- SIGNUP ---------------- */
 app.post('/api/signup', async (req, res) => {
-    const { phone, email, name, address } = req.body;
+    const { phone, name } = req.body; // Removed 'email'
     try {
-        const newUser = new User({ phone, email, name, address });
+        const newUser = new User({ phone, name });
         await newUser.save();
-        res.status(201).json({ message: "User created! Now log in with your phone." });
+        res.status(201).json({ message: "Account created successfully!" });
     } catch (err) {
-        res.status(400).json({ message: "Phone or Email already exists!" });
+        res.status(400).json({ message: "Phone number already registered." });
     }
 });
 
 /* ---------------- LOGIN STEP 1: REQUEST OTP ---------------- */
 app.post('/api/login/step1', async (req, res) => {
     const { phone } = req.body;
-
     try {
-        // 1. Check if user exists in MongoDB
         const user = await User.findOne({ phone });
         if (!user) return res.status(404).json({ message: "User not found!" });
 
-        // 2. Generate a 4-digit OTP
-        const generatedOtp = Math.floor(1000 + Math.random() * 9000).toString();
+        const otp = Math.floor(1000 + Math.random() * 9000).toString();
+        await User.updateOne({ phone }, { $set: { otp } });
 
-        // 3. Save it to MongoDB Atlas (Internet Storage)
-        await User.updateOne(
-            { phone: phone },
-            { $set: { otp: generatedOtp } }
-        );
-
-        // 4. Send it back to the frontend to trigger the Alert
-        res.json({ 
-            message: "OTP generated successfully", 
-            otp: generatedOtp 
-        });
-
+        // Send OTP back directly for your "Modern Toast" logic
+        res.json({ message: "OTP generated", otp });
     } catch (err) {
-        res.status(500).json({ message: "Database connection error" });
+        res.status(500).json({ message: "Server error" });
     }
 });
 

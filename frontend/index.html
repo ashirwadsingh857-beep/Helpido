@@ -46,35 +46,9 @@
 
         <section id="signup-section" class="form-section hidden">
             <h2>Create Account</h2>
-            <form id="signup-form" onsubmit="event.preventDefault();">
-                <div class="input-group">
-                    <label for="signup-name">Full Name</label>
-                    <input type="text" id="signup-name" placeholder="e.g., Ashirwad" required>
-                </div>
-
-                <div class="input-group">
-                    <label for="signup-address">Address / House No.</label>
-                    <textarea id="signup-address" rows="2" placeholder="e.g., Lonavala, Pune" required></textarea>
-                </div>
-
-                <div class="input-group">
-                    <label for="signup-mobile">Mobile Number</label>
-                    <input type="tel" id="signup-mobile" placeholder="Enter 10-digit number" pattern="[0-9]{10}"
-                        required>
-                </div>
-
-                <div class="input-group">
-                    <label for="signup-email">Email Address</label>
-                    <input type="email" id="signup-email" placeholder="your@email.com" required>
-                </div>
-
-                <button type="submit" class="primary-btn">Sign Up</button>
-            </form>
-
-            <div class="toggle-container">
-                <p>Already helping?</p>
-                <button class="text-btn" onclick="toggleForms()">Login</button>
-            </div>
+            <input type="text" id="reg-name" placeholder="Full Name">
+            <input type="tel" id="reg-phone" placeholder="Phone Number">
+            <button class="btn" onclick="registerUser()">Sign Up</button>
         </section>
     </main>
 
@@ -105,38 +79,28 @@
             // Reset forms when switching
             document.getElementById('login-phone').value = '';
             document.getElementById('otp-input').value = '';
-            document.getElementById('signup-form').reset();
+            document.getElementById('reg-name').value = '';
+            document.getElementById('reg-phone').value = '';
             
             // Reset OTP section visibility
             document.getElementById('otp-section').style.display = 'none';
             document.getElementById('login-section').style.display = 'block';
         }
 
-        // Handle Signup Submission
-        document.getElementById('signup-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('signup-name').value;
-            const address = document.getElementById('signup-address').value;
-            const phone = document.getElementById('signup-mobile').value;
-            const email = document.getElementById('signup-email').value;
+        async function registerUser() {
+            const name = document.getElementById('reg-name').value;
+            const phone = document.getElementById('reg-phone').value;
 
-            try {
-                const res = await fetch(`${API_URL}/signup`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, address, phone, email })
-                });
-                
-                const data = await res.json();
-                showToast(data.message);
+            const res = await fetch(`${API_URL}/signup`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, phone }) // Removed email
+            });
 
-                if (res.ok) {
-                    toggleForms(); // Switch to login after successful signup
-                }
-            } catch (err) {
-                showToast("Error connecting to server.");
-            }
-        });
+            const data = await res.json();
+            showToast(data.message);
+            if (res.ok) toggleForms(); // Switch to login screen
+        }
 
         async function requestOTP() {
             const phone = document.getElementById('login-phone').value;
