@@ -33,67 +33,54 @@ mongoose.connect(process.env.MONGO_URI)
     .catch((err) => console.error("Mongo Error:", err));
 
 /* ---------------- SIGNUP ---------------- */
-app.post("/api/signup", async (req, res) => {
-    const { name, address, phone } = req.body;
-
-    if (!name || !phone || !address) {
-        return res.status(400).json({ message: "Missing fields" });
-    }
-
+app.post('/api/signup', async (req, res) => {
+    const { phone, email, name, address } = req.body;
     try {
-        const exists = await User.findOne({ phone });
-        if (exists) {
-            return res.status(400).json({ message: "Phone already registered. Please login." });
-        }
-
-        const user = new User({ name, address, phone });
-        await user.save();
-
-        res.status(201).json({ message: "Account created successfully!" });
+        const newUser = new User({ phone, email, name, address });
+        await newUser.save();
+        res.status(201).json({ message: "User created! Now log in with your phone." });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Signup failed" });
+        res.status(400).json({ message: "Phone or Email already exists!" });
     }
 });
 
 /* ---------------- LOGIN -> GENERATE OTP ---------------- */
-app.post("/api/login", async (req, res) => {
+app.post('/api/login/step1', async (req, res) => {
     const { phone } = req.body;
 
     try {
+        // 1. Find the user by their phone number
         const user = await User.findOne({ phone });
-
+        
         if (!user) {
-            return res.status(404).json({ message: "User not found. Please sign up." });
+            return res.status(404).json({ message: "User not found. Please sign up first!" });
         }
 
-        const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
-        const hashedOtp = await bcrypt.hash(otp, 10);
-
-        user.otp = hashedOtp;
-        user.otpExpiry = Date.now() + 5 * 60 * 1000; // 5 mins
+        // 2. Generate OTP
+        const otp = Math.floor(1000 + Math.random() * 9000);
+        user.otp = otp;
         await user.save();
 
-        // Replace console.log("OTP for", phone, "is", otp); with this:
+        // 3. Send OTP to the email linked to this phone number
         const mailOptions = {
             from: process.env.EMAIL_USER,
-            to: 'ashirwadrakeshsingh@gmail.com', // Since we don't have user emails yet, we send all OTPs to you for now
+            to: user.email, // Sends to the email we found in the database
             subject: 'Helpido Login OTP',
-            text: `Your OTP for Helpido login is: ${otp}. This code will expire in 5 minutes.`
+            text: `Your Helpido OTP is: ${otp}`
         };
 
         transporter.sendMail(mailOptions, (error, info) => {
             if (error) {
-                console.log("Email error:", error);
+                console.log("Email error:", error.message);
             } else {
-                console.log("OTP Email sent: " + info.response);
+                console.log(`OTP sent to email linked with ${phone}`);
             }
         });
 
-        res.json({ message: "OTP sent to your phone" });
+        res.json({ message: "OTP sent to your registered email!" });
+
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Login failed" });
+        res.status(500).json({ message: "Server error" });
     }
 });
 
@@ -108,19 +95,12 @@ app.post("/api/verify-otp", async (req, res) => {
             return res.status(404).json({ message: "Invalid request" });
         }
 
-        if (Date.now() > user.otpExpiry) {
-            return res.status(400).json({ message: "OTP expired" });
-        }
-
-        const match = await bcrypt.compare(otp, user.otp);
-
-        if (!match) {
+        if (user.otp !== otp) {
             return res.status(400).json({ message: "Wrong OTP" });
         }
 
         // Clear OTP after successful login
         user.otp = null;
-        user.otpExpiry = null;
         await user.save();
 
         res.json({ message: "Login successful!" });
