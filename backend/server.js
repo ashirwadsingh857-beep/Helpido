@@ -38,21 +38,29 @@ app.post('/api/signup', async (req, res) => {
 /* ---------------- LOGIN STEP 1: REQUEST OTP ---------------- */
 app.post('/api/login/step1', async (req, res) => {
     const { phone } = req.body;
-    
-    try {
-        // Generate OTP
-        const otp = Math.floor(1000 + Math.random() * 9000).toString();
-        
-        // Save to MongoDB (upsert - create if doesn't exist)
-        await User.updateOne({ phone }, { $set: { otp } }, { upsert: true });
 
-        // Send it back so the frontend can "see" it
+    try {
+        // 1. Check if user exists in MongoDB
+        const user = await User.findOne({ phone });
+        if (!user) return res.status(404).json({ message: "User not found!" });
+
+        // 2. Generate a 4-digit OTP
+        const generatedOtp = Math.floor(1000 + Math.random() * 9000).toString();
+
+        // 3. Save it to MongoDB Atlas (Internet Storage)
+        await User.updateOne(
+            { phone: phone },
+            { $set: { otp: generatedOtp } }
+        );
+
+        // 4. Send it back to the frontend to trigger the Alert
         res.json({ 
-            message: "OTP Generated", 
-            otp: otp 
+            message: "OTP generated successfully", 
+            otp: generatedOtp 
         });
+
     } catch (err) {
-        res.status(500).json({ message: "Server error" });
+        res.status(500).json({ message: "Database connection error" });
     }
 });
 

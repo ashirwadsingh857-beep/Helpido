@@ -139,6 +139,30 @@
             }
         });
 
+        async function requestOTP() {
+            const phone = document.getElementById('login-phone').value;
+            
+            // Call your Render API
+            const res = await fetch(`${API_URL}/login/step1`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                // THE ALERT: This pulls the code directly from the MongoDB response
+                alert(`Helpido OTP: ${data.otp}`);
+                
+                // Switch the UI to show the Verify box
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('otp-section').style.display = 'block';
+            } else {
+                alert(data.message); // e.g., "User not found!"
+            }
+        }
+
         async function verifyOTP() {
             const otp = document.getElementById('otp-input').value;
             const phone = document.getElementById('login-phone').value;
