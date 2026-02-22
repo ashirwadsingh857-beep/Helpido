@@ -61,6 +61,11 @@
                         required>
                 </div>
 
+                <div class="input-group">
+                    <label for="signup-email">Email Address</label>
+                    <input type="email" id="signup-email" placeholder="your@email.com" required>
+                </div>
+
                 <button type="submit" class="primary-btn">Sign Up</button>
             </form>
 
@@ -109,12 +114,13 @@
             const name = document.getElementById('signup-name').value;
             const address = document.getElementById('signup-address').value;
             const phone = document.getElementById('signup-mobile').value;
+            const email = document.getElementById('signup-email').value;
 
             try {
                 const res = await fetch(`${API_URL}/signup`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, address, phone })
+                    body: JSON.stringify({ name, address, phone, email })
                 });
                 
                 const data = await res.json();
@@ -139,7 +145,7 @@
             if (otpGroup.classList.contains('hidden')) {
                 // STEP 1: Request OTP
                 try {
-                    const res = await fetch(`${API_URL}/login`, {
+                    const res = await fetch(`${API_URL}/login/step1`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ phone: phoneInput.value })
@@ -148,7 +154,7 @@
                     const data = await res.json();
                     
                     if (res.ok) {
-                        showToast("OTP Sent! Check your terminal", "success");
+                        showToast(data.message, "success");
                         currentPhone = phoneInput.value;
                         phoneInput.readOnly = true; 
                         otpGroup.classList.remove('hidden'); 
