@@ -82,24 +82,19 @@ app.post('/api/login/step2', async (req, res) => {
 });
 /* ---------------- TASKS ROUTES ---------------- */
 
-// 1. Create a new help request
 // Reference point: SIT Lonavala Campus Center
 const REF_LAT = 18.7394; 
 const REF_LNG = 73.4312;
-const MAX_RADIUS_KM = 3.0; // 3km radius
 
 app.post('/api/tasks', async (req, res) => {
     const { title, description, postedBy, lat, lng, reward } = req.body;
 
-    // Convert coordinates to rough distance in KM
-    // (1 degree of lat is ~111km, 1 degree of lng is ~111km at the equator)
-    const latDiff = (lat - REF_LAT) * 111;
-    const lngDiff = (lng - REF_LNG) * 111;
-    const distance = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
+    // Simple math to check if within ~3km
+    const distance = Math.sqrt(Math.pow(lat - REF_LAT, 2) + Math.pow(lng - REF_LNG, 2));
 
-    if (distance > MAX_RADIUS_KM) {
+    if (distance > 0.03) { // 0.03 is roughly 3km in coordinates
         return res.status(403).json({ 
-            message: `Too far! Helpido is only active within 3km of SIT Lonavala. (You are ${distance.toFixed(2)}km away)` 
+            message: "Helpido is only active within 3km of SIT Lonavala (Datta Mandir area)."
         });
     }
 
@@ -108,7 +103,8 @@ app.post('/api/tasks', async (req, res) => {
         await newTask.save();
         res.status(201).json(newTask);
     } catch (err) {
-        res.status(500).json({ message: "Error saving task" });
+        console.error("Error saving task:", err.message);
+        res.status(500).json({ message: "Failed to post task" });
     }
 });
 
