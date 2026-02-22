@@ -108,7 +108,7 @@
     </main>
 
     <script>
-        const API_URL = '/api';
+        const API_URL = 'https://helpido.onrender.com/api';
         const myPhone = localStorage.getItem('helpido_phone');
 
         // Redirect to login if phone number isn't saved
@@ -246,54 +246,41 @@
         }
 
         async function postHelpRequest() {
-            console.log("Post button clicked!"); // Check your browser console for this!
+            console.log("Button Clicked!"); // Check console to see if this triggers
             
-            const titleInput = document.getElementById('task-title');
-            const descInput = document.getElementById('task-desc');
+            const title = document.getElementById('task-title').value;
+            const description = document.getElementById('task-desc').value;
+            const userId = localStorage.getItem('helpido_user');
 
-            if (!titleInput || !descInput) {
-                console.error("Missing UI elements!");
+            if (!title || !description) {
+                showToast("Please fill in all fields!");
                 return;
             }
 
-            // 1. Request GPS immediately inside the click event
-            if (navigator.geolocation) {
-                showToast("Getting your Lonavala coordinates...");
-                
-                navigator.geolocation.getCurrentPosition(async (position) => {
-                    const { latitude, longitude } = position.coords;
-                    console.log("Location found:", latitude, longitude);
-
-                    // 2. Send to Backend
-                    try {
-                        const res = await fetch(`${API_URL}/tasks`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                title: titleInput.value,
-                                description: descInput.value,
-                                postedBy: localStorage.getItem('helpido_user'),
-                                lat: latitude,
-                                lng: longitude
-                            })
-                        });
-
-                        if (res.ok) {
-                            showToast("Help request posted successfully!");
-                            titleInput.value = ""; 
-                            descInput.value = "";
-                        } else {
-                            const errorData = await res.json();
-                            showToast(errorData.message);
-                        }
-                    } catch (err) {
-                        showToast("Server connection failed!");
-                    }
-                }, (error) => {
-                    showToast("GPS Error: Please enable location in browser settings.");
+            try {
+                const res = await fetch(`${API_URL}/tasks`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title,
+                        description,
+                        postedBy: userId,
+                        lat: 0, // Radius check is disabled
+                        lng: 0
+                    })
                 });
-            } else {
-                showToast("Your browser doesn't support GPS.");
+
+                if (res.ok) {
+                    showToast("Success! Task posted.");
+                    document.getElementById('task-title').value = "";
+                    document.getElementById('task-desc').value = "";
+                    loadTasks(); // Refresh the list
+                } else {
+                    showToast("Server error. Try again.");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Cannot connect to Render.");
             }
         }
 

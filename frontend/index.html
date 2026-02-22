@@ -19,37 +19,25 @@
             <p>Help your neighbors. Earn rewards.</p>
         </header>
 
-        <div class="auth-container">
-            <div id="login-section">
-                <div class="input-group">
-                    <label for="login-phone">Mobile Number</label>
-                    <input type="tel" id="login-phone" placeholder="Enter 10-digit number" pattern="[0-9]{10}"
-                        required>
-                </div>
-                <button onclick="requestOTP()" class="primary-btn">Get OTP</button>
+        <div class="auth-container"> 
+            <h1 class="logo">Helpido</h1>
+            
+            <div id="signup-section" class="form-group">
+                <input type="text" id="reg-name" class="input-field" placeholder="Full Name">
+                <input type="tel" id="reg-phone" class="input-field" placeholder="Phone Number">
+                <button class="btn" onclick="registerUser()">Sign Up</button>
+            </div>
+
+            <div id="login-section" class="form-group" style="display: none;">
+                <input type="tel" id="login-phone" class="input-field" placeholder="Phone Number">
+                <button class="btn" onclick="requestOTP()">Get OTP</button>
             </div>
 
             <div id="otp-section" style="display: none; margin-top: 20px;">
-                <div class="input-group">
-                    <label for="otp-input">OTP Code</label>
-                    <input type="number" id="otp-input" placeholder="0000">
-                </div>
-                <button onclick="verifyOTP()" class="primary-btn">Verify & Login</button>
+                <input type="number" id="otp-input" class="input-field" placeholder="OTP Code">
+                <button onclick="verifyOTP()" class="btn">Verify & Login</button>
             </div>
         </div>
-
-            <div class="toggle-container">
-                <p>Want to join the neighborhood?</p>
-                <button class="text-btn" onclick="toggleForms()">Sign Up Here</button>
-            </div>
-        </section>
-
-        <section id="signup-section" class="form-section hidden">
-            <h2>Create Account</h2>
-            <input type="text" id="reg-name" placeholder="Full Name">
-            <input type="tel" id="reg-phone" placeholder="Phone Number">
-            <button class="btn" onclick="registerUser()">Sign Up</button>
-        </section>
     </main>
 
    <script>
@@ -70,11 +58,16 @@
 
         // Toggle between Login and Signup forms
         function toggleForms() {
-            const authContainer = document.querySelector('.auth-container');
             const signupSection = document.getElementById('signup-section');
+            const loginSection = document.getElementById('login-section');
             
-            authContainer.classList.toggle('hidden');
-            signupSection.classList.toggle('hidden');
+            if (signupSection.style.display !== 'none') {
+                signupSection.style.display = 'none';
+                loginSection.style.display = 'block';
+            } else {
+                signupSection.style.display = 'block';
+                loginSection.style.display = 'none';
+            }
             
             // Reset forms when switching
             document.getElementById('login-phone').value = '';
@@ -84,7 +77,6 @@
             
             // Reset OTP section visibility
             document.getElementById('otp-section').style.display = 'none';
-            document.getElementById('login-section').style.display = 'block';
         }
 
         async function registerUser() {
