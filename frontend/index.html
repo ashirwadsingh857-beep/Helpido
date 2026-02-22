@@ -15,8 +15,8 @@
 
         <div class="auth-container"> 
             <div id="login-section" class="form-group">
-                <input type="tel" id="login-phone" class="input-field" placeholder="Enter Mobile Number">
-                <button class="btn" onclick="requestOTP()">Get OTP</button>
+                <input type="tel" id="login-phone" class="input-field" placeholder="10-digit Mobile Number" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
+                <button type="button" class="btn" onclick="requestOTP()">Get OTP</button>
                 <p class="toggle-text" style="margin-top:15px; color:#757575;">
                     New here? <span onclick="switchMode('signup')" style="color:#FF5722; cursor:pointer; font-weight:600;">Sign Up</span>
                 </p>
@@ -25,8 +25,8 @@
             <div id="signup-section" class="form-group" style="display: none;">
                 <input type="text" id="reg-name" class="input-field" placeholder="Full Name">
                 <input type="text" id="reg-address" class="input-field" placeholder="Address (e.g., Datta Mandir)">
-                <input type="tel" id="reg-phone" class="input-field" placeholder="Mobile Number">
-                <button class="btn" onclick="registerUser()">Create Account</button>
+                <input type="tel" id="reg-phone" class="input-field" placeholder="10-digit Mobile Number" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
+                <button type="button" class="btn" onclick="registerUser()">Create Account</button>
                 <p class="toggle-text" style="margin-top:15px; color:#757575;">
                     Already registered? <span onclick="switchMode('login')" style="color:#FF5722; cursor:pointer; font-weight:600;">Login</span>
                 </p>
@@ -34,9 +34,9 @@
 
             <div id="otp-section" class="form-group" style="display: none;">
                 <p style="margin-bottom:10px; color:#757575; font-size:0.9rem;">Check the popup for your 4-digit code.</p>
-                <input type="number" id="otp-input" class="input-field" placeholder="Enter OTP">
-                <button class="btn" onclick="verifyOTP()">Verify & Enter</button>
-                <button class="text-btn" onclick="switchMode('login')" style="margin-top:15px;">Change Number</button>
+                <input type="number" id="otp-input" class="input-field" placeholder="Enter 4-digit OTP" oninput="this.value = this.value.slice(0, 4);">
+                <button type="button" class="btn" onclick="verifyOTP()">Verify & Enter</button>
+                <button type="button" class="text-btn" onclick="switchMode('login')" style="margin-top:15px;">Change Number</button>
             </div>
         </div>
     </main>
@@ -45,6 +45,7 @@
 
     <script>
         const API_URL = 'https://helpido.onrender.com/api';
+        let activePhone = ""; 
 
         function showToast(message, type = "success") {
             const toast = document.getElementById("toast");
@@ -64,11 +65,14 @@
         }
 
         async function registerUser() {
-            const name = document.getElementById('reg-name').value;
-            const address = document.getElementById('reg-address').value;
+            const name = document.getElementById('reg-name').value.trim();
+            const address = document.getElementById('reg-address').value.trim();
             const phone = document.getElementById('reg-phone').value;
 
             if(!name || !address || !phone) return showToast("Please fill all fields", "error");
+            
+            // STRICT 10-DIGIT CHECK FOR SIGNUP
+            if(phone.length !== 10) return showToast("Please enter a valid 10-digit number", "error");
 
             const res = await fetch(`${API_URL}/signup`, {
                 method: 'POST',
@@ -79,6 +83,7 @@
             
             showToast(data.message);
             if(res.ok) {
+                document.getElementById('login-phone').value = phone; 
                 document.getElementById('reg-name').value = '';
                 document.getElementById('reg-address').value = '';
                 document.getElementById('reg-phone').value = '';
@@ -88,7 +93,11 @@
 
         async function requestOTP() {
             const phone = document.getElementById('login-phone').value;
+            
             if(!phone) return showToast("Enter your mobile number", "error");
+
+            // STRICT 10-DIGIT CHECK FOR LOGIN
+            if(phone.length !== 10) return showToast("Please enter a valid 10-digit number", "error");
 
             showToast("Connecting...");
             const res = await fetch(`${API_URL}/login/step1`, {
@@ -99,6 +108,7 @@
             const data = await res.json();
 
             if(res.ok) {
+                activePhone = phone; 
                 showToast(`OTP: ${data.otp}`, "success");
                 switchMode('otp'); 
             } else {
@@ -108,7 +118,9 @@
 
         async function verifyOTP() {
             const otp = document.getElementById('otp-input').value;
-            const phone = document.getElementById('login-phone').value;
+            const phone = activePhone || document.getElementById('login-phone').value; 
+
+            if(!otp || otp.length !== 4) return showToast("Please enter the 4-digit code", "error");
 
             const res = await fetch(`${API_URL}/login/step2`, {
                 method: 'POST',
