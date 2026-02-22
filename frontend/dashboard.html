@@ -246,15 +246,13 @@
         }
 
         async function postHelpRequest() {
-            console.log("Button Clicked!"); // Check console to see if this triggers
-            
             const title = document.getElementById('task-title').value;
             const description = document.getElementById('task-desc').value;
-            const reward = parseInt(document.getElementById('task-reward').value) || 0;
+            const reward = document.getElementById('task-reward').value;
             const userId = localStorage.getItem('helpido_user');
 
-            if (!title || !description) {
-                showToast("Please fill in all fields!");
+            if (!title || !description || !reward) {
+                showToast("Fill all fields!");
                 return;
             }
 
@@ -263,28 +261,21 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        title,
-                        description,
-                        postedBy: userId,
-                        lat: 0, // Radius check is disabled
-                        lng: 0,
-                        reward
+                        title, description, reward,
+                        postedBy: userId, // Standardized to ID
+                        lat: 0, lng: 0    // GPS bypassed for testing
                     })
                 });
 
                 if (res.ok) {
-                    showToast("Success! Task posted.");
-                    document.getElementById('task-title').value = "";
-                    document.getElementById('task-desc').value = "";
-                    document.getElementById('task-reward').value = "";
-                    loadTasks(); // Refresh the list
+                    showToast("Task Posted!");
+                    closeModal();
+                    loadTasks();
                 } else {
-                    const errorData = await res.json();
-                    showToast(errorData.message || "Server error. Try again.");
+                    showToast("Server error. Try again.");
                 }
             } catch (err) {
-                console.error(err);
-                showToast("Cannot connect to Render.");
+                showToast("Failed to connect to server");
             }
         }
 

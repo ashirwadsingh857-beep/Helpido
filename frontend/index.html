@@ -99,7 +99,10 @@
             const loginSection = document.getElementById('login-section');
             const otpSection = document.getElementById('otp-section');
             
-            showToast("Fetching OTP from Helpido Cloud...");
+            if (!phone) {
+                showToast("Enter phone number");
+                return;
+            }
 
             try {
                 const res = await fetch(`${API_URL}/login/step1`, {
@@ -107,24 +110,17 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ phone })
                 });
-
                 const data = await res.json();
 
                 if (res.ok) {
-                    // SHOW OTP in the Modern Toast
-                    showToast(`OTP: ${data.otp} (Valid for 5 mins)`);
-                    
-                    // FORCE UI REVEAL
-                    loginSection.style.display = 'none'; // Hide phone input
-                    otpSection.style.display = 'block';  // Show code input
-                    otpSection.style.opacity = '1';      // Ensure it's not transparent
-                    
-                    console.log("UI Switched to OTP mode");
+                    showToast(`DEVELOPER OTP: ${data.otp}`);
+                    loginSection.style.display = 'none';
+                    otpSection.style.display = 'block';
                 } else {
-                    showToast(data.message || "User not found!");
+                    showToast(data.message);
                 }
             } catch (err) {
-                showToast("Check Render Logs - Connection Failed");
+                showToast("Server Connection Failed");
             }
         }
 
