@@ -19,40 +19,30 @@
             <p>Help your neighbors. Earn rewards.</p>
         </header>
 
-        <div class="auth-container"> 
-            <h1 class="logo">Helpido</h1>
-            
+        <div class="auth-container">
             <div id="signup-section" class="form-group">
                 <input type="text" id="reg-name" class="input-field" placeholder="Full Name">
                 <input type="tel" id="reg-phone" class="input-field" placeholder="Phone Number">
                 <button class="btn" onclick="registerUser()">Sign Up</button>
+                <p class="toggle-text">Already have an account? <span onclick="toggleForms()">Login</span></p>
             </div>
 
-            <div id="login-section" class="form-group" style="display: none;">
-                <input type="tel" id="login-phone" class="input-field" placeholder="Phone Number">
-                <button class="btn" onclick="requestOTP()">Get OTP</button>
-            </div>
-
-            <div id="otp-section" style="display: none; margin-top: 20px;">
-                <input type="number" id="otp-input" class="input-field" placeholder="OTP Code">
-                <button onclick="verifyOTP()" class="btn">Verify & Login</button>
-            </div>
         </div>
     </main>
 
-   <script>
+    <script>
         const API_URL = 'https://helpido.onrender.com/api';
-        let currentPhone = ''; 
+        let currentPhone = '';
 
         // --- UI Polish: Toast Notifications ---
         function showToast(message) {
             const toast = document.getElementById("toast");
             toast.innerText = message;
             toast.className = "toast show";
-            
+
             // Increased to 8000ms (8 seconds) so you have time to read the OTP
-            setTimeout(() => { 
-                toast.className = toast.className.replace("show", ""); 
+            setTimeout(() => {
+                toast.className = toast.className.replace("show", "");
             }, 8000);
         }
 
@@ -60,7 +50,7 @@
         function toggleForms() {
             const signupSection = document.getElementById('signup-section');
             const loginSection = document.getElementById('login-section');
-            
+
             if (signupSection.style.display !== 'none') {
                 signupSection.style.display = 'none';
                 loginSection.style.display = 'block';
@@ -68,13 +58,13 @@
                 signupSection.style.display = 'block';
                 loginSection.style.display = 'none';
             }
-            
+
             // Reset forms when switching
             document.getElementById('login-phone').value = '';
             document.getElementById('otp-input').value = '';
             document.getElementById('reg-name').value = '';
             document.getElementById('reg-phone').value = '';
-            
+
             // Reset OTP section visibility
             document.getElementById('otp-section').style.display = 'none';
         }
@@ -98,11 +88,6 @@
             const phone = document.getElementById('login-phone').value;
             const loginSection = document.getElementById('login-section');
             const otpSection = document.getElementById('otp-section');
-            
-            if (!phone) {
-                showToast("Enter phone number");
-                return;
-            }
 
             try {
                 const res = await fetch(`${API_URL}/login/step1`, {
@@ -110,24 +95,28 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ phone })
                 });
+
                 const data = await res.json();
 
                 if (res.ok) {
-                    showToast(`DEVELOPER OTP: ${data.otp}`);
+                    // Show OTP in the toast so UI is never interrupted
+                    showToast(`OTP: ${data.otp}`);
+
+                    // Switch sections clearly
                     loginSection.style.display = 'none';
                     otpSection.style.display = 'block';
                 } else {
                     showToast(data.message);
                 }
             } catch (err) {
-                showToast("Server Connection Failed");
+                showToast("Server Error");
             }
         }
 
         async function verifyOTP() {
             const otp = document.getElementById('otp-input').value;
             const phone = document.getElementById('login-phone').value;
-            
+
             try {
                 const res = await fetch(`${API_URL}/login/step2`, {
                     method: 'POST',
