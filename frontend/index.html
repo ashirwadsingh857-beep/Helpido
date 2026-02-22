@@ -23,7 +23,7 @@
             <h2>Welcome Back</h2>
             
             <div id="auth-box">
-                <div id="login-container">
+                <div id="login-section">
                     <div class="input-group">
                         <label for="login-phone">Mobile Number</label>
                         <input type="tel" id="login-phone" placeholder="Enter 10-digit number" pattern="[0-9]{10}"
@@ -32,8 +32,7 @@
                     <button onclick="requestOTP()" class="primary-btn">Get OTP</button>
                 </div>
 
-                <div id="otp-container" style="display: none;">
-                    <p>Enter the 4-digit code shown in the popup:</p>
+                <div id="otp-section" style="display: none; margin-top: 20px;">
                     <div class="input-group">
                         <label for="otp-input">OTP Code</label>
                         <input type="number" id="otp-input" placeholder="0000">
@@ -91,7 +90,11 @@
             const toast = document.getElementById("toast");
             toast.innerText = message;
             toast.className = "toast show";
-            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+            
+            // Increased to 8000ms (8 seconds) so you have time to read the OTP
+            setTimeout(() => { 
+                toast.className = toast.className.replace("show", ""); 
+            }, 8000);
         }
 
         // Toggle between Login and Signup forms
@@ -105,8 +108,8 @@
             document.getElementById('signup-form').reset();
             
             // Reset OTP section visibility
-            document.getElementById('otp-container').style.display = 'none';
-            document.getElementById('login-container').style.display = 'block';
+            document.getElementById('otp-section').style.display = 'none';
+            document.getElementById('login-section').style.display = 'block';
         }
 
         // Handle Signup Submission
@@ -138,8 +141,7 @@
         async function requestOTP() {
             const phone = document.getElementById('login-phone').value;
             
-            // Show a "loading" toast so you know the internet is working
-            showToast("Connecting to MongoDB...");
+            showToast("Connecting to Helpido Cloud...");
 
             try {
                 const res = await fetch(`${API_URL}/login/step1`, {
@@ -151,19 +153,20 @@
                 const data = await res.json();
 
                 if (res.ok) {
-                    // THE ALERT: This pulls from the cloud
-                    alert(`Helpido OTP: ${data.otp}`);
+                    // SUCCESS: Show the OTP in your modern toast instead of an alert
+                    showToast(`OTP: ${data.otp} (Valid for 5 mins)`);
                     
-                    // UI FIX: Hide login, show OTP input, but don't hide the whole app!
-                    document.getElementById('login-container').style.display = 'none';
-                    document.getElementById('otp-container').style.display = 'block';
-                    showToast("OTP Received! Please verify.");
+                    // UI: Show the OTP input field and Verify button
+                    // Using 'block' ensures it appears below your title
+                    document.getElementById('otp-section').style.display = 'block';
+                    
+                    // Optional: Hide the phone input so the user focuses on the code
+                    document.getElementById('login-section').style.display = 'none';
                 } else {
-                    // Use your modern toast for errors instead of boring alerts
                     showToast(data.message || "User not found!");
                 }
             } catch (err) {
-                showToast("Server connection failed. Check Render logs.");
+                showToast("Network error. Is Render Live?");
             }
         }
 
