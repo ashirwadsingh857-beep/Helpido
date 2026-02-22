@@ -19,27 +19,24 @@
             <p>Help your neighbors. Earn rewards.</p>
         </header>
 
-        <section id="login-section" class="form-section">
-            <h2>Welcome Back</h2>
-            
-            <div id="auth-box">
-                <div id="login-section">
-                    <div class="input-group">
-                        <label for="login-phone">Mobile Number</label>
-                        <input type="tel" id="login-phone" placeholder="Enter 10-digit number" pattern="[0-9]{10}"
-                            required>
-                    </div>
-                    <button onclick="requestOTP()" class="primary-btn">Get OTP</button>
+        <div class="auth-container">
+            <div id="login-section">
+                <div class="input-group">
+                    <label for="login-phone">Mobile Number</label>
+                    <input type="tel" id="login-phone" placeholder="Enter 10-digit number" pattern="[0-9]{10}"
+                        required>
                 </div>
-
-                <div id="otp-section" style="display: none; margin-top: 20px;">
-                    <div class="input-group">
-                        <label for="otp-input">OTP Code</label>
-                        <input type="number" id="otp-input" placeholder="0000">
-                    </div>
-                    <button onclick="verifyOTP()" class="primary-btn">Verify & Login</button>
-                </div>
+                <button onclick="requestOTP()" class="primary-btn">Get OTP</button>
             </div>
+
+            <div id="otp-section" style="display: none; margin-top: 20px;">
+                <div class="input-group">
+                    <label for="otp-input">OTP Code</label>
+                    <input type="number" id="otp-input" placeholder="0000">
+                </div>
+                <button onclick="verifyOTP()" class="primary-btn">Verify & Login</button>
+            </div>
+        </div>
 
             <div class="toggle-container">
                 <p>Want to join the neighborhood?</p>
@@ -99,8 +96,11 @@
 
         // Toggle between Login and Signup forms
         function toggleForms() {
-            document.getElementById('login-section').classList.toggle('hidden');
-            document.getElementById('signup-section').classList.toggle('hidden');
+            const authContainer = document.querySelector('.auth-container');
+            const signupSection = document.getElementById('signup-section');
+            
+            authContainer.classList.toggle('hidden');
+            signupSection.classList.toggle('hidden');
             
             // Reset forms when switching
             document.getElementById('login-phone').value = '';
@@ -140,8 +140,10 @@
 
         async function requestOTP() {
             const phone = document.getElementById('login-phone').value;
+            const loginSection = document.getElementById('login-section');
+            const otpSection = document.getElementById('otp-section');
             
-            showToast("Connecting to Helpido Cloud...");
+            showToast("Fetching OTP from Helpido Cloud...");
 
             try {
                 const res = await fetch(`${API_URL}/login/step1`, {
@@ -153,20 +155,20 @@
                 const data = await res.json();
 
                 if (res.ok) {
-                    // SUCCESS: Show the OTP in your modern toast instead of an alert
+                    // SHOW OTP in the Modern Toast
                     showToast(`OTP: ${data.otp} (Valid for 5 mins)`);
                     
-                    // UI: Show the OTP input field and Verify button
-                    // Using 'block' ensures it appears below your title
-                    document.getElementById('otp-section').style.display = 'block';
+                    // FORCE UI REVEAL
+                    loginSection.style.display = 'none'; // Hide phone input
+                    otpSection.style.display = 'block';  // Show code input
+                    otpSection.style.opacity = '1';      // Ensure it's not transparent
                     
-                    // Optional: Hide the phone input so the user focuses on the code
-                    document.getElementById('login-section').style.display = 'none';
+                    console.log("UI Switched to OTP mode");
                 } else {
                     showToast(data.message || "User not found!");
                 }
             } catch (err) {
-                showToast("Network error. Is Render Live?");
+                showToast("Check Render Logs - Connection Failed");
             }
         }
 
