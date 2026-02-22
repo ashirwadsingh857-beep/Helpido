@@ -517,3 +517,48 @@ body {
 .toast.error {
     background-color: #D32F2F; /* Red for errors */
 }
+/* --- Remove Number Arrows (Spinners) --- */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield; /* For Firefox */
+}
+
+/* --- Professional Logout Button --- */
+.logout-btn {
+    background-color: #FFF0F0;
+    color: #D32F2F;
+    border: none;
+    padding: 14px 24px;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.2s ease;
+}
+
+.logout-btn:hover {
+    background-color: #FFE5E5;
+}
+
+/* --- Polish Modal Inputs --- */
+.modal-content input, .modal-content textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #E0E0E0;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    font-family: 'Inter', sans-serif;
+    margin-bottom: 12px;
+    outline: none;
+}
+.modal-content input:focus, .modal-content textarea:focus {
+    border-color: var(--primary-color);
+}
+.modal-content textarea {
+    resize: none; /* Stops users from dragging the text box out of shape */
+}

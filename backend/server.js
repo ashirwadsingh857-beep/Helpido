@@ -62,6 +62,16 @@ app.post('/api/login/step2', async (req, res) => {
 });
 
 // ... (Keep all your existing Task routes below this) ...
-
+/* --- PROFILE ROUTE --- */
+app.get('/api/users/:phone', async (req, res) => {
+    try {
+        // Find user by phone, but don't send the OTP data back to the frontend
+        const user = await User.findOne({ phone: req.params.phone }).select('-otp -otpExpiry');
+        if (!user) return res.status(404).json({ message: "User not found" });
+        res.json(user);
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -50,37 +50,38 @@
         </section>
 
         <section id="profile-view" class="feed-section hidden">
-            <h3 class="section-title">My Profile</h3>
-            
-            <div class="task-card" style="text-align: center; padding: 30px 20px;">
-                <div style="font-size: 3.5rem; margin-bottom: 10px;">👤</div>
-                <h2 id="profile-name" style="margin-bottom: 5px; color: var(--text-dark);">Loading...</h2>
-                <p id="profile-phone" style="color: var(--text-muted); margin-bottom: 20px;">...</p>
-                
-                <div style="background-color: var(--bg-light); padding: 16px; border-radius: 8px; text-align: left; margin-bottom: 24px;">
-                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">Home Address</p>
-                    <p id="profile-address" style="color: var(--text-dark); line-height: 1.4;">...</p>
-                </div>
+    <h3 class="section-title">My Profile</h3>
+    
+    <div class="task-card" style="text-align: center; padding: 30px 20px;">
+        <div style="font-size: 3.5rem; margin-bottom: 10px;">👤</div>
+        <h2 id="profile-name" style="margin-bottom: 5px; color: var(--text-dark);">Loading...</h2>
+        <p id="profile-phone" style="color: var(--text-muted); margin-bottom: 20px;">...</p>
+        
+        <div style="background-color: var(--bg-light); padding: 16px; border-radius: 8px; text-align: left; margin-bottom: 24px;">
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">Home Address</p>
+            <p id="profile-address" style="color: var(--text-dark); line-height: 1.4;">...</p>
+        </div>
 
-                <button class="primary-btn" style="background-color: #D32F2F;" onclick="logout()">Log Out</button>
-            </div>
-        </section>
+        <button class="logout-btn" onclick="logout()">Log Out</button> 
+    </div>
+</section>
 
         <button class="fab-btn" onclick="openModal()">+</button>
 
         <div id="create-modal" class="modal-overlay hidden">
-            <div class="modal-content">
-                <h3>Ask for Help</h3>
-                <input type="text" id="task-title" placeholder="What do you need? (e.g. Move furniture)" required>
-                <textarea id="task-desc" rows="3" placeholder="Provide some details..." required></textarea>
-                <input type="number" id="task-reward" placeholder="Reward amount (₹)" required>
-                
-                <div class="modal-actions">
-                    <button class="text-btn" onclick="closeModal()">Cancel</button>
-                    <button class="primary-btn" onclick="postHelpRequest()">Post Request</button>
-                </div>
-            </div>
+    <div class="modal-content">
+        <h3 style="margin-bottom: 16px; color: var(--text-dark);">Ask for Help</h3>
+        
+        <input type="text" id="task-title" placeholder="What do you need? (e.g. Move furniture)" required>
+        <textarea id="task-desc" rows="3" placeholder="Provide some details..." required></textarea>
+        <input type="number" id="task-reward" placeholder="Reward amount (₹)" required>
+        
+        <div class="modal-actions" style="display: flex; justify-content: space-between; margin-top: 10px;">
+            <button class="text-btn" onclick="closeModal()" style="color: #757575;">Cancel</button>
+            <button class="btn" onclick="postHelpRequest()" style="width: auto; padding: 10px 20px;">Post Request</button>
         </div>
+    </div>
+</div>
 
         <div id="confirm-modal" class="modal-overlay hidden" style="z-index: 200;">
             <div class="modal-content" style="text-align: center; max-width: 320px;">
