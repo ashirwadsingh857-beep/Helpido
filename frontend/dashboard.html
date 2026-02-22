@@ -47,11 +47,35 @@
     const API_URL = 'https://helpido.onrender.com/api';
     const myPhone = localStorage.getItem('helpido_phone');
 
-    // THE FIX: Stricter, safer bounce check
-    if (!myPhone || myPhone === "undefined" || myPhone === "null") {
-        console.warn("Security check failed. Memory is empty.");
-        window.location.replace('index.html'); // replace() stops back-button loops
+    // --- WE DELETED THE BOUNCE CODE ---
+    // The app is no longer allowed to automatically kick you out.
+
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById("toast");
+        toast.innerText = message;
+        toast.className = `toast show ${type}`;
+        setTimeout(() => { toast.className = "toast"; }, 3000);
     }
+
+    window.onload = () => {
+        // Instead of bouncing you, we check the memory and freeze the screen if it's broken
+        if (!myPhone || myPhone === "undefined" || myPhone === "null") {
+            document.getElementById('task-feed').innerHTML = `
+                <div style="text-align: center; padding: 40px 20px;">
+                    <h2 style="color: #D32F2F; margin-bottom: 10px;">⚠️ Memory Lost</h2>
+                    <p style="color: #757575; margin-bottom: 20px;">Your phone's browser wiped the login data before the dashboard could load it.</p>
+                    <a href="index.html" style="background: var(--primary-color); color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold;">Tap here to return</a>
+                </div>
+            `;
+            return; // Stops the rest of the dashboard from loading empty data
+        }
+
+        // If the memory IS working, load the app normally!
+        loadProfile();
+        loadTasks();
+    };
+
+    // ... (Keep all your other functions like loadTasks, acceptTask, etc. below this)
 
     function showToast(message, type = 'success') {
     // ... rest of your code

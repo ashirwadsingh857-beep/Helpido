@@ -142,16 +142,16 @@
         const data = await res.json();
 
         if(res.ok) {
-            // 1. Force the save to memory
+            // Save to memory
             localStorage.setItem('helpido_user', data.userId);
             localStorage.setItem('helpido_phone', phone.toString());
             
-            showToast("Login Successful! Redirecting...", "success");
+            showToast("Login Successful! Loading Dashboard...", "success");
             
-            // 2. The Fix: Wait half a second, then securely route to the dashboard
+            // Wait 800ms to guarantee the phone saves the memory, then route
             setTimeout(() => {
-                window.location.assign('dashboard.html'); 
-            }, 500);
+                window.location.href = './dashboard.html'; 
+            }, 800);
             
         } else {
             showToast(data.message || "Invalid Code", "error");
