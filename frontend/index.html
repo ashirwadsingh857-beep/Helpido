@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Helpido | Neighborly Help</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF5722">
+</head>
+
+<body>
+
+    <main class="app-container">
+        <header class="header">
+            <h1>Helpido</h1>
+            <p>Help your neighbors. Earn rewards.</p>
+        </header>
+
+        <section id="login-section" class="form-section">
+            <h2>Welcome Back</h2>
+            <form id="login-form" onsubmit="event.preventDefault();">
+                <div class="input-group">
+                    <label for="login-mobile">Mobile Number</label>
+                    <input type="tel" id="login-mobile" placeholder="Enter 10-digit number" pattern="[0-9]{10}"
+                        required>
+                </div>
+
+                <div class="input-group hidden" id="otp-group">
+                    <label for="login-otp">Enter OTP</label>
+                    <input type="text" id="login-otp" placeholder="4-digit code">
+                </div>
+
+                <button type="submit" class="primary-btn">Request OTP</button>
+            </form>
+
+            <div class="toggle-container">
+                <p>Want to join the neighborhood?</p>
+                <button class="text-btn" onclick="toggleForms()">Sign Up Here</button>
+            </div>
+        </section>
+
+        <section id="signup-section" class="form-section hidden">
+            <h2>Create Account</h2>
+            <form id="signup-form" onsubmit="event.preventDefault();">
+                <div class="input-group">
+                    <label for="signup-name">Full Name</label>
+                    <input type="text" id="signup-name" placeholder="e.g., Ashirwad" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="signup-address">Address / House No.</label>
+                    <textarea id="signup-address" rows="2" placeholder="e.g., Lonavala, Pune" required></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label for="signup-mobile">Mobile Number</label>
+                    <input type="tel" id="signup-mobile" placeholder="Enter 10-digit number" pattern="[0-9]{10}"
+                        required>
+                </div>
+
+                <button type="submit" class="primary-btn">Sign Up</button>
+            </form>
+
+            <div class="toggle-container">
+                <p>Already helping?</p>
+                <button class="text-btn" onclick="toggleForms()">Login</button>
+            </div>
+        </section>
+    </main>
+
+   <script>
+        const API_URL = '/api';
+        let currentPhone = ''; 
+
+        // --- UI Polish: Toast Notifications ---
+        function showToast(message, type = 'success') {
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                document.body.appendChild(container);
+            }
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerText = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // Toggle between Login and Signup forms
+        function toggleForms() {
+            document.getElementById('login-section').classList.toggle('hidden');
+            document.getElementById('signup-section').classList.toggle('hidden');
+            
+            // Reset forms when switching
+            document.getElementById('login-form').reset();
+            document.getElementById('signup-form').reset();
+            document.getElementById('otp-group').classList.add('hidden');
+            document.getElementById('login-mobile').readOnly = false;
+            document.querySelector('#login-form .primary-btn').textContent = 'Request OTP';
+        }
+
+        // Handle Signup Submission
+        document.getElementById('signup-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('signup-name').value;
+            const address = document.getElementById('signup-address').value;
+            const phone = document.getElementById('signup-mobile').value;
+
+            try {
+                const res = await fetch(`${API_URL}/signup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, address, phone })
+                });
+                
+                const data = await res.json();
+                showToast(data.message, res.ok ? 'success' : 'error');
+
+                if (res.ok) {
+                    toggleForms(); // Switch to login after successful signup
+                }
+            } catch (err) {
+                showToast("Error connecting to server.", "error");
+            }
+        });
+
+        // Handle Login (Request OTP & Verify OTP)
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const phoneInput = document.getElementById('login-mobile');
+            const otpInput = document.getElementById('login-otp');
+            const otpGroup = document.getElementById('otp-group');
+            const submitBtn = document.querySelector('#login-form .primary-btn');
+
+            if (otpGroup.classList.contains('hidden')) {
+                // STEP 1: Request OTP
+                try {
+                    const res = await fetch(`${API_URL}/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ phone: phoneInput.value })
+                    });
+                    
+                    const data = await res.json();
+                    
+                    if (res.ok) {
+                        showToast("OTP Sent! Check your terminal", "success");
+                        currentPhone = phoneInput.value;
+                        phoneInput.readOnly = true; 
+                        otpGroup.classList.remove('hidden'); 
+                        submitBtn.textContent = 'Verify OTP'; 
+                    } else {
+                        showToast(data.message, "error");
+                    }
+                } catch (err) {
+                    showToast("Error connecting to server.", "error");
+                }
+
+            } else {
+                // STEP 2: Verify OTP
+                try {
+                    const res = await fetch(`${API_URL}/verify-otp`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ phone: currentPhone, otp: otpInput.value })
+                    });
+                    
+                    const data = await res.json();
+                    showToast(data.message, res.ok ? 'success' : 'error');
+
+                    // ALL OF THIS must stay inside the try block!
+                    if (res.ok) {
+                        // Save the user session
+                        localStorage.setItem('helpido_phone', currentPhone);
+                        // Redirect to the dashboard
+                        window.location.href = 'dashboard.html';
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast("Error: " + err.message, "error");
+                }
+            }
+        });
+    </script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker Registered'))
+                    .catch(err => console.log('Service Worker Error', err));
+            });
+        }
+    </script>
+</body>
+
+</html>

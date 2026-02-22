@@ -1,0 +1,518 @@
+/* Base Resets and Variables */
+:root {
+    --primary-color: #FF5722; /* A warm, active color */
+    --primary-hover: #E64A19;
+    --text-dark: #212121;
+    --text-muted: #757575;
+    --bg-light: #F5F5F5;
+    --white: #FFFFFF;
+    --border-radius: 12px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    background-color: var(--bg-light);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* Mobile App Container */
+.app-container {
+    background-color: var(--white);
+    width: 100%;
+    max-width: 480px; /* Limits width on desktop, acts as mobile container */
+    min-height: 100vh; /* Takes full height on mobile */
+    padding: 40px 24px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+@media (min-width: 481px) {
+    .app-container {
+        min-height: auto;
+        border-radius: 24px;
+    }
+}
+
+/* Header */
+.header {
+    text-align: center;
+    margin-bottom: 40px;
+    margin-top: 20px;
+}
+
+.header h1 {
+    color: var(--primary-color);
+    font-size: 2.5rem;
+    font-weight: 700;
+    letter-spacing: -1px;
+}
+
+.header p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-top: 5px;
+}
+
+/* Forms */
+.form-section {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-section h2 {
+    color: var(--text-dark);
+    font-size: 1.5rem;
+    margin-bottom: 24px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+input, textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #E0E0E0;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    color: var(--text-dark);
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+input:focus, textarea:focus {
+    border-color: var(--primary-color);
+}
+
+textarea {
+    resize: none;
+}
+
+/* Buttons */
+.primary-btn {
+    width: 100%;
+    padding: 16px;
+    background-color: var(--primary-color);
+    color: var(--white);
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.2s ease;
+}
+
+.primary-btn:active {
+    background-color: var(--primary-hover);
+}
+
+/* Toggle Footer */
+.toggle-container {
+    margin-top: auto; /* Pushes toggle to the bottom */
+    padding-top: 40px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+.toggle-container p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+.text-btn {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Utility */
+.hidden {
+    display: none !important;
+}
+
+/* =========================================
+   DASHBOARD SPECIFIC STYLES 
+   ========================================= */
+
+.dashboard-layout {
+    padding: 0; /* Override previous padding */
+    background-color: var(--bg-light);
+    position: relative;
+    padding-bottom: 80px; /* Space for bottom nav */
+}
+
+/* Header */
+.dash-header {
+    background-color: var(--white);
+    padding: 24px 24px 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #E0E0E0;
+    margin-bottom: 20px;
+    margin-top: 0;
+}
+
+.user-greeting h2 {
+    font-size: 1.25rem;
+    color: var(--text-dark);
+    margin-bottom: 4px;
+}
+
+.user-greeting p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.wallet-badge {
+    background-color: #FFF3E0;
+    color: var(--primary-color);
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* Feed & Task Cards */
+.feed-section {
+    padding: 0 24px;
+    padding-bottom: 120px; /* Ensures the last card isn't hidden by the nav */
+}
+
+.section-title {
+    font-size: 1.1rem;
+    color: var(--text-dark);
+    margin-bottom: 16px;
+}
+
+.task-card {
+    background-color: var(--white);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    margin-bottom: 16px;
+    border: 1px solid #EEEEEE;
+}
+
+.task-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.task-top h4 {
+    font-size: 1.05rem;
+    color: var(--text-dark);
+}
+
+.reward-tag {
+    background-color: #E8F5E9;
+    color: #2E7D32;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.task-desc {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin-bottom: 16px;
+}
+
+.task-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.distance-tag {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    background-color: var(--bg-light);
+    padding: 6px 10px;
+    border-radius: 20px;
+}
+
+.accept-btn {
+    background-color: var(--primary-color);
+    color: var(--white);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.accept-btn:active {
+    background-color: var(--primary-hover);
+}
+
+/* Floating Action Button (FAB) */
+.fab-btn {
+    position: fixed;
+    bottom: 90px; /* Pushes it above the bottom nav */
+    right: 24px;
+    width: 60px;
+    height: 60px;
+    background-color: var(--text-dark);
+    color: var(--white);
+    border: none;
+    border-radius: 50%;
+    font-size: 2rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100; /* Ensures it floats above everything else */
+    line-height: 1;
+    padding-bottom: 4px;
+}
+
+@media (min-width: 481px) {
+    .fab-btn {
+        position: absolute;
+    }
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    max-width: 480px;
+    background-color: var(--white);
+    display: flex;
+    justify-content: space-around;
+    padding: 12px 0;
+    border-top: 1px solid #E0E0E0;
+    z-index: 10;
+}
+
+@media (min-width: 481px) {
+    .bottom-nav {
+        position: absolute;
+        border-bottom-left-radius: 24px;
+        border-bottom-right-radius: 24px;
+    }
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.nav-item span {
+    font-size: 1.2rem;
+    margin-bottom: 4px;
+}
+
+.nav-item p {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.nav-item.active {
+    color: var(--primary-color);
+}
+
+/* Fix for the + button centering */
+.fab-btn {
+    line-height: 1;
+    padding-bottom: 4px; /* Adjusts the visual center of the + sign */
+}
+
+/* Modal Styling */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.modal-content {
+    background-color: var(--white);
+    width: 90%;
+    max-width: 400px;
+    padding: 24px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.modal-content h3 {
+    margin-bottom: 16px;
+    color: var(--text-dark);
+}
+
+.modal-content input, .modal-content textarea {
+    margin-bottom: 12px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.modal-actions .text-btn {
+    color: var(--text-muted);
+}
+
+.modal-actions .primary-btn {
+    width: auto;
+    margin-top: 0;
+    padding: 12px 20px;
+}
+
+/* 3-Dot Menu Styles */
+.task-card {
+    position: relative; /* Ensures the dropdown stays inside the card */
+}
+
+.menu-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0 8px;
+    line-height: 1;
+}
+
+.dropdown-menu {
+    display: none; /* Hidden by default */
+    position: absolute;
+    top: 35px;
+    right: 15px;
+    background-color: var(--white);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 8px;
+    overflow: hidden;
+    z-index: 50;
+    border: 1px solid #E0E0E0;
+    min-width: 140px;
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-item {
+    width: 100%;
+    text-align: left;
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid #F5F5F5;
+    font-size: 0.9rem;
+    color: var(--text-dark);
+    cursor: pointer;
+}
+
+.dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.dropdown-item:hover {
+    background-color: var(--bg-light);
+}
+
+.dropdown-item.danger {
+    color: #D32F2F; /* Red color for destructive actions */
+}
+
+.priority-badge {
+    background-color: #FFC107;
+    color: #000;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: bold;
+    margin-left: 8px;
+    display: inline-block;
+}
+
+/* =========================================
+   TOAST NOTIFICATIONS
+   ========================================= */
+#toast-container {
+    position: fixed;
+    bottom: 100px; /* Sits just above your bottom nav */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none; /* Ensures you can click through the invisible container */
+    width: 90%;
+    max-width: 400px;
+}
+
+.toast {
+    background-color: #333333;
+    color: var(--white);
+    padding: 14px 20px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    text-align: center;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: slideUpFadeIn 0.3s forwards, fadeOutDown 0.3s forwards 2.7s;
+}
+
+.toast.success {
+    background-color: #2E7D32; /* Green for success */
+}
+
+.toast.error {
+    background-color: #D32F2F; /* Red for errors */
+}
+
+@keyframes slideUpFadeIn {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOutDown {
+    to { opacity: 0; transform: translateY(20px); }
+}

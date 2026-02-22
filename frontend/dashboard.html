@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Helpido | Feed</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF5722">
+</head>
+<body>
+
+    <main class="app-container dashboard-layout">
+
+        <section id="home-view" class="feed-section">
+            
+            <header class="dash-header" style="margin-left: -24px; margin-right: -24px; margin-bottom: 20px;">
+                <div class="user-greeting">
+                    <h2>Hi, Neighbor 👋</h2>
+                    <p id="home-address">📍 Local Area</p>
+                </div>
+            </header>
+
+            <h3 class="section-title" id="my-open-title" style="display: none; color: var(--primary-color);">My Open Requests</h3>
+            <div id="my-open-feed" style="margin-bottom: 24px;"></div>
+
+            <h3 class="section-title">Help Needed Nearby</h3>
+            <div id="task-feed">
+                <p style="text-align: center; color: #757575; margin-top: 40px;">Loading tasks...</p>
+            </div>
+            
+        </section>
+
+        <section id="tasks-view" class="feed-section hidden">
+            
+            <header class="dash-header" style="margin-left: -24px; margin-right: -24px; margin-bottom: 24px;">
+                <div class="user-greeting">
+                    <h2>My Activity 📋</h2>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">Track your requests and the neighbors you are helping.</p>
+                </div>
+            </header>
+
+            <h3 class="section-title">Requests I Posted</h3>
+            <div id="my-requests-feed" style="margin-bottom: 30px;"></div>
+
+            <h3 class="section-title">Tasks I'm Helping With</h3>
+            <div id="my-jobs-feed" style="margin-bottom: 40px;"></div>
+            
+        </section>
+
+        <section id="profile-view" class="feed-section hidden">
+            <h3 class="section-title">My Profile</h3>
+            
+            <div class="task-card" style="text-align: center; padding: 30px 20px;">
+                <div style="font-size: 3.5rem; margin-bottom: 10px;">👤</div>
+                <h2 id="profile-name" style="margin-bottom: 5px; color: var(--text-dark);">Loading...</h2>
+                <p id="profile-phone" style="color: var(--text-muted); margin-bottom: 20px;">...</p>
+                
+                <div style="background-color: var(--bg-light); padding: 16px; border-radius: 8px; text-align: left; margin-bottom: 24px;">
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">Home Address</p>
+                    <p id="profile-address" style="color: var(--text-dark); line-height: 1.4;">...</p>
+                </div>
+
+                <button class="primary-btn" style="background-color: #D32F2F;" onclick="logout()">Log Out</button>
+            </div>
+        </section>
+
+        <button class="fab-btn" onclick="openModal()">+</button>
+
+        <div id="create-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <h3>Ask for Help</h3>
+                <input type="text" id="task-title" placeholder="What do you need? (e.g. Move furniture)" required>
+                <textarea id="task-desc" rows="3" placeholder="Provide some details..." required></textarea>
+                <input type="number" id="task-reward" placeholder="Reward amount (₹)" required>
+                
+                <div class="modal-actions">
+                    <button class="text-btn" onclick="closeModal()">Cancel</button>
+                    <button class="primary-btn" onclick="submitTask()">Post Request</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="confirm-modal" class="modal-overlay hidden" style="z-index: 200;">
+            <div class="modal-content" style="text-align: center; max-width: 320px;">
+                <h3 id="confirm-title" style="margin-bottom: 10px;">Are you sure?</h3>
+                <p id="confirm-message" style="color: var(--text-muted); margin-bottom: 24px; font-size: 0.95rem; line-height: 1.4;"></p>
+                <div class="modal-actions" style="justify-content: center; gap: 16px;">
+                    <button class="text-btn" onclick="closeConfirm()">Cancel</button>
+                    <button id="confirm-btn" class="primary-btn" style="background-color: #D32F2F; width: auto; margin-top: 0;">Yes</button>
+                </div>
+            </div>
+        </div>
+
+        <nav class="bottom-nav">
+            <div class="nav-item active" id="nav-home" onclick="switchTab('home')">
+                <span>🏠</span><p>Home</p>
+            </div>
+            <div class="nav-item" id="nav-tasks" onclick="switchTab('tasks')">
+                <span>📋</span><p>Tasks</p>
+            </div>
+            <div class="nav-item" id="nav-profile" onclick="switchTab('profile')">
+                <span>👤</span><p>Profile</p>
+            </div>
+        </nav>
+
+    </main>
+
+    <script>
+        const API_URL = '/api';
+        const myPhone = localStorage.getItem('helpido_phone');
+
+        // Redirect to login if phone number isn't saved
+        if (!myPhone) window.location.href = 'index.html';
+
+        // --- UI Polish: Toast Notifications ---
+        function showToast(message, type = 'success') {
+            // Check if container exists, if not, create it
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                document.body.appendChild(container);
+            }
+
+            // Create the toast element
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerText = message;
+
+            // Add it to the screen
+            container.appendChild(toast);
+
+            // Automatically remove it from the HTML after 3 seconds
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // --- UI Polish: Close Menus on Outside Click ---
+        document.addEventListener('click', function(event) {
+            // If the user clicked anything EXCEPT a menu button or inside a menu...
+            if (!event.target.closest('.menu-btn') && !event.target.closest('.dropdown-menu')) {
+                // Find all open menus and close them
+                document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                    menu.classList.remove('show');
+                });
+            }
+        });
+
+        // --- Custom Confirm Modal Logic ---
+        let pendingAction = null; // Stores what action to run if the user clicks "Yes"
+
+        function openConfirm(title, message, buttonText, actionFunction) {
+            document.getElementById('confirm-title').innerText = title;
+            document.getElementById('confirm-message').innerText = message;
+            document.getElementById('confirm-btn').innerText = buttonText;
+            
+            pendingAction = actionFunction; // Save the function to run later
+            document.getElementById('confirm-modal').classList.remove('hidden');
+        }
+
+        function closeConfirm() {
+            document.getElementById('confirm-modal').classList.add('hidden');
+            pendingAction = null; // Clear the saved action
+        }
+
+        // When the user clicks the red "Yes" button...
+        document.getElementById('confirm-btn').addEventListener('click', () => {
+            if (pendingAction) pendingAction(); // Run the saved function!
+            closeConfirm(); // Close the modal
+        });
+
+        // Load user info AND tasks when page opens
+        window.onload = () => {
+            loadProfile(); // Grabs your name instantly
+            loadTasks();   // Grabs the feed
+        };
+
+        async function loadTasks() {
+            const feed = document.getElementById('task-feed');
+            const myOpenFeed = document.getElementById('my-open-feed');
+            const myOpenTitle = document.getElementById('my-open-title');
+
+            try {
+                const res = await fetch(`${API_URL}/tasks`);
+                const tasks = await res.json();
+
+                // Split the tasks into two groups using the logged-in phone number
+                const myOpenTasks = tasks.filter(t => t.requesterPhone === myPhone);
+                const othersOpenTasks = tasks.filter(t => t.requesterPhone !== myPhone);
+
+                // --- 1. Render Tasks YOU Uploaded ---
+                if (myOpenTasks.length > 0) {
+                    myOpenTitle.style.display = 'block'; // Show the title
+                    myOpenFeed.innerHTML = myOpenTasks.map(task => `
+                        <div class="task-card" style="border: 1px dashed var(--primary-color); background-color: #FFF3E0;">
+                            <div class="task-top">
+                                <h4>${task.title}</h4>
+                                <span class="reward-tag">₹${task.reward}</span>
+                            </div>
+                            <p class="task-desc">${task.description}</p>
+                            <div class="task-bottom">
+                                <span class="distance-tag" style="color: var(--primary-color); font-weight: 600;">⏳ Waiting for helper...</span>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    myOpenTitle.style.display = 'none'; // Hide if you have no open requests
+                    myOpenFeed.innerHTML = '';
+                }
+
+                // --- 2. Render Tasks OTHERS Uploaded ---
+                if (othersOpenTasks.length === 0) {
+                    feed.innerHTML = `<p style="text-align:center; color:#757575; margin-top:40px;">No help requests nearby right now.</p>`;
+                } else {
+                    feed.innerHTML = othersOpenTasks.map(task => `
+                        <div class="task-card">
+                            <div class="task-top">
+                                <h4>${task.title}</h4>
+                                <span class="reward-tag">₹${task.reward}</span>
+                            </div>
+                            <p class="task-desc">${task.description}</p>
+                            <div class="task-bottom">
+                                <span class="distance-tag">📍 Nearby</span>
+                                <button class="accept-btn" onclick="acceptTask('${task._id}')">I can help</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) {
+                feed.innerHTML = `<p style="text-align:center; color:red;">Failed to load tasks.</p>`;
+            }
+        }
+
+        async function submitTask() {
+            const title = document.getElementById('task-title').value;
+            const description = document.getElementById('task-desc').value;
+            const reward = document.getElementById('task-reward').value;
+
+            if (!title || !description || !reward) return showToast("Please fill all fields", "error");
+
+            try {
+                const res = await fetch(`${API_URL}/tasks`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, description, reward, requesterPhone: myPhone })
+                });
+                
+                if (res.ok) {
+                    showToast("Help request posted!");
+                    closeModal();
+                    loadTasks(); // Refresh the feed
+                } else {
+                    showToast("Failed to post task", "error");
+                }
+            } catch (err) {
+                showToast("Server error", "error");
+            }
+        }
+
+        async function acceptTask(taskId) {
+            try {
+                const res = await fetch(`${API_URL}/tasks/accept`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ taskId, helperPhone: myPhone })
+                });
+                
+                const data = await res.json();
+                showToast(data.message, res.ok ? "success" : "error");
+                if (res.ok) loadTasks(); // Refresh the feed to remove the accepted task
+            } catch (err) {
+                showToast("Server error", "error");
+            }
+        }
+
+        // Modal Controls
+        function openModal() { document.getElementById('create-modal').classList.remove('hidden'); }
+        function closeModal() { 
+            document.getElementById('create-modal').classList.add('hidden'); 
+            document.getElementById('task-title').value = '';
+            document.getElementById('task-desc').value = '';
+            document.getElementById('task-reward').value = '';
+        }
+
+        // Tab Switching Logic
+        function switchTab(tabName) {
+            // Hide everything
+            document.getElementById('home-view').classList.add('hidden');
+            document.getElementById('tasks-view').classList.add('hidden');
+            document.getElementById('profile-view').classList.add('hidden');
+            
+            // Remove active state
+            document.getElementById('nav-home').classList.remove('active');
+            document.getElementById('nav-tasks').classList.remove('active');
+            document.getElementById('nav-profile').classList.remove('active');
+
+            if (tabName === 'home') {
+                document.getElementById('home-view').classList.remove('hidden');
+                document.getElementById('nav-home').classList.add('active');
+                loadTasks();
+            } else if (tabName === 'tasks') {
+                document.getElementById('tasks-view').classList.remove('hidden');
+                document.getElementById('nav-tasks').classList.add('active');
+                loadMyTasks();
+            } else if (tabName === 'profile') {
+                document.getElementById('profile-view').classList.remove('hidden');
+                document.getElementById('nav-profile').classList.add('active');
+                loadProfile();
+            }
+        }
+
+        // Fetch My Tasks
+        async function loadMyTasks() {
+            const reqFeed = document.getElementById('my-requests-feed');
+            const jobsFeed = document.getElementById('my-jobs-feed');
+            
+            reqFeed.innerHTML = '<p>Loading...</p>';
+            jobsFeed.innerHTML = '<p>Loading...</p>';
+
+            try {
+                const res = await fetch(`${API_URL}/tasks/my-tasks?phone=${myPhone}`);
+                const data = await res.json();
+
+                // 1. Render Requests I Posted (Can be Deleted)
+                if (data.myRequests.length === 0) {
+                    reqFeed.innerHTML = `<p style="color:#757575; font-size: 0.9rem;">You haven't asked for help yet.</p>`;
+                } else {
+                    reqFeed.innerHTML = data.myRequests.map(task => `
+                        <div class="task-card" style="border-left: 4px solid #FF5722;">
+                            <div class="task-top">
+                                <div style="display:flex; align-items:center;">
+                                    <h4>${task.title}</h4>
+                                </div>
+                                <div>
+                                    <span class="reward-tag">₹${task.reward}</span>
+                                    <button class="menu-btn" onclick="toggleMenu('${task._id}')">⋮</button>
+                                </div>
+                            </div>
+                            <div id="menu-${task._id}" class="dropdown-menu">
+                                <button class="dropdown-item danger" onclick="deleteTask('${task._id}')">Delete Task</button>
+                            </div>
+
+                            <p class="task-desc">Status: <strong>${task.status.toUpperCase()}</strong></p>
+                            ${task.helperPhone ? `<p style="font-size:0.8rem; color:green;">Helper Found: ${task.helperPhone}</p>` : ''}
+                        </div>
+                    `).join('');
+                }
+
+                // 2. Render Tasks I'm Helping With (Can be Prioritized or Removed)
+                if (data.myJobs.length === 0) {
+                    jobsFeed.innerHTML = `<p style="color:#757575; font-size: 0.9rem;">You haven't accepted any tasks yet.</p>`;
+                } else {
+                    // Sort logic: Bring prioritized tasks to the top
+                    const sortedJobs = data.myJobs.sort((a, b) => {
+                        if (a.isPrioritized && !b.isPrioritized) return -1;
+                        if (!a.isPrioritized && b.isPrioritized) return 1;
+                        return 0;
+                    });
+
+                    jobsFeed.innerHTML = sortedJobs.map(task => `
+                        <div class="task-card" style="border-left: 4px solid #2E7D32; ${task.isPrioritized ? 'background-color: #FFFDE7;' : ''}">
+                            <div class="task-top">
+                                <div style="display:flex; align-items:center;">
+                                    <h4>${task.title}</h4>
+                                    ${task.isPrioritized ? '<span class="priority-badge">★ Priority</span>' : ''}
+                                </div>
+                                <div>
+                                    <span class="reward-tag">₹${task.reward}</span>
+                                    <button class="menu-btn" onclick="toggleMenu('${task._id}')">⋮</button>
+                                </div>
+                            </div>
+                            
+                            <div id="menu-${task._id}" class="dropdown-menu">
+                                <button class="dropdown-item" onclick="prioritizeTask('${task._id}')">
+                                    ${task.isPrioritized ? 'Remove Priority' : 'Prioritize Task'}
+                                </button>
+                                <button class="dropdown-item danger" onclick="removeTask('${task._id}')">Remove Task</button>
+                            </div>
+
+                            <p class="task-desc">Requester: ${task.requesterPhone}</p>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) {
+                reqFeed.innerHTML = `<p style="color:red;">Error loading tasks.</p>`;
+            }
+        }
+
+        // --- New Action Functions ---
+
+        // Toggles the visibility of the dropdown menu
+        function toggleMenu(taskId) {
+            // Close all other open menus first
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                if (menu.id !== `menu-${taskId}`) menu.classList.remove('show');
+            });
+            // Toggle the clicked one
+            document.getElementById(`menu-${taskId}`).classList.toggle('show');
+        }
+
+        // Deletes a task you created
+        function deleteTask(taskId) {
+            openConfirm(
+                "Delete Request", 
+                "Are you sure you want to delete this help request? This cannot be undone.", 
+                "Delete", 
+                async () => {
+                    try {
+                        await fetch(`${API_URL}/tasks/${taskId}`, { method: 'DELETE' });
+                        showToast("Task deleted", "success");
+                        loadMyTasks(); // Refresh list
+                    } catch (err) { showToast("Failed to delete task", "error"); }
+                }
+            );
+        }
+
+        // Drops a task you accepted, putting it back in the public feed
+        function removeTask(taskId) {
+            openConfirm(
+                "Drop Task", 
+                "Are you sure you want to drop this task? It will be sent back to the public feed.", 
+                "Drop Task", 
+                async () => {
+                    try {
+                        await fetch(`${API_URL}/tasks/cancel`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ taskId })
+                        });
+                        showToast("Task returned to public feed", "success");
+                        loadMyTasks(); // Refresh list
+                    } catch (err) { showToast("Failed to drop task", "error"); }
+                }
+            );
+        }
+
+        // Toggles priority status
+        async function prioritizeTask(taskId) {
+            try {
+                await fetch(`${API_URL}/tasks/prioritize`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ taskId })
+                });
+                showToast("Priority updated");
+                loadMyTasks(); // Refresh list to trigger the sort
+            } catch (err) { showToast("Failed to update priority", "error"); }
+        }
+
+        // Fetch and display user profile
+        async function loadProfile() {
+            try {
+                const res = await fetch(`${API_URL}/users/${myPhone}`);
+                if (res.ok) {
+                    const user = await res.json();
+                    
+                    // Update the Profile Tab
+                    document.getElementById('profile-name').innerText = user.name;
+                    document.getElementById('profile-phone').innerText = "+91 " + user.phone;
+                    document.getElementById('profile-address').innerText = user.address;
+                    
+                    // Update the Home Tab Header instantly
+                    const firstName = user.name.split(' ')[0]; // Grabs just the first name
+                    document.querySelector('.user-greeting h2').innerText = `Hi, ${firstName} 👋`;
+                    document.getElementById('home-address').innerText = `📍 ${user.address}`;
+                }
+            } catch (err) {
+                console.error("Failed to load profile");
+            }
+        }
+
+        // Log the user out
+        function logout() {
+            openConfirm(
+                "Log Out", 
+                "Are you sure you want to log out of Helpido?", 
+                "Log Out", 
+                () => {
+                    localStorage.removeItem('helpido_phone'); 
+                    window.location.href = 'index.html';      
+                }
+            );
+        }
+    </script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker Registered'))
+                    .catch(err => console.log('Service Worker Error', err));
+            });
+        }
+    </script>
+</body>
+</html>
