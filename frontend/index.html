@@ -134,6 +134,30 @@
             }
         });
 
+        async function requestOTP() {
+            const phone = document.getElementById('login-phone').value;
+            try {
+                const res = await fetch(`${API_URL}/login/step1`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    // Instead of waiting for email, open WhatsApp with the OTP
+                    // We get the OTP from the response only for this "Developer Mode"
+                    const whatsappUrl = `https://wa.me/91${phone}?text=Your%20Helpido%20OTP%20is:%20${data.otp}`;
+                    window.open(whatsappUrl, '_blank');
+                    showToast("OTP generated! Check WhatsApp.");
+                } else {
+                    showToast(data.message, "error");
+                }
+            } catch (err) {
+                showToast("Error connecting to server.", "error");
+            }
+        }
+
         // Handle Login (Request OTP & Verify OTP)
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -144,27 +168,11 @@
 
             if (otpGroup.classList.contains('hidden')) {
                 // STEP 1: Request OTP
-                try {
-                    const res = await fetch(`${API_URL}/login/step1`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ phone: phoneInput.value })
-                    });
-                    
-                    const data = await res.json();
-                    
-                    if (res.ok) {
-                        showToast(data.message, "success");
-                        currentPhone = phoneInput.value;
-                        phoneInput.readOnly = true; 
-                        otpGroup.classList.remove('hidden'); 
-                        submitBtn.textContent = 'Verify OTP'; 
-                    } else {
-                        showToast(data.message, "error");
-                    }
-                } catch (err) {
-                    showToast("Error connecting to server.", "error");
-                }
+                await requestOTP();
+                currentPhone = phoneInput.value;
+                phoneInput.readOnly = true; 
+                otpGroup.classList.remove('hidden'); 
+                submitBtn.textContent = 'Verify OTP';
 
             } else {
                 // STEP 2: Verify OTP

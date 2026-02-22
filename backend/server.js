@@ -3,22 +3,6 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
-const nodemailer = require('nodemailer');
-
-const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false, // Must be false for Port 587
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    // We keep these to ensure IPv4 and stability
-    family: 4, 
-    tls: {
-        rejectUnauthorized: false
-    }
-});
 
 // Load .env from the current directory (/backend)
 require("dotenv").config({ path: path.join(__dirname, ".env") });
@@ -54,41 +38,16 @@ app.post('/api/signup', async (req, res) => {
 /* ---------------- LOGIN -> GENERATE OTP ---------------- */
 app.post('/api/login/step1', async (req, res) => {
     const { phone } = req.body;
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    
+    await User.updateOne({ phone }, { $set: { otp } });
 
-    try {
-        // 1. Find the user by their phone number
-        const user = await User.findOne({ phone });
-        
-        if (!user) {
-            return res.status(404).json({ message: "User not found. Please sign up first!" });
-        }
-
-        // 2. Generate OTP
-        const otp = Math.floor(1000 + Math.random() * 9000);
-        user.otp = otp;
-        await user.save();
-
-        // 3. Send OTP to the email linked to this phone number
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: user.email, // Sends to the email we found in the database
-            subject: 'Helpido Login OTP',
-            text: `Your Helpido OTP is: ${otp}`
-        };
-
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.log("Email error:", error.message);
-            } else {
-                console.log(`OTP sent to email linked with ${phone}`);
-            }
-        });
-
-        res.json({ message: "OTP sent to your registered email!" });
-
-    } catch (err) {
-        res.status(500).json({ message: "Server error" });
-    }
+    // Since Email is blocked, we send the OTP back in the response 
+    // ONLY for your development/testing phase.
+    res.json({ 
+        message: "Developer Mode: OTP generated", 
+        otp: otp // REMOVE THIS line before you release the app publicly!
+    });
 });
 
 /* ---------------- VERIFY OTP ---------------- */
