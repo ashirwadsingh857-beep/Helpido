@@ -184,12 +184,10 @@
             const myOpenTitle = document.getElementById('my-open-title');
 
             try {
-                const res = await fetch(`${API_URL}/tasks`);
-                const tasks = await res.json();
-
-                // Split the tasks into two groups using the logged-in phone number
-                const myOpenTasks = tasks.filter(t => t.requesterPhone === myPhone);
-                const othersOpenTasks = tasks.filter(t => t.requesterPhone !== myPhone);
+                // Fetch my own tasks
+                const myRes = await fetch(`${API_URL}/tasks/my-tasks?phone=${myPhone}`);
+                const myData = await myRes.json();
+                const myOpenTasks = myData.myRequests.filter(t => t.status === 'open');
 
                 // --- 1. Render Tasks YOU Uploaded ---
                 if (myOpenTasks.length > 0) {
@@ -211,23 +209,36 @@
                     myOpenFeed.innerHTML = '';
                 }
 
-                // --- 2. Render Tasks OTHERS Uploaded ---
-                if (othersOpenTasks.length === 0) {
-                    feed.innerHTML = `<p style="text-align:center; color:#757575; margin-top:40px;">No help requests nearby right now.</p>`;
+                // --- 2. Render Tasks OTHERS Uploaded (Nearby) ---
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(async (position) => {
+                        const { latitude, longitude } = position.coords;
+                        const res = await fetch(`${API_URL}/tasks/nearby?lat=${latitude}&lng=${longitude}&radius=2`);
+                        const tasks = await res.json();
+                        const othersOpenTasks = tasks.filter(t => t.postedBy !== myPhone);
+
+                        if (othersOpenTasks.length === 0) {
+                            feed.innerHTML = `<p style="text-align:center; color:#757575; margin-top:40px;">No help requests nearby right now.</p>`;
+                        } else {
+                            feed.innerHTML = othersOpenTasks.map(task => `
+                                <div class="task-card">
+                                    <div class="task-top">
+                                        <h4>${task.title}</h4>
+                                        <span class="reward-tag">₹${task.reward}</span>
+                                    </div>
+                                    <p class="task-desc">${task.description}</p>
+                                    <div class="task-bottom">
+                                        <span class="distance-tag">📍 Nearby</span>
+                                        <button class="accept-btn" onclick="acceptTask('${task._id}')">I can help</button>
+                                    </div>
+                                </div>
+                            `).join('');
+                        }
+                    }, (error) => {
+                        feed.innerHTML = `<p style="text-align:center; color:#757575; margin-top:40px;">Enable location to see nearby requests.</p>`;
+                    });
                 } else {
-                    feed.innerHTML = othersOpenTasks.map(task => `
-                        <div class="task-card">
-                            <div class="task-top">
-                                <h4>${task.title}</h4>
-                                <span class="reward-tag">₹${task.reward}</span>
-                            </div>
-                            <p class="task-desc">${task.description}</p>
-                            <div class="task-bottom">
-                                <span class="distance-tag">📍 Nearby</span>
-                                <button class="accept-btn" onclick="acceptTask('${task._id}')">I can help</button>
-                            </div>
-                        </div>
-                    `).join('');
+                    feed.innerHTML = `<p style="text-align:center; color:#757575; margin-top:40px;">Location not supported.</p>`;
                 }
             } catch (err) {
                 feed.innerHTML = `<p style="text-align:center; color:red;">Failed to load tasks.</p>`;
@@ -241,23 +252,36 @@
 
             if (!title || !description || !reward) return showToast("Please fill all fields", "error");
 
-            try {
+            if (!navigator.geolocation) {
+                showToast("GPS not supported by your browser", "error");
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const taskData = {
+                    title: title,
+                    description: description,
+                    postedBy: myPhone,
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                    reward: parseFloat(reward)
+                };
+
                 const res = await fetch(`${API_URL}/tasks`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title, description, reward, requesterPhone: myPhone })
+                    body: JSON.stringify(taskData)
                 });
-                
+
+                const data = await res.json();
                 if (res.ok) {
-                    showToast("Help request posted!");
+                    showToast("Request posted successfully!");
                     closeModal();
-                    loadTasks(); // Refresh the feed
+                    loadTasks();
                 } else {
-                    showToast("Failed to post task", "error");
+                    showToast(data.message, "error");
                 }
-            } catch (err) {
-                showToast("Server error", "error");
-            }
+            });
         }
 
         async function acceptTask(taskId) {
@@ -380,7 +404,7 @@
                                 <button class="dropdown-item danger" onclick="removeTask('${task._id}')">Remove Task</button>
                             </div>
 
-                            <p class="task-desc">Requester: ${task.requesterPhone}</p>
+                            <p class="task-desc">Requester: ${task.postedBy}</p>
                         </div>
                     `).join('');
                 }
