@@ -21,22 +21,25 @@
 
         <section id="login-section" class="form-section">
             <h2>Welcome Back</h2>
-            <div id="login-section">
-                <div class="input-group">
-                    <label for="login-phone">Mobile Number</label>
-                    <input type="tel" id="login-phone" placeholder="Enter 10-digit number" pattern="[0-9]{10}"
-                        required>
+            
+            <div id="auth-box">
+                <div id="login-container">
+                    <div class="input-group">
+                        <label for="login-phone">Mobile Number</label>
+                        <input type="tel" id="login-phone" placeholder="Enter 10-digit number" pattern="[0-9]{10}"
+                            required>
+                    </div>
+                    <button onclick="requestOTP()" class="primary-btn">Get OTP</button>
                 </div>
-                <button onclick="requestOTP()" class="primary-btn">Get OTP</button>
-            </div>
 
-            <div id="otp-section" style="display: none;">
-                <p>Enter the 4-digit code shown in the popup:</p>
-                <div class="input-group">
-                    <label for="otp-input">OTP Code</label>
-                    <input type="number" id="otp-input" placeholder="0000">
+                <div id="otp-container" style="display: none;">
+                    <p>Enter the 4-digit code shown in the popup:</p>
+                    <div class="input-group">
+                        <label for="otp-input">OTP Code</label>
+                        <input type="number" id="otp-input" placeholder="0000">
+                    </div>
+                    <button onclick="verifyOTP()" class="primary-btn">Verify & Login</button>
                 </div>
-                <button onclick="verifyOTP()" class="primary-btn">Verify & Login</button>
             </div>
 
             <div class="toggle-container">
@@ -84,18 +87,11 @@
         let currentPhone = ''; 
 
         // --- UI Polish: Toast Notifications ---
-        function showToast(message, type = 'success') {
-            let container = document.getElementById('toast-container');
-            if (!container) {
-                container = document.createElement('div');
-                container.id = 'toast-container';
-                document.body.appendChild(container);
-            }
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
+        function showToast(message) {
+            const toast = document.getElementById("toast");
             toast.innerText = message;
-            container.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
+            toast.className = "toast show";
+            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
         }
 
         // Toggle between Login and Signup forms
@@ -109,8 +105,8 @@
             document.getElementById('signup-form').reset();
             
             // Reset OTP section visibility
-            document.getElementById('otp-section').style.display = 'none';
-            document.getElementById('login-section').style.display = 'block';
+            document.getElementById('otp-container').style.display = 'none';
+            document.getElementById('login-container').style.display = 'block';
         }
 
         // Handle Signup Submission
@@ -129,37 +125,45 @@
                 });
                 
                 const data = await res.json();
-                showToast(data.message, res.ok ? 'success' : 'error');
+                showToast(data.message);
 
                 if (res.ok) {
                     toggleForms(); // Switch to login after successful signup
                 }
             } catch (err) {
-                showToast("Error connecting to server.", "error");
+                showToast("Error connecting to server.");
             }
         });
 
         async function requestOTP() {
             const phone = document.getElementById('login-phone').value;
             
-            // Call your Render API
-            const res = await fetch(`${API_URL}/login/step1`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone })
-            });
+            // Show a "loading" toast so you know the internet is working
+            showToast("Connecting to MongoDB...");
 
-            const data = await res.json();
+            try {
+                const res = await fetch(`${API_URL}/login/step1`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone })
+                });
 
-            if (res.ok) {
-                // THE ALERT: This pulls the code directly from the MongoDB response
-                alert(`Helpido OTP: ${data.otp}`);
-                
-                // Switch the UI to show the Verify box
-                document.getElementById('login-section').style.display = 'none';
-                document.getElementById('otp-section').style.display = 'block';
-            } else {
-                alert(data.message); // e.g., "User not found!"
+                const data = await res.json();
+
+                if (res.ok) {
+                    // THE ALERT: This pulls from the cloud
+                    alert(`Helpido OTP: ${data.otp}`);
+                    
+                    // UI FIX: Hide login, show OTP input, but don't hide the whole app!
+                    document.getElementById('login-container').style.display = 'none';
+                    document.getElementById('otp-container').style.display = 'block';
+                    showToast("OTP Received! Please verify.");
+                } else {
+                    // Use your modern toast for errors instead of boring alerts
+                    showToast(data.message || "User not found!");
+                }
+            } catch (err) {
+                showToast("Server connection failed. Check Render logs.");
             }
         }
 
@@ -188,7 +192,7 @@
             }
         }
     </script>
-
+    <div id="toast" class="toast"></div>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
