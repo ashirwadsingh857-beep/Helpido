@@ -6,20 +6,17 @@ const bcrypt = require("bcryptjs");
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
-    // Direct IPv4 address for smtp.gmail.com to bypass IPv6 issues
-    host: "64.233.171.108", 
-    port: 465,
-    secure: true,
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // Must be false for Port 587
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     },
-    // Strictly force IPv4
+    // We keep these to ensure IPv4 and stability
     family: 4, 
     tls: {
-        // This is necessary when using a direct IP instead of a domain name
-        servername: 'smtp.gmail.com',
-        rejectUnauthorized: false 
+        rejectUnauthorized: false
     }
 });
 
