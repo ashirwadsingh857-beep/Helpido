@@ -1,153 +1,133 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Helpido | Neighborly Help</title>
+    <title>Helpido | Login</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#FF5722">
 </head>
-
 <body>
 
     <main class="app-container">
         <header class="header">
             <h1>Helpido</h1>
-            <p>Help your neighbors. Earn rewards.</p>
+            <p>Neighborly help for SIT Lonavala.</p>
         </header>
 
-        <div class="auth-container">
+        <div class="auth-container"> 
+            
             <div id="signup-section" class="form-group">
                 <input type="text" id="reg-name" class="input-field" placeholder="Full Name">
-                <input type="tel" id="reg-phone" class="input-field" placeholder="Phone Number">
+                <input type="tel" id="reg-phone-signup" class="input-field" placeholder="Phone Number">
                 <button class="btn" onclick="registerUser()">Sign Up</button>
-                <p class="toggle-text">Already have an account? <span onclick="toggleForms()">Login</span></p>
+                <p class="toggle-text" style="margin-top:15px; color:#757575;">
+                    Already have an account? <span onclick="toggleAuthMode()" style="color:#FF5722; cursor:pointer; font-weight:600;">Login</span>
+                </p>
             </div>
 
+            <div id="login-section" class="form-group" style="display: none;">
+                <input type="tel" id="login-phone" class="input-field" placeholder="Phone Number">
+                <button class="btn" onclick="requestOTP()">Get OTP</button>
+                <p class="toggle-text" style="margin-top:15px; color:#757575;">
+                    New here? <span onclick="toggleAuthMode()" style="color:#FF5722; cursor:pointer; font-weight:600;">Create Account</span>
+                </p>
+            </div>
+
+            <div id="otp-section" class="form-group" style="display: none;">
+                <p style="margin-bottom:10px; color:#757575;">Check the notification at the bottom for your code:</p>
+                <input type="number" id="otp-input" class="input-field" placeholder="Enter 4-digit code">
+                <button class="btn" onclick="verifyOTP()">Verify & Login</button>
+                <button class="text-btn" onclick="location.reload()" style="margin-top:10px; font-size:0.8rem;">Change Number</button>
+            </div>
         </div>
     </main>
 
+    <div id="toast" class="toast"></div>
+
     <script>
         const API_URL = 'https://helpido.onrender.com/api';
-        let currentPhone = '';
 
-        // --- UI Polish: Toast Notifications ---
-        function showToast(message) {
+        // 1. TOAST LOGIC
+        function showToast(message, type = "success") {
             const toast = document.getElementById("toast");
             toast.innerText = message;
-            toast.className = "toast show";
-
-            // Increased to 8000ms (8 seconds) so you have time to read the OTP
-            setTimeout(() => {
-                toast.className = toast.className.replace("show", "");
-            }, 8000);
+            toast.className = `toast show ${type}`;
+            setTimeout(() => { toast.className = "toast"; }, 5000);
         }
 
-        // Toggle between Login and Signup forms
-        function toggleForms() {
-            const signupSection = document.getElementById('signup-section');
-            const loginSection = document.getElementById('login-section');
-
-            if (signupSection.style.display !== 'none') {
-                signupSection.style.display = 'none';
-                loginSection.style.display = 'block';
+        // 2. TOGGLE UI MODES
+        function toggleAuthMode() {
+            const signup = document.getElementById('signup-section');
+            const login = document.getElementById('login-section');
+            if(signup.style.display === 'none') {
+                signup.style.display = 'block';
+                login.style.display = 'none';
             } else {
-                signupSection.style.display = 'block';
-                loginSection.style.display = 'none';
+                signup.style.display = 'none';
+                login.style.display = 'block';
             }
-
-            // Reset forms when switching
-            document.getElementById('login-phone').value = '';
-            document.getElementById('otp-input').value = '';
-            document.getElementById('reg-name').value = '';
-            document.getElementById('reg-phone').value = '';
-
-            // Reset OTP section visibility
-            document.getElementById('otp-section').style.display = 'none';
         }
 
+        // 3. SIGNUP LOGIC
         async function registerUser() {
             const name = document.getElementById('reg-name').value;
-            const phone = document.getElementById('reg-phone').value;
+            const phone = document.getElementById('reg-phone-signup').value;
+            if(!name || !phone) return showToast("Please fill all fields", "error");
 
             const res = await fetch(`${API_URL}/signup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, phone }) // Removed email
+                body: JSON.stringify({ name, phone })
             });
-
             const data = await res.json();
             showToast(data.message);
-            if (res.ok) toggleForms(); // Switch to login screen
+            if(res.ok) toggleAuthMode();
         }
 
+        // 4. REQUEST OTP (Developer Bypass)
         async function requestOTP() {
             const phone = document.getElementById('login-phone').value;
-            const loginSection = document.getElementById('login-section');
-            const otpSection = document.getElementById('otp-section');
+            if(!phone) return showToast("Enter phone number", "error");
 
-            try {
-                const res = await fetch(`${API_URL}/login/step1`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone })
-                });
+            showToast("Connecting to database...");
+            const res = await fetch(`${API_URL}/login/step1`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone })
+            });
+            const data = await res.json();
 
-                const data = await res.json();
-
-                if (res.ok) {
-                    // Show OTP in the toast so UI is never interrupted
-                    showToast(`OTP: ${data.otp}`);
-
-                    // Switch sections clearly
-                    loginSection.style.display = 'none';
-                    otpSection.style.display = 'block';
-                } else {
-                    showToast(data.message);
-                }
-            } catch (err) {
-                showToast("Server Error");
+            if(res.ok) {
+                // THE CORE FIX: Show OTP in Toast and switch UI
+                showToast(`DEVELOPER OTP: ${data.otp}`, "success");
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('otp-section').style.display = 'block';
+            } else {
+                showToast(data.message, "error");
             }
         }
 
+        // 5. VERIFY OTP
         async function verifyOTP() {
             const otp = document.getElementById('otp-input').value;
             const phone = document.getElementById('login-phone').value;
 
-            try {
-                const res = await fetch(`${API_URL}/login/step2`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone, otp })
-                });
+            const res = await fetch(`${API_URL}/login/step2`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone, otp })
+            });
+            const data = await res.json();
 
-                if (res.ok) {
-                    const data = await res.json();
-                    localStorage.setItem('helpido_user', data.userId);
-                    localStorage.setItem('helpido_phone', phone);
-                    window.location.href = 'dashboard.html';
-                } else {
-                    const data = await res.json();
-                    alert(data.message || "Invalid OTP");
-                }
-            } catch (err) {
-                alert("Error connecting to server.");
+            if(res.ok) {
+                localStorage.setItem('helpido_user', data.userId);
+                localStorage.setItem('helpido_phone', phone);
+                window.location.href = 'dashboard.html';
+            } else {
+                showToast("Invalid Code", "error");
             }
         }
     </script>
-    <div id="toast" class="toast"></div>
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('Service Worker Registered'))
-                    .catch(err => console.log('Service Worker Error', err));
-            });
-        }
-    </script>
 </body>
-
 </html>
