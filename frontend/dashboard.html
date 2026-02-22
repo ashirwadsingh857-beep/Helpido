@@ -246,41 +246,55 @@
         }
 
         async function postHelpRequest() {
-            const title = document.getElementById('task-title').value;
-            const description = document.getElementById('task-desc').value;
-            const reward = parseInt(document.getElementById('task-reward').value);
+            console.log("Post button clicked!"); // Check your browser console for this!
+            
+            const titleInput = document.getElementById('task-title');
+            const descInput = document.getElementById('task-desc');
 
-            // 1. Get user's current GPS location
-            if (!navigator.geolocation) {
-                alert("Please enable GPS to post a request.");
+            if (!titleInput || !descInput) {
+                console.error("Missing UI elements!");
                 return;
             }
 
-            navigator.geolocation.getCurrentPosition(async (position) => {
-                const { latitude, longitude } = position.coords;
+            // 1. Request GPS immediately inside the click event
+            if (navigator.geolocation) {
+                showToast("Getting your Lonavala coordinates...");
+                
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    const { latitude, longitude } = position.coords;
+                    console.log("Location found:", latitude, longitude);
 
-                // 2. Send to Backend
-                const res = await fetch(`${API_URL}/tasks`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        title,
-                        description,
-                        postedBy: myPhone,
-                        lat: latitude,
-                        lng: longitude,
-                        reward
-                    })
+                    // 2. Send to Backend
+                    try {
+                        const res = await fetch(`${API_URL}/tasks`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                title: titleInput.value,
+                                description: descInput.value,
+                                postedBy: localStorage.getItem('helpido_user'),
+                                lat: latitude,
+                                lng: longitude
+                            })
+                        });
+
+                        if (res.ok) {
+                            showToast("Help request posted successfully!");
+                            titleInput.value = ""; 
+                            descInput.value = "";
+                        } else {
+                            const errorData = await res.json();
+                            showToast(errorData.message);
+                        }
+                    } catch (err) {
+                        showToast("Server connection failed!");
+                    }
+                }, (error) => {
+                    showToast("GPS Error: Please enable location in browser settings.");
                 });
-
-                const data = await res.json();
-                if (res.ok) {
-                    alert("Help request posted successfully!");
-                    loadTasks(); // Refresh the list
-                } else {
-                    alert(data.message); // This will show the "Out of Radius" error
-                }
-            });
+            } else {
+                showToast("Your browser doesn't support GPS.");
+            }
         }
 
         async function acceptTask(taskId) {
