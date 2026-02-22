@@ -10,6 +10,10 @@ const User = require("./models/User.js");
 const app = express();
 app.use(express.json());
 app.use(cors());
+// --- BULLETPROOF FOLDER ROUTING ---
+// This tells Render to search EVERY possible folder structure for your HTML files.
+app.use(express.static(__dirname)); 
+app.use(express.static(path.join(__dirname, 'frontend')));
 app.use(express.static(path.join(__dirname, '../frontend')));
 
 mongoose.connect(process.env.MONGO_URI)
