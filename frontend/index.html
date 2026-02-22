@@ -126,42 +126,41 @@
     }
 
     async function verifyOTP() {
-        try {
-            const otp = document.getElementById('otp-input').value;
-            const phone = activePhone || document.getElementById('login-phone').value; 
+    try {
+        const otp = document.getElementById('otp-input').value;
+        const phone = activePhone || document.getElementById('login-phone').value; 
 
-            if(!otp || otp.length !== 4) return showToast("Please enter the 4-digit code", "error");
+        if(!otp || otp.length !== 4) return showToast("Please enter the 4-digit code", "error");
 
-            showToast("Verifying code...", "success");
+        showToast("Verifying code...", "success");
 
-            const res = await fetch(`${API_URL}/login/step2`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                // FORCED stringification to ensure MongoDB matches it properly
-                body: JSON.stringify({ phone: phone.toString(), otp: otp.toString() }) 
-            });
-            const data = await res.json();
+        const res = await fetch(`${API_URL}/login/step2`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: phone.toString(), otp: otp.toString() }) 
+        });
+        const data = await res.json();
 
-            if(res.ok) {
-                // Save credentials to browser memory safely
-                localStorage.setItem('helpido_user', data.userId);
-                localStorage.setItem('helpido_phone', phone);
-                
-                showToast("Login Successful! Redirecting...", "success");
-                
-                // Adding a 1-second delay so the browser has time to save the memory before jumping pages
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 1000);
-                
-            } else {
-                showToast(data.message || "Invalid Code", "error");
-            }
-        } catch (err) {
-            // If it crashes now, the black toast will tell us EXACTLY that it's a network issue
-            showToast("Network Error: Could not reach backend", "error");
+        if(res.ok) {
+            // 1. Save to memory safely
+            localStorage.setItem('helpido_user', data.userId);
+            localStorage.setItem('helpido_phone', phone.toString()); // Forced to string
+            
+            showToast("Login Successful! Loading Dashboard...", "success");
+            
+            // 2. THE FIX: Use an absolute path (/dashboard.html) and assign()
+            setTimeout(() => {
+                window.location.assign('/dashboard.html'); 
+            }, 1000);
+            
+        } else {
+            showToast(data.message || "Invalid Code", "error");
         }
+    } catch (err) {
+        showToast("Network Error: Could not reach backend", "error");
     }
+}
+    
 </script>
 </body>
 </html>
