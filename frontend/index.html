@@ -43,36 +43,37 @@
 
     <div id="toast" class="toast"></div>
 
-    <script>
-        const API_URL = 'https://helpido.onrender.com/api';
-        let activePhone = ""; 
+   <script>
+    const API_URL = 'https://helpido.onrender.com/api';
+    let activePhone = ""; 
 
-        function showToast(message, type = "success") {
-            const toast = document.getElementById("toast");
-            toast.innerText = message;
-            toast.className = `toast show ${type}`;
-            setTimeout(() => { toast.className = "toast"; }, 5000);
-        }
+    function showToast(message, type = "success") {
+        const toast = document.getElementById("toast");
+        toast.innerText = message;
+        toast.className = `toast show ${type}`;
+        setTimeout(() => { toast.className = "toast"; }, 5000);
+    }
 
-        function switchMode(mode) {
-            document.getElementById('login-section').style.display = 'none';
-            document.getElementById('signup-section').style.display = 'none';
-            document.getElementById('otp-section').style.display = 'none';
+    function switchMode(mode) {
+        document.getElementById('login-section').style.display = 'none';
+        document.getElementById('signup-section').style.display = 'none';
+        document.getElementById('otp-section').style.display = 'none';
 
-            if (mode === 'login') document.getElementById('login-section').style.display = 'block';
-            if (mode === 'signup') document.getElementById('signup-section').style.display = 'block';
-            if (mode === 'otp') document.getElementById('otp-section').style.display = 'block';
-        }
+        if (mode === 'login') document.getElementById('login-section').style.display = 'block';
+        if (mode === 'signup') document.getElementById('signup-section').style.display = 'block';
+        if (mode === 'otp') document.getElementById('otp-section').style.display = 'block';
+    }
 
-        async function registerUser() {
+    async function registerUser() {
+        try {
             const name = document.getElementById('reg-name').value.trim();
             const address = document.getElementById('reg-address').value.trim();
             const phone = document.getElementById('reg-phone').value;
 
             if(!name || !address || !phone) return showToast("Please fill all fields", "error");
-            
-            // STRICT 10-DIGIT CHECK FOR SIGNUP
             if(phone.length !== 10) return showToast("Please enter a valid 10-digit number", "error");
+
+            showToast("Creating account...", "success");
 
             const res = await fetch(`${API_URL}/signup`, {
                 method: 'POST',
@@ -81,25 +82,30 @@
             });
             const data = await res.json();
             
-            showToast(data.message);
             if(res.ok) {
+                showToast(data.message, "success");
                 document.getElementById('login-phone').value = phone; 
                 document.getElementById('reg-name').value = '';
                 document.getElementById('reg-address').value = '';
                 document.getElementById('reg-phone').value = '';
                 switchMode('login'); 
+            } else {
+                showToast(data.message, "error");
             }
+        } catch (err) {
+            showToast("Network Error: Check internet/Render", "error");
         }
+    }
 
-        async function requestOTP() {
+    async function requestOTP() {
+        try {
             const phone = document.getElementById('login-phone').value;
             
             if(!phone) return showToast("Enter your mobile number", "error");
-
-            // STRICT 10-DIGIT CHECK FOR LOGIN
             if(phone.length !== 10) return showToast("Please enter a valid 10-digit number", "error");
 
-            showToast("Connecting...");
+            showToast("Connecting to server...", "success");
+            
             const res = await fetch(`${API_URL}/login/step1`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -114,29 +120,48 @@
             } else {
                 showToast(data.message, "error");
             }
+        } catch (err) {
+            showToast("Network Error: Server might be asleep", "error");
         }
+    }
 
-        async function verifyOTP() {
+    async function verifyOTP() {
+        try {
             const otp = document.getElementById('otp-input').value;
             const phone = activePhone || document.getElementById('login-phone').value; 
 
             if(!otp || otp.length !== 4) return showToast("Please enter the 4-digit code", "error");
 
+            showToast("Verifying code...", "success");
+
             const res = await fetch(`${API_URL}/login/step2`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone, otp })
+                // FORCED stringification to ensure MongoDB matches it properly
+                body: JSON.stringify({ phone: phone.toString(), otp: otp.toString() }) 
             });
             const data = await res.json();
 
             if(res.ok) {
+                // Save credentials to browser memory safely
                 localStorage.setItem('helpido_user', data.userId);
                 localStorage.setItem('helpido_phone', phone);
-                window.location.href = 'dashboard.html';
+                
+                showToast("Login Successful! Redirecting...", "success");
+                
+                // Adding a 1-second delay so the browser has time to save the memory before jumping pages
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1000);
+                
             } else {
-                showToast("Invalid Code", "error");
+                showToast(data.message || "Invalid Code", "error");
             }
+        } catch (err) {
+            // If it crashes now, the black toast will tell us EXACTLY that it's a network issue
+            showToast("Network Error: Could not reach backend", "error");
         }
-    </script>
+    }
+</script>
 </body>
 </html>
