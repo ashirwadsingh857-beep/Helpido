@@ -132,14 +132,32 @@ app.post("/api/verify-otp", async (req, res) => {
 /* ---------------- TASKS ROUTES ---------------- */
 
 // 1. Create a new help request
-app.post("/api/tasks", async (req, res) => {
-    const { title, description, reward, requesterPhone, location } = req.body;
+// Reference point: SIT Lonavala Campus Center
+const REF_LAT = 18.7394; 
+const REF_LNG = 73.4312;
+const MAX_RADIUS_KM = 3.0; // 3km radius
+
+app.post('/api/tasks', async (req, res) => {
+    const { title, description, postedBy, lat, lng, reward } = req.body;
+
+    // Convert coordinates to rough distance in KM
+    // (1 degree of lat is ~111km, 1 degree of lng is ~111km at the equator)
+    const latDiff = (lat - REF_LAT) * 111;
+    const lngDiff = (lng - REF_LNG) * 111;
+    const distance = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
+
+    if (distance > MAX_RADIUS_KM) {
+        return res.status(403).json({ 
+            message: `Too far! Helpido is only active within 3km of SIT Lonavala. (You are ${distance.toFixed(2)}km away)` 
+        });
+    }
+
     try {
-        const newTask = new Task({ title, description, reward, requesterPhone, location });
+        const newTask = new Task({ title, description, postedBy, lat, lng, reward });
         await newTask.save();
-        res.status(201).json({ message: "Task posted successfully!" });
+        res.status(201).json(newTask);
     } catch (err) {
-        res.status(500).json({ message: "Failed to post task" });
+        res.status(500).json({ message: "Error saving task" });
     }
 });
 
@@ -164,7 +182,7 @@ app.post("/api/tasks/accept", async (req, res) => {
         }
         
         // Prevent users from accepting their own tasks
-        if (task.requesterPhone === helperPhone) {
+        if (task.postedBy === helperPhone) {
             return res.status(400).json({ message: "You cannot accept your own request!" });
         }
 
@@ -184,7 +202,7 @@ app.get("/api/tasks/my-tasks", async (req, res) => {
 
     try {
         // Find tasks I asked for
-        const myRequests = await Task.find({ requesterPhone: phone }).sort({ createdAt: -1 });
+        const myRequests = await Task.find({ postedBy: phone }).sort({ createdAt: -1 });
         
         // Find tasks I agreed to help with
         const myJobs = await Task.find({ helperPhone: phone }).sort({ createdAt: -1 });
@@ -241,14 +259,18 @@ app.post("/api/tasks/prioritize", async (req, res) => {
 // 8. Get nearby tasks
 app.get('/api/tasks/nearby', async (req, res) => {
     const { lat, lng, radius } = req.query;
+    const userLat = parseFloat(lat);
+    const userLng = parseFloat(lng);
+    const radiusKm = parseFloat(radius);
+
+    // Approximate bounding box (rough calculation)
+    const latRange = radiusKm / 111; // 1 degree lat ~ 111km
+    const lngRange = radiusKm / (111 * Math.cos(userLat * Math.PI / 180)); // Adjust for longitude
+
     try {
         const tasks = await Task.find({
-            location: {
-                $near: {
-                    $geometry: { type: "Point", coordinates: [parseFloat(lng), parseFloat(lat)] },
-                    $maxDistance: radius * 1000 // Convert km to meters
-                }
-            },
+            lat: { $gte: userLat - latRange, $lte: userLat + latRange },
+            lng: { $gte: userLng - lngRange, $lte: userLng + lngRange },
             status: 'open'
         });
         res.json(tasks);
