@@ -16,9 +16,9 @@ mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("MongoDB Connected"))
     .catch((err) => console.error("Mongo Error:", err));
 
-/* --- 1. SIGNUP ROUTE (Name, Address, Phone) --- */
+/* ---------------- AUTH ROUTES ---------------- */
 app.post('/api/signup', async (req, res) => {
-    const { phone, name, address } = req.body; 
+    const { phone, name, address } = req.body;
     try {
         const newUser = new User({ phone, name, address });
         await newUser.save();
@@ -28,7 +28,6 @@ app.post('/api/signup', async (req, res) => {
     }
 });
 
-/* --- 2. LOGIN ROUTE (Phone Only) --- */
 app.post('/api/login/step1', async (req, res) => {
     const { phone } = req.body;
     try {
@@ -37,15 +36,12 @@ app.post('/api/login/step1', async (req, res) => {
 
         const otp = Math.floor(1000 + Math.random() * 9000).toString();
         await User.updateOne({ phone }, { $set: { otp } });
-
-        // DEVELOPER BYPASS: Send OTP back in the response
         res.json({ message: "OTP generated", otp }); 
     } catch (err) {
         res.status(500).json({ message: "Server error" });
     }
 });
 
-/* --- 3. VERIFY OTP --- */
 app.post('/api/login/step2', async (req, res) => {
     const { phone, otp } = req.body;
     try {
@@ -61,11 +57,9 @@ app.post('/api/login/step2', async (req, res) => {
     }
 });
 
-// ... (Keep all your existing Task routes below this) ...
-/* --- PROFILE ROUTE --- */
+/* ---------------- PROFILE ROUTE ---------------- */
 app.get('/api/users/:phone', async (req, res) => {
     try {
-        // Find user by phone, but don't send the OTP data back to the frontend
         const user = await User.findOne({ phone: req.params.phone }).select('-otp -otpExpiry');
         if (!user) return res.status(404).json({ message: "User not found" });
         res.json(user);
@@ -73,5 +67,66 @@ app.get('/api/users/:phone', async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 });
+
+/* ---------------- TASK ROUTES ---------------- */
+// 1. Post a task (Location Removed)
+app.post('/api/tasks', async (req, res) => {
+    const { title, description, postedBy, reward } = req.body; // lat and lng are gone
+    try {
+        const newTask = new Task({ title, description, postedBy, reward });
+        await newTask.save();
+        res.status(201).json(newTask);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to post task" });
+    }
+});
+
+// 2. Get all open tasks (Public Feed)
+app.get("/api/tasks", async (req, res) => {
+    try {
+        const tasks = await Task.find({ status: 'open' }).sort({ createdAt: -1 });
+        res.json(tasks);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to fetch tasks" });
+    }
+});
+
+// 3. Get my personal tasks
+app.get("/api/tasks/my-tasks", async (req, res) => {
+    const phone = req.query.phone;
+    try {
+        const myRequests = await Task.find({ postedBy: phone }).sort({ createdAt: -1 });
+        const myJobs = await Task.find({ helperPhone: phone }).sort({ createdAt: -1 });
+        res.json({ myRequests, myJobs });
+    } catch (err) {
+        res.status(500).json({ message: "Failed to fetch your tasks" });
+    }
+});
+
+// 4. Accept a task
+app.post("/api/tasks/accept", async (req, res) => {
+    const { taskId, helperPhone } = req.body;
+    try {
+        const task = await Task.findById(taskId);
+        if (task.postedBy === helperPhone) return res.status(400).json({ message: "Cannot accept your own task!" });
+        task.status = 'accepted';
+        task.helperPhone = helperPhone;
+        await task.save();
+        res.json({ message: "Task accepted!" });
+    } catch (err) {
+        res.status(500).json({ message: "Failed to accept task" });
+    }
+});
+
+// 5. Delete a task completely
+app.delete("/api/tasks/:id", async (req, res) => {
+    try {
+        await Task.findByIdAndDelete(req.params.id);
+        res.json({ message: "Task deleted" });
+    } catch (err) {
+        res.status(500).json({ message: "Failed to delete task" });
+    }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

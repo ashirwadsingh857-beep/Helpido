@@ -246,168 +246,105 @@
             }
         }
 
-        async function postHelpRequest() {
-            const title = document.getElementById('task-title').value;
-            const description = document.getElementById('task-desc').value;
-            const reward = document.getElementById('task-reward').value;
-            const userId = localStorage.getItem('helpido_user');
+        // --- LOCATION-FREE POST BUTTON ---
+async function postHelpRequest() {
+    const title = document.getElementById('task-title').value;
+    const description = document.getElementById('task-desc').value;
+    const reward = parseInt(document.getElementById('task-reward').value) || 0;
+    
+    const myPhone = localStorage.getItem('helpido_phone'); 
 
-            if (!title || !description || !reward) {
-                showToast("Fill all fields!");
-                return;
-            }
+    if (!title || !description) {
+        showToast("Please fill in all fields!", "error");
+        return;
+    }
 
-            try {
-                const res = await fetch(`${API_URL}/tasks`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        title, description, reward,
-                        postedBy: userId, // Standardized to ID
-                        lat: 0, lng: 0    // GPS bypassed for testing
-                    })
-                });
+    try {
+        const res = await fetch(`${API_URL}/tasks`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title, 
+                description, 
+                postedBy: myPhone, 
+                reward
+                // GPS data entirely removed from payload
+            })
+        });
 
-                if (res.ok) {
-                    showToast("Task Posted!");
-                    closeModal();
-                    loadTasks();
-                } else {
-                    showToast("Server error. Try again.");
-                }
-            } catch (err) {
-                showToast("Failed to connect to server");
-            }
-        }
-
-        async function acceptTask(taskId) {
-            try {
-                const res = await fetch(`${API_URL}/tasks/accept`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ taskId, helperPhone: myPhone })
-                });
-                
-                const data = await res.json();
-                showToast(data.message, res.ok ? "success" : "error");
-                if (res.ok) loadTasks(); // Refresh the feed to remove the accepted task
-            } catch (err) {
-                showToast("Server error", "error");
-            }
-        }
-
-        // Modal Controls
-        function openModal() { document.getElementById('create-modal').classList.remove('hidden'); }
-        function closeModal() { 
-            document.getElementById('create-modal').classList.add('hidden'); 
-            document.getElementById('task-title').value = '';
-            document.getElementById('task-desc').value = '';
-            document.getElementById('task-reward').value = '';
-        }
-
-        // Tab Switching Logic
-        function switchTab(tabName) {
-            // Hide everything
-            document.getElementById('home-view').classList.add('hidden');
-            document.getElementById('tasks-view').classList.add('hidden');
-            document.getElementById('profile-view').classList.add('hidden');
+        if (res.ok) {
+            showToast("Success! Task posted.");
+            closeModal(); 
+            loadTasks();  
             
-            // Remove active state
-            document.getElementById('nav-home').classList.remove('active');
-            document.getElementById('nav-tasks').classList.remove('active');
-            document.getElementById('nav-profile').classList.remove('active');
+            document.getElementById('task-title').value = "";
+            document.getElementById('task-desc').value = "";
+            document.getElementById('task-reward').value = "";
+        } else {
+            showToast("Server error. Try again.", "error");
+        }
+    } catch (err) {
+        showToast("Cannot connect to server.", "error");
+    }
+}
 
-            if (tabName === 'home') {
-                document.getElementById('home-view').classList.remove('hidden');
-                document.getElementById('nav-home').classList.add('active');
-                loadTasks();
-            } else if (tabName === 'tasks') {
-                document.getElementById('tasks-view').classList.remove('hidden');
-                document.getElementById('nav-tasks').classList.add('active');
-                loadMyTasks();
-            } else if (tabName === 'profile') {
-                document.getElementById('profile-view').classList.remove('hidden');
-                document.getElementById('nav-profile').classList.add('active');
-                loadProfile();
-            }
+// --- LOCATION-FREE FEED LOADING ---
+async function loadTasks() {
+    const feed = document.getElementById('task-feed');
+    const myOpenFeed = document.getElementById('my-open-feed');
+    const myOpenTitle = document.getElementById('my-open-title');
+
+    try {
+        // 1. Load Your Own Open Tasks
+        const myRes = await fetch(`${API_URL}/tasks/my-tasks?phone=${myPhone}`);
+        const myData = await myRes.json();
+        const myOpenTasks = myData.myRequests.filter(t => t.status === 'open');
+
+        if (myOpenTasks.length > 0) {
+            myOpenTitle.style.display = 'block';
+            myOpenFeed.innerHTML = myOpenTasks.map(task => `
+                <div class="task-card" style="border: 1px dashed var(--primary-color); background-color: #FFF3E0;">
+                    <div class="task-top">
+                        <h4>${task.title}</h4>
+                        <span class="reward-tag">₹${task.reward}</span>
+                    </div>
+                    <p class="task-desc">${task.description}</p>
+                    <div class="task-bottom">
+                        <span class="distance-tag" style="color: var(--primary-color); font-weight: 600;">⏳ Waiting for helper...</span>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            myOpenTitle.style.display = 'none';
+            myOpenFeed.innerHTML = '';
         }
 
-        // Fetch My Tasks
-        async function loadMyTasks() {
-            const reqFeed = document.getElementById('my-requests-feed');
-            const jobsFeed = document.getElementById('my-jobs-feed');
-            
-            reqFeed.innerHTML = '<p>Loading...</p>';
-            jobsFeed.innerHTML = '<p>Loading...</p>';
+        // 2. Load Public Feed
+        const publicRes = await fetch(`${API_URL}/tasks`);
+        const allTasks = await publicRes.json();
+        
+        const othersOpenTasks = allTasks.filter(t => t.postedBy !== myPhone);
 
-            try {
-                const res = await fetch(`${API_URL}/tasks/my-tasks?phone=${myPhone}`);
-                const data = await res.json();
-
-                // 1. Render Requests I Posted (Can be Deleted)
-                if (data.myRequests.length === 0) {
-                    reqFeed.innerHTML = `<p style="color:#757575; font-size: 0.9rem;">You haven't asked for help yet.</p>`;
-                } else {
-                    reqFeed.innerHTML = data.myRequests.map(task => `
-                        <div class="task-card" style="border-left: 4px solid #FF5722;">
-                            <div class="task-top">
-                                <div style="display:flex; align-items:center;">
-                                    <h4>${task.title}</h4>
-                                </div>
-                                <div>
-                                    <span class="reward-tag">₹${task.reward}</span>
-                                    <button class="menu-btn" onclick="toggleMenu('${task._id}')">⋮</button>
-                                </div>
-                            </div>
-                            <div id="menu-${task._id}" class="dropdown-menu">
-                                <button class="dropdown-item danger" onclick="deleteTask('${task._id}')">Delete Task</button>
-                            </div>
-
-                            <p class="task-desc">Status: <strong>${task.status.toUpperCase()}</strong></p>
-                            ${task.helperPhone ? `<p style="font-size:0.8rem; color:green;">Helper Found: ${task.helperPhone}</p>` : ''}
-                        </div>
-                    `).join('');
-                }
-
-                // 2. Render Tasks I'm Helping With (Can be Prioritized or Removed)
-                if (data.myJobs.length === 0) {
-                    jobsFeed.innerHTML = `<p style="color:#757575; font-size: 0.9rem;">You haven't accepted any tasks yet.</p>`;
-                } else {
-                    // Sort logic: Bring prioritized tasks to the top
-                    const sortedJobs = data.myJobs.sort((a, b) => {
-                        if (a.isPrioritized && !b.isPrioritized) return -1;
-                        if (!a.isPrioritized && b.isPrioritized) return 1;
-                        return 0;
-                    });
-
-                    jobsFeed.innerHTML = sortedJobs.map(task => `
-                        <div class="task-card" style="border-left: 4px solid #2E7D32; ${task.isPrioritized ? 'background-color: #FFFDE7;' : ''}">
-                            <div class="task-top">
-                                <div style="display:flex; align-items:center;">
-                                    <h4>${task.title}</h4>
-                                    ${task.isPrioritized ? '<span class="priority-badge">★ Priority</span>' : ''}
-                                </div>
-                                <div>
-                                    <span class="reward-tag">₹${task.reward}</span>
-                                    <button class="menu-btn" onclick="toggleMenu('${task._id}')">⋮</button>
-                                </div>
-                            </div>
-                            
-                            <div id="menu-${task._id}" class="dropdown-menu">
-                                <button class="dropdown-item" onclick="prioritizeTask('${task._id}')">
-                                    ${task.isPrioritized ? 'Remove Priority' : 'Prioritize Task'}
-                                </button>
-                                <button class="dropdown-item danger" onclick="removeTask('${task._id}')">Remove Task</button>
-                            </div>
-
-                            <p class="task-desc">Requester: ${task.postedBy}</p>
-                        </div>
-                    `).join('');
-                }
-            } catch (err) {
-                reqFeed.innerHTML = `<p style="color:red;">Error loading tasks.</p>`;
-            }
+        if (othersOpenTasks.length === 0) {
+            feed.innerHTML = `<p style="text-align:center; color:#757575; margin-top:40px;">No help requests available right now.</p>`;
+        } else {
+            feed.innerHTML = othersOpenTasks.map(task => `
+                <div class="task-card">
+                    <div class="task-top">
+                        <h4>${task.title}</h4>
+                        <span class="reward-tag">₹${task.reward}</span>
+                    </div>
+                    <p class="task-desc">${task.description}</p>
+                    <div class="task-bottom" style="justify-content: flex-end;">
+                        <button class="accept-btn" onclick="acceptTask('${task._id}')" style="width: 100%;">I can help</button>
+                    </div>
+                </div>
+            `).join('');
         }
+    } catch (err) {
+        feed.innerHTML = `<p style="text-align:center; color:red;">Failed to load tasks.</p>`;
+    }
+}
 
         // --- New Action Functions ---
 

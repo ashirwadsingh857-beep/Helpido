@@ -115,7 +115,7 @@ body {
 
 .btn:hover {
     background-color: var(--primary-hover);
-}
+
     margin-top: 10px;
     transition: background-color 0.2s ease;
 }
@@ -523,10 +523,11 @@ input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
-input[type="number"] {
-    -moz-appearance: textfield; /* For Firefox */
-}
 
+input[type="number"] {
+    -moz-appearance: textfield; /* Fallback for older Firefox */
+    appearance: textfield; /* Standard modern syntax (Fixes the editor error) */
+}
 /* --- Professional Logout Button --- */
 .logout-btn {
     background-color: #FFF0F0;
