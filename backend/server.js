@@ -69,9 +69,8 @@ app.get('/api/users/:phone', async (req, res) => {
 });
 
 /* ---------------- TASK ROUTES ---------------- */
-// 1. Post a task (Location Removed)
 app.post('/api/tasks', async (req, res) => {
-    const { title, description, postedBy, reward } = req.body; // lat and lng are gone
+    const { title, description, postedBy, reward } = req.body;
     try {
         const newTask = new Task({ title, description, postedBy, reward });
         await newTask.save();
@@ -81,7 +80,6 @@ app.post('/api/tasks', async (req, res) => {
     }
 });
 
-// 2. Get all open tasks (Public Feed)
 app.get("/api/tasks", async (req, res) => {
     try {
         const tasks = await Task.find({ status: 'open' }).sort({ createdAt: -1 });
@@ -91,7 +89,22 @@ app.get("/api/tasks", async (req, res) => {
     }
 });
 
-// 3. Get my personal tasks
+app.post("/api/tasks/accept", async (req, res) => {
+    const { taskId, helperPhone } = req.body;
+    try {
+        const task = await Task.findById(taskId);
+        if (task.postedBy === helperPhone) {
+            return res.status(400).json({ message: "Cannot accept your own task!" });
+        }
+        task.status = 'accepted'; 
+        task.helperPhone = helperPhone; 
+        await task.save();
+        res.json({ message: "Task accepted!" });
+    } catch (err) {
+        res.status(500).json({ message: "Error accepting task" });
+    }
+});
+
 app.get("/api/tasks/my-tasks", async (req, res) => {
     const phone = req.query.phone;
     try {
@@ -99,32 +112,42 @@ app.get("/api/tasks/my-tasks", async (req, res) => {
         const myJobs = await Task.find({ helperPhone: phone }).sort({ createdAt: -1 });
         res.json({ myRequests, myJobs });
     } catch (err) {
-        res.status(500).json({ message: "Failed to fetch your tasks" });
+        res.status(500).json({ message: "Error fetching your tasks" });
     }
 });
 
-// 4. Accept a task
-app.post("/api/tasks/accept", async (req, res) => {
-    const { taskId, helperPhone } = req.body;
-    try {
-        const task = await Task.findById(taskId);
-        if (task.postedBy === helperPhone) return res.status(400).json({ message: "Cannot accept your own task!" });
-        task.status = 'accepted';
-        task.helperPhone = helperPhone;
-        await task.save();
-        res.json({ message: "Task accepted!" });
-    } catch (err) {
-        res.status(500).json({ message: "Failed to accept task" });
-    }
-});
-
-// 5. Delete a task completely
 app.delete("/api/tasks/:id", async (req, res) => {
     try {
         await Task.findByIdAndDelete(req.params.id);
         res.json({ message: "Task deleted" });
     } catch (err) {
-        res.status(500).json({ message: "Failed to delete task" });
+        res.status(500).json({ message: "Error deleting task" });
+    }
+});
+
+app.post("/api/tasks/cancel", async (req, res) => {
+    const { taskId } = req.body;
+    try {
+        const task = await Task.findById(taskId);
+        task.status = 'open'; 
+        task.helperPhone = null; 
+        task.isPrioritized = false; 
+        await task.save();
+        res.json({ message: "Task returned to public feed" });
+    } catch (err) {
+        res.status(500).json({ message: "Error removing task" });
+    }
+});
+
+app.post("/api/tasks/prioritize", async (req, res) => {
+    const { taskId } = req.body;
+    try {
+        const task = await Task.findById(taskId);
+        task.isPrioritized = !task.isPrioritized; 
+        await task.save();
+        res.json({ message: "Priority updated" });
+    } catch (err) {
+        res.status(500).json({ message: "Error updating priority" });
     }
 });
 
