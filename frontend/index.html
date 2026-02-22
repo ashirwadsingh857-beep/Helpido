@@ -125,14 +125,14 @@
         }
     }
 
-    async function verifyOTP() {
+   async function verifyOTP() {
     try {
         const otp = document.getElementById('otp-input').value;
         const phone = activePhone || document.getElementById('login-phone').value; 
 
         if(!otp || otp.length !== 4) return showToast("Please enter the 4-digit code", "error");
 
-        showToast("Verifying code...", "success");
+        showToast("Verifying...", "success");
 
         const res = await fetch(`${API_URL}/login/step2`, {
             method: 'POST',
@@ -142,16 +142,16 @@
         const data = await res.json();
 
         if(res.ok) {
-            // 1. Save to memory safely
+            // 1. Force the save to memory
             localStorage.setItem('helpido_user', data.userId);
-            localStorage.setItem('helpido_phone', phone.toString()); // Forced to string
+            localStorage.setItem('helpido_phone', phone.toString());
             
-            showToast("Login Successful! Loading Dashboard...", "success");
+            showToast("Login Successful! Redirecting...", "success");
             
-            // 2. THE FIX: Use an absolute path (/dashboard.html) and assign()
+            // 2. The Fix: Wait half a second, then securely route to the dashboard
             setTimeout(() => {
-                window.location.assign('/dashboard.html'); 
-            }, 1000);
+                window.location.assign('dashboard.html'); 
+            }, 500);
             
         } else {
             showToast(data.message || "Invalid Code", "error");
@@ -160,7 +160,7 @@
         showToast("Network Error: Could not reach backend", "error");
     }
 }
-    
+
 </script>
 </body>
 </html>

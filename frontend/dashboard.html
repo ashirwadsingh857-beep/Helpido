@@ -44,9 +44,17 @@
     <div id="toast" class="toast"></div>
 
     <script>
-        const API_URL = 'https://helpido.onrender.com/api';
+    const API_URL = 'https://helpido.onrender.com/api';
+    const myPhone = localStorage.getItem('helpido_phone');
 
-        function showToast(message, type = "success") {
+    // THE FIX: Stricter, safer bounce check
+    if (!myPhone || myPhone === "undefined" || myPhone === "null") {
+        console.warn("Security check failed. Memory is empty.");
+        window.location.replace('index.html'); // replace() stops back-button loops
+    }
+
+    function showToast(message, type = 'success') {
+    // ... rest of your code
             const toast = document.getElementById("toast");
             toast.innerText = message;
             toast.className = `toast show ${type}`;

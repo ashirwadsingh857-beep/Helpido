@@ -152,4 +152,20 @@ app.post("/api/tasks/prioritize", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+/* ---------------- EXPLICIT FRONTEND ROUTING ---------------- */
+// This guarantees Render knows exactly where to find your files
+app.get('/dashboard.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/dashboard.html'));
+});
+
+app.get('/index.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/index.html'));
+});
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/index.html'));
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
