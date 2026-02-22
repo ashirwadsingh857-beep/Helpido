@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Helpido | Login</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -17,29 +16,31 @@
 
         <div class="auth-container"> 
             
-            <div id="signup-section" class="form-group">
-                <input type="text" id="reg-name" class="input-field" placeholder="Full Name">
-                <input type="tel" id="reg-phone-signup" class="input-field" placeholder="Phone Number">
-                <button class="btn" onclick="registerUser()">Sign Up</button>
+            <div id="login-section" class="form-group">
+                <input type="tel" id="login-phone" class="input-field" placeholder="Enter Mobile Number">
+                <button class="btn" onclick="requestOTP()">Get OTP</button>
                 <p class="toggle-text" style="margin-top:15px; color:#757575;">
-                    Already have an account? <span onclick="toggleAuthMode()" style="color:#FF5722; cursor:pointer; font-weight:600;">Login</span>
+                    New here? <span onclick="switchMode('signup')" style="color:#FF5722; cursor:pointer; font-weight:600;">Sign Up</span>
                 </p>
             </div>
 
-            <div id="login-section" class="form-group" style="display: none;">
-                <input type="tel" id="login-phone" class="input-field" placeholder="Phone Number">
-                <button class="btn" onclick="requestOTP()">Get OTP</button>
+            <div id="signup-section" class="form-group" style="display: none;">
+                <input type="text" id="reg-name" class="input-field" placeholder="Full Name">
+                <input type="text" id="reg-address" class="input-field" placeholder="Address (e.g., Datta Mandir)">
+                <input type="tel" id="reg-phone" class="input-field" placeholder="Mobile Number">
+                <button class="btn" onclick="registerUser()">Create Account</button>
                 <p class="toggle-text" style="margin-top:15px; color:#757575;">
-                    New here? <span onclick="toggleAuthMode()" style="color:#FF5722; cursor:pointer; font-weight:600;">Create Account</span>
+                    Already registered? <span onclick="switchMode('login')" style="color:#FF5722; cursor:pointer; font-weight:600;">Login</span>
                 </p>
             </div>
 
             <div id="otp-section" class="form-group" style="display: none;">
-                <p style="margin-bottom:10px; color:#757575;">Check the notification at the bottom for your code:</p>
-                <input type="number" id="otp-input" class="input-field" placeholder="Enter 4-digit code">
-                <button class="btn" onclick="verifyOTP()">Verify & Login</button>
-                <button class="text-btn" onclick="location.reload()" style="margin-top:10px; font-size:0.8rem;">Change Number</button>
+                <p style="margin-bottom:10px; color:#757575; font-size:0.9rem;">Check the popup for your 4-digit code.</p>
+                <input type="number" id="otp-input" class="input-field" placeholder="Enter OTP">
+                <button class="btn" onclick="verifyOTP()">Verify & Enter</button>
+                <button class="text-btn" onclick="switchMode('login')" style="margin-top:15px;">Change Number</button>
             </div>
+            
         </div>
     </main>
 
@@ -48,7 +49,6 @@
     <script>
         const API_URL = 'https://helpido.onrender.com/api';
 
-        // 1. TOAST LOGIC
         function showToast(message, type = "success") {
             const toast = document.getElementById("toast");
             toast.innerText = message;
@@ -56,41 +56,44 @@
             setTimeout(() => { toast.className = "toast"; }, 5000);
         }
 
-        // 2. TOGGLE UI MODES
-        function toggleAuthMode() {
-            const signup = document.getElementById('signup-section');
-            const login = document.getElementById('login-section');
-            if(signup.style.display === 'none') {
-                signup.style.display = 'block';
-                login.style.display = 'none';
-            } else {
-                signup.style.display = 'none';
-                login.style.display = 'block';
-            }
+        function switchMode(mode) {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('signup-section').style.display = 'none';
+            document.getElementById('otp-section').style.display = 'none';
+
+            if (mode === 'login') document.getElementById('login-section').style.display = 'block';
+            if (mode === 'signup') document.getElementById('signup-section').style.display = 'block';
+            if (mode === 'otp') document.getElementById('otp-section').style.display = 'block';
         }
 
-        // 3. SIGNUP LOGIC
         async function registerUser() {
             const name = document.getElementById('reg-name').value;
-            const phone = document.getElementById('reg-phone-signup').value;
-            if(!name || !phone) return showToast("Please fill all fields", "error");
+            const address = document.getElementById('reg-address').value;
+            const phone = document.getElementById('reg-phone').value;
+
+            if(!name || !address || !phone) return showToast("Please fill all fields", "error");
 
             const res = await fetch(`${API_URL}/signup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, phone })
+                body: JSON.stringify({ name, address, phone })
             });
             const data = await res.json();
+            
             showToast(data.message);
-            if(res.ok) toggleAuthMode();
+            if(res.ok) {
+                document.getElementById('reg-name').value = '';
+                document.getElementById('reg-address').value = '';
+                document.getElementById('reg-phone').value = '';
+                switchMode('login'); 
+            }
         }
 
-        // 4. REQUEST OTP (Developer Bypass)
         async function requestOTP() {
             const phone = document.getElementById('login-phone').value;
-            if(!phone) return showToast("Enter phone number", "error");
+            if(!phone) return showToast("Enter your mobile number", "error");
 
-            showToast("Connecting to database...");
+            showToast("Connecting...");
             const res = await fetch(`${API_URL}/login/step1`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -99,16 +102,13 @@
             const data = await res.json();
 
             if(res.ok) {
-                // THE CORE FIX: Show OTP in Toast and switch UI
-                showToast(`DEVELOPER OTP: ${data.otp}`, "success");
-                document.getElementById('login-section').style.display = 'none';
-                document.getElementById('otp-section').style.display = 'block';
+                showToast(`OTP: ${data.otp}`, "success");
+                switchMode('otp'); 
             } else {
                 showToast(data.message, "error");
             }
         }
 
-        // 5. VERIFY OTP
         async function verifyOTP() {
             const otp = document.getElementById('otp-input').value;
             const phone = document.getElementById('login-phone').value;
