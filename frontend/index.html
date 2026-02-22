@@ -125,7 +125,7 @@
         }
     }
 
-   async function verifyOTP() {
+  async function verifyOTP() {
     try {
         const otp = document.getElementById('otp-input').value;
         const phone = activePhone || document.getElementById('login-phone').value; 
@@ -142,16 +142,20 @@
         const data = await res.json();
 
         if(res.ok) {
-            // Save to memory
+            // 1. Save credentials
             localStorage.setItem('helpido_user', data.userId);
             localStorage.setItem('helpido_phone', phone.toString());
             
-            showToast("Login Successful! Loading Dashboard...", "success");
-            
-            // Wait 800ms to guarantee the phone saves the memory, then route
-            setTimeout(() => {
-                window.location.href = './dashboard.html'; 
-            }, 800);
+            // 2. STOP THE AUTO-REDIRECT. Create a physical button instead.
+            document.querySelector('.auth-container').innerHTML = `
+                <div style="text-align: center; padding: 30px 10px;">
+                    <h2 style="color: #2E7D32; margin-bottom: 15px;">✅ Verified!</h2>
+                    <p style="color: #757575; margin-bottom: 25px;">Memory saved successfully.</p>
+                    <a href="dashboard.html" style="background: #FF5722; color: white; padding: 14px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; display: block; width: 100%;">
+                        ENTER DASHBOARD
+                    </a>
+                </div>
+            `;
             
         } else {
             showToast(data.message || "Invalid Code", "error");
