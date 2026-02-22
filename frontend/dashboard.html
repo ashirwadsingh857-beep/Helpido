@@ -250,6 +250,7 @@
             
             const title = document.getElementById('task-title').value;
             const description = document.getElementById('task-desc').value;
+            const reward = parseInt(document.getElementById('task-reward').value) || 0;
             const userId = localStorage.getItem('helpido_user');
 
             if (!title || !description) {
@@ -266,7 +267,8 @@
                         description,
                         postedBy: userId,
                         lat: 0, // Radius check is disabled
-                        lng: 0
+                        lng: 0,
+                        reward
                     })
                 });
 
@@ -274,9 +276,11 @@
                     showToast("Success! Task posted.");
                     document.getElementById('task-title').value = "";
                     document.getElementById('task-desc').value = "";
+                    document.getElementById('task-reward').value = "";
                     loadTasks(); // Refresh the list
                 } else {
-                    showToast("Server error. Try again.");
+                    const errorData = await res.json();
+                    showToast(errorData.message || "Server error. Try again.");
                 }
             } catch (err) {
                 console.error(err);

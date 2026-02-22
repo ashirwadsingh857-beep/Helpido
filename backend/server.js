@@ -79,13 +79,14 @@ const REF_LNG = 73.4312;
 app.post('/api/tasks', async (req, res) => {
     const { title, description, postedBy, lat, lng, reward } = req.body;
 
-    // Simple math to check if within ~3km
-    const distance = Math.sqrt(Math.pow(lat - REF_LAT, 2) + Math.pow(lng - REF_LNG, 2));
-
-    if (distance > 0.03) { // 0.03 is roughly 3km in coordinates
-        return res.status(403).json({ 
-            message: "Helpido is only active within 3km of SIT Lonavala (Datta Mandir area)."
-        });
+    // Skip radius check if lat/lng are 0 (for testing or disabled mode)
+    if (lat !== 0 || lng !== 0) {
+        const distance = Math.sqrt(Math.pow(lat - REF_LAT, 2) + Math.pow(lng - REF_LNG, 2));
+        if (distance > 0.03) { // 0.03 is roughly 3km in coordinates
+            return res.status(403).json({ 
+                message: "Helpido is only active within 3km of SIT Lonavala (Datta Mandir area)."
+            });
+        }
     }
 
     try {
