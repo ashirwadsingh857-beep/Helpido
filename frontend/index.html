@@ -21,20 +21,23 @@
 
         <section id="login-section" class="form-section">
             <h2>Welcome Back</h2>
-            <form id="login-form" onsubmit="event.preventDefault();">
+            <div id="login-section">
                 <div class="input-group">
-                    <label for="login-mobile">Mobile Number</label>
-                    <input type="tel" id="login-mobile" placeholder="Enter 10-digit number" pattern="[0-9]{10}"
+                    <label for="login-phone">Mobile Number</label>
+                    <input type="tel" id="login-phone" placeholder="Enter 10-digit number" pattern="[0-9]{10}"
                         required>
                 </div>
+                <button onclick="requestOTP()" class="primary-btn">Get OTP</button>
+            </div>
 
-                <div class="input-group hidden" id="otp-group">
-                    <label for="login-otp">Enter OTP</label>
-                    <input type="text" id="login-otp" placeholder="4-digit code">
+            <div id="otp-section" style="display: none;">
+                <p>Enter the 4-digit code shown in the popup:</p>
+                <div class="input-group">
+                    <label for="otp-input">OTP Code</label>
+                    <input type="number" id="otp-input" placeholder="0000">
                 </div>
-
-                <button type="submit" class="primary-btn">Request OTP</button>
-            </form>
+                <button onclick="verifyOTP()" class="primary-btn">Verify & Login</button>
+            </div>
 
             <div class="toggle-container">
                 <p>Want to join the neighborhood?</p>
@@ -101,11 +104,13 @@
             document.getElementById('signup-section').classList.toggle('hidden');
             
             // Reset forms when switching
-            document.getElementById('login-form').reset();
+            document.getElementById('login-phone').value = '';
+            document.getElementById('otp-input').value = '';
             document.getElementById('signup-form').reset();
-            document.getElementById('otp-group').classList.add('hidden');
-            document.getElementById('login-mobile').readOnly = false;
-            document.querySelector('#login-form .primary-btn').textContent = 'Request OTP';
+            
+            // Reset OTP section visibility
+            document.getElementById('otp-section').style.display = 'none';
+            document.getElementById('login-section').style.display = 'block';
         }
 
         // Handle Signup Submission
@@ -134,70 +139,30 @@
             }
         });
 
-        async function requestOTP() {
+        async function verifyOTP() {
+            const otp = document.getElementById('otp-input').value;
             const phone = document.getElementById('login-phone').value;
+            
             try {
-                const res = await fetch(`${API_URL}/login/step1`, {
+                const res = await fetch(`${API_URL}/login/step2`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone })
+                    body: JSON.stringify({ phone, otp })
                 });
 
-                const data = await res.json();
                 if (res.ok) {
-                    // Instead of waiting for email, open WhatsApp with the OTP
-                    // We get the OTP from the response only for this "Developer Mode"
-                    const whatsappUrl = `https://wa.me/91${phone}?text=Your%20Helpido%20OTP%20is:%20${data.otp}`;
-                    window.open(whatsappUrl, '_blank');
-                    showToast("OTP generated! Check WhatsApp.");
+                    const data = await res.json();
+                    localStorage.setItem('helpido_user', data.userId);
+                    localStorage.setItem('helpido_phone', phone);
+                    window.location.href = 'dashboard.html';
                 } else {
-                    showToast(data.message, "error");
+                    const data = await res.json();
+                    alert(data.message || "Invalid OTP");
                 }
             } catch (err) {
-                showToast("Error connecting to server.", "error");
+                alert("Error connecting to server.");
             }
         }
-
-        // Handle Login (Request OTP & Verify OTP)
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const phoneInput = document.getElementById('login-mobile');
-            const otpInput = document.getElementById('login-otp');
-            const otpGroup = document.getElementById('otp-group');
-            const submitBtn = document.querySelector('#login-form .primary-btn');
-
-            if (otpGroup.classList.contains('hidden')) {
-                // STEP 1: Request OTP
-                await requestOTP();
-                currentPhone = phoneInput.value;
-                phoneInput.readOnly = true; 
-                otpGroup.classList.remove('hidden'); 
-                submitBtn.textContent = 'Verify OTP';
-
-            } else {
-                // STEP 2: Verify OTP
-                try {
-                    const res = await fetch(`${API_URL}/login/step2`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ phone: currentPhone, otp: otpInput.value })
-                    });
-
-                    if (res.ok) {
-                        const data = await res.json();
-                        localStorage.setItem('helpido_user', data.userId);
-                        localStorage.setItem('helpido_phone', currentPhone);
-                        window.location.href = 'dashboard.html'; // Finally go to the app!
-                    } else {
-                        const data = await res.json();
-                        showToast(data.message, "error");
-                    }
-                } catch (err) {
-                    console.error(err);
-                    showToast("Error connecting to server.", "error");
-                }
-            }
-        });
     </script>
 
     <script>
