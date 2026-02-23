@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Helpido | Login</title>
+    <title>Helpido | Dashboard</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -43,6 +43,17 @@
 
     <div id="toast" class="toast"></div>
 
+    <div id="post-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Post a Help Request</h3>
+            <input id="task-title" class="input-field" placeholder="Task Title" />
+            <textarea id="task-description" class="input-field" placeholder="Description" style="height: 80px;"></textarea>
+            <input id="task-reward" type="number" class="input-field" placeholder="Reward Amount" />
+            <button class="btn" onclick="postTask()">Post Request</button>
+            <button class="text-btn" onclick="hidePostModal()">Cancel</button>
+        </div>
+    </div>
+
     <script>
     const API_URL = 'https://helpido.onrender.com/api';
     const myPhone = localStorage.getItem('helpido_phone');
@@ -60,7 +71,7 @@
     window.onload = () => {
         // Instead of bouncing you, we check the memory and freeze the screen if it's broken
         if (!myPhone || myPhone === "undefined" || myPhone === "null") {
-            document.getElementById('task-feed').innerHTML = `
+            document.getElementById('auth-container').innerHTML = `
                 <div style="text-align: center; padding: 40px 20px;">
                     <h2 style="color: #D32F2F; margin-bottom: 10px;">⚠️ Memory Lost</h2>
                     <p style="color: #757575; margin-bottom: 20px;">Your phone's browser wiped the login data before the dashboard could load it.</p>
@@ -71,6 +82,25 @@
         }
 
         // If the memory IS working, load the app normally!
+        document.getElementById('auth-container').innerHTML = `
+            <div id="profile-section" style="margin-bottom: 20px; text-align: center;">
+                <h3>Welcome back!</h3>
+                <p id="profile-info">Loading...</p>
+            </div>
+            
+            <button class="btn" onclick="showPostModal()" style="margin-bottom: 20px;">Create Request</button>
+            
+            <div id="task-feed">
+                <h3>Open Tasks</h3>
+                <div id="tasks-list">Loading tasks...</div>
+            </div>
+            
+            <div id="my-tasks" style="margin-top: 30px;">
+                <h3>My Tasks</h3>
+                <div id="my-requests">Loading...</div>
+                <div id="my-jobs">Loading...</div>
+            </div>
+        `;
         loadProfile();
         loadTasks();
     };
@@ -157,6 +187,129 @@
                 showToast("Invalid Code", "error");
             }
         }
+
+    function loadProfile() {
+        fetch(`${API_URL}/users/${myPhone}`)
+            .then(res => res.json())
+            .then(user => {
+                document.getElementById('profile-info').innerText = `${user.name} - ${user.address}`;
+            })
+            .catch(err => showToast('Error loading profile', 'error'));
+    }
+
+    function loadTasks() {
+        fetch(`${API_URL}/tasks`)
+            .then(res => res.json())
+            .then(tasks => {
+                const list = document.getElementById('tasks-list');
+                list.innerHTML = tasks.map(task => `
+                    <div class="task-card">
+                        <h4>${task.title}</h4>
+                        <p>${task.description}</p>
+                        <p>Reward: ₹${task.reward}</p>
+                        <button class="btn" onclick="acceptTask('${task._id}')">Accept</button>
+                    </div>
+                `).join('');
+            })
+            .catch(err => showToast('Error loading tasks', 'error'));
+        
+        fetch(`${API_URL}/tasks/my-tasks?phone=${myPhone}`)
+            .then(res => res.json())
+            .then(data => {
+                const requests = document.getElementById('my-requests');
+                requests.innerHTML = data.myRequests.map(task => `
+                    <div class="task-card">
+                        <h4>${task.title}</h4>
+                        <p>Status: ${task.status}</p>
+                        <button class="text-btn" onclick="deleteTask('${task._id}')">Delete</button>
+                    </div>
+                `).join('');
+                
+                const jobs = document.getElementById('my-jobs');
+                jobs.innerHTML = data.myJobs.map(task => `
+                    <div class="task-card">
+                        <h4>${task.title}</h4>
+                        <p>Status: ${task.status}</p>
+                        <button class="text-btn" onclick="cancelTask('${task._id}')">Cancel</button>
+                    </div>
+                `).join('');
+            })
+            .catch(err => showToast('Error loading my tasks', 'error'));
+    }
+
+    function showPostModal() {
+        document.getElementById('post-modal').style.display = 'block';
+    }
+
+    function hidePostModal() {
+        document.getElementById('post-modal').style.display = 'none';
+        document.getElementById('task-title').value = '';
+        document.getElementById('task-description').value = '';
+        document.getElementById('task-reward').value = '';
+    }
+
+    function postTask() {
+        const title = document.getElementById('task-title').value.trim();
+        const description = document.getElementById('task-description').value.trim();
+        const reward = parseFloat(document.getElementById('task-reward').value);
+        const userId = localStorage.getItem('helpido_user');
+        
+        if (!title || !description || !reward) return showToast('Fill all fields', 'error');
+        
+        fetch(`${API_URL}/tasks`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, description, postedBy: userId, reward })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (res.ok) {
+                showToast('Task posted!', 'success');
+                hidePostModal();
+                loadTasks();
+            } else {
+                showToast(data.message || 'Error posting task', 'error');
+            }
+        })
+        .catch(err => showToast('Error posting task', 'error'));
+    }
+
+    function acceptTask(taskId) {
+        fetch(`${API_URL}/tasks/accept`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ taskId, helperPhone: myPhone })
+        })
+        .then(res => res.json())
+        .then(data => {
+            showToast(data.message, res.ok ? 'success' : 'error');
+            if (res.ok) loadTasks();
+        })
+        .catch(err => showToast('Error accepting task', 'error'));
+    }
+
+    function deleteTask(taskId) {
+        fetch(`${API_URL}/tasks/${taskId}`, { method: 'DELETE' })
+        .then(res => {
+            showToast(res.ok ? 'Task deleted' : 'Error deleting task', res.ok ? 'success' : 'error');
+            if (res.ok) loadTasks();
+        })
+        .catch(err => showToast('Error deleting task', 'error'));
+    }
+
+    function cancelTask(taskId) {
+        fetch(`${API_URL}/tasks/cancel`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ taskId })
+        })
+        .then(res => res.json())
+        .then(data => {
+            showToast(data.message, res.ok ? 'success' : 'error');
+            if (res.ok) loadTasks();
+        })
+        .catch(err => showToast('Error canceling task', 'error'));
+    }
     </script>
 </body>
 </html>
