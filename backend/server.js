@@ -160,6 +160,7 @@ app.post("/api/tasks/prioritize", async (req, res) => {
 // --- IRONCLAD FRONTEND ROUTING ---
 // 1. Tell Express where the frontend folder is
 const frontendPath = path.join(__dirname, '../frontend');
+app.use(express.static(frontendPath));
 
 // 2. Explicitly serve the Dashboard
 app.get('/dashboard.html', (req, res) => {
@@ -172,7 +173,7 @@ app.get('/', (req, res) => {
 });
 
 // 4. Catch-All: If anyone types a weird URL, send them to login
-app.get('/*', (req, res) => {
+app.get('*', (req, res) => {
     res.sendFile(path.join(frontendPath, 'index.html'));
 });
 

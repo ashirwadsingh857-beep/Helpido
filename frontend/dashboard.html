@@ -7,309 +7,250 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <main class="app-container">
-        <header class="header">
-            <h1>Helpido</h1>
-            <p>Neighborly help for SIT Lonavala.</p>
-        </header>
-
-        <div class="auth-container"> 
-            <div id="login-section" class="form-group">
-                <input type="tel" id="login-phone" class="input-field" placeholder="Enter Mobile Number">
-                <button class="btn" onclick="requestOTP()">Get OTP</button>
-                <p class="toggle-text" style="margin-top:15px; color:#757575;">
-                    New here? <span onclick="switchMode('signup')" style="color:#FF5722; cursor:pointer; font-weight:600;">Sign Up</span>
-                </p>
+    <main class="app-container dashboard-layout">
+        <section id="home-view" class="feed-section">
+            <header class="dash-header" style="margin-left: -24px; margin-right: -24px; margin-bottom: 20px;">
+                <div class="user-greeting">
+                    <h2 id="greeting-name">Hi, Neighbor 👋</h2>
+                    <p id="home-address">📍 Local Area</p>
+                </div>
+            </header>
+            <h3 class="section-title">Help Needed Nearby</h3>
+            <div id="task-feed">
+                <p style="text-align: center; color: #757575; margin-top: 40px;">Loading tasks...</p>
             </div>
+        </section>
 
-            <div id="signup-section" class="form-group" style="display: none;">
-                <input type="text" id="reg-name" class="input-field" placeholder="Full Name">
-                <input type="text" id="reg-address" class="input-field" placeholder="Address (e.g., Datta Mandir)">
-                <input type="tel" id="reg-phone" class="input-field" placeholder="Mobile Number">
-                <button class="btn" onclick="registerUser()">Create Account</button>
-                <p class="toggle-text" style="margin-top:15px; color:#757575;">
-                    Already registered? <span onclick="switchMode('login')" style="color:#FF5722; cursor:pointer; font-weight:600;">Login</span>
-                </p>
+        <section id="tasks-view" class="feed-section hidden">
+            <header class="dash-header" style="margin-left: -24px; margin-right: -24px; margin-bottom: 24px;">
+                <div class="user-greeting">
+                    <h2>My Activity 📋</h2>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">Track requests and tasks you accepted.</p>
+                </div>
+            </header>
+            <h3 class="section-title">My Uploaded Requests</h3>
+            <div id="my-requests-feed" style="margin-bottom: 30px;"></div>
+            <h3 class="section-title">Tasks I Accepted</h3>
+            <div id="my-jobs-feed" style="margin-bottom: 40px;"></div>
+        </section>
+
+        <section id="profile-view" class="feed-section hidden">
+            <h3 class="section-title">My Profile</h3>
+            <div class="task-card" style="text-align: center; padding: 30px 20px;">
+                <div style="font-size: 3.5rem; margin-bottom: 10px;">👤</div>
+                <h2 id="profile-name" style="margin-bottom: 5px; color: var(--text-dark);">Loading...</h2>
+                <p id="profile-phone" style="color: var(--text-muted); margin-bottom: 20px;">...</p>
+                <div style="background-color: var(--bg-light); padding: 16px; border-radius: 8px; text-align: left; margin-bottom: 24px;">
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">Home Address</p>
+                    <p id="profile-address" style="color: var(--text-dark); line-height: 1.4;">...</p>
+                </div>
+                <button class="logout-btn" onclick="logout()">Log Out</button>
             </div>
+        </section>
 
-            <div id="otp-section" class="form-group" style="display: none;">
-                <p style="margin-bottom:10px; color:#757575; font-size:0.9rem;">Check the popup for your 4-digit code.</p>
-                <input type="number" id="otp-input" class="input-field" placeholder="Enter OTP">
-                <button class="btn" onclick="verifyOTP()">Verify & Enter</button>
-                <button class="text-btn" onclick="switchMode('login')" style="margin-top:15px;">Change Number</button>
+        <button class="fab-btn" onclick="openModal()">+</button>
+
+        <div id="create-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <h3 style="margin-bottom: 16px; color: var(--text-dark);">Ask for Help</h3>
+                <input type="text" id="task-title" placeholder="What do you need? (e.g. Move furniture)" required>
+                <textarea id="task-desc" rows="3" placeholder="Provide some details..." required></textarea>
+                <input type="number" id="task-reward" placeholder="Reward amount (₹)" required>
+                <div class="modal-actions" style="display: flex; justify-content: space-between; margin-top: 10px;">
+                    <button class="text-btn" onclick="closeModal()" style="color: #757575;">Cancel</button>
+                    <button class="btn" onclick="postHelpRequest()" style="width: auto; padding: 10px 20px;">Post Request</button>
+                </div>
             </div>
         </div>
+
+        <nav class="bottom-nav">
+            <div class="nav-item active" id="nav-home" onclick="switchTab('home')">
+                <span>🏠</span><p>Home</p>
+            </div>
+            <div class="nav-item" id="nav-tasks" onclick="switchTab('tasks')">
+                <span>📋</span><p>Tasks</p>
+            </div>
+            <div class="nav-item" id="nav-profile" onclick="switchTab('profile')">
+                <span>👤</span><p>Profile</p>
+            </div>
+        </nav>
     </main>
 
     <div id="toast" class="toast"></div>
 
-    <div id="post-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <h3>Post a Help Request</h3>
-            <input id="task-title" class="input-field" placeholder="Task Title" />
-            <textarea id="task-description" class="input-field" placeholder="Description" style="height: 80px;"></textarea>
-            <input id="task-reward" type="number" class="input-field" placeholder="Reward Amount" />
-            <button class="btn" onclick="postTask()">Post Request</button>
-            <button class="text-btn" onclick="hidePostModal()">Cancel</button>
-        </div>
-    </div>
-
     <script>
-    const API_URL = 'https://helpido.onrender.com/api';
-    const myPhone = localStorage.getItem('helpido_phone');
+        const API_URL = 'https://helpido.onrender.com/api';
+        const myPhone = localStorage.getItem('helpido_phone');
 
-    // --- WE DELETED THE BOUNCE CODE ---
-    // The app is no longer allowed to automatically kick you out.
-
-    function showToast(message, type = 'success') {
-        const toast = document.getElementById("toast");
-        toast.innerText = message;
-        toast.className = `toast show ${type}`;
-        setTimeout(() => { toast.className = "toast"; }, 3000);
-    }
-
-    window.onload = () => {
-        // Instead of bouncing you, we check the memory and freeze the screen if it's broken
         if (!myPhone || myPhone === "undefined" || myPhone === "null") {
-            document.getElementById('auth-container').innerHTML = `
-                <div style="text-align: center; padding: 40px 20px;">
+            document.body.innerHTML = `
+                <div style="text-align: center; padding: 40px 20px; font-family: sans-serif;">
                     <h2 style="color: #D32F2F; margin-bottom: 10px;">⚠️ Memory Lost</h2>
-                    <p style="color: #757575; margin-bottom: 20px;">Your phone's browser wiped the login data before the dashboard could load it.</p>
-                    <a href="index.html" style="background: var(--primary-color); color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold;">Tap here to return</a>
+                    <p style="color: #757575; margin-bottom: 20px;">Your browser wiped the login data.</p>
+                    <a href="index.html" style="background: #FF5722; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold;">Return to Login</a>
                 </div>
             `;
-            return; // Stops the rest of the dashboard from loading empty data
         }
 
-        // If the memory IS working, load the app normally!
-        document.getElementById('auth-container').innerHTML = `
-            <div id="profile-section" style="margin-bottom: 20px; text-align: center;">
-                <h3>Welcome back!</h3>
-                <p id="profile-info">Loading...</p>
-            </div>
-            
-            <button class="btn" onclick="showPostModal()" style="margin-bottom: 20px;">Create Request</button>
-            
-            <div id="task-feed">
-                <h3>Open Tasks</h3>
-                <div id="tasks-list">Loading tasks...</div>
-            </div>
-            
-            <div id="my-tasks" style="margin-top: 30px;">
-                <h3>My Tasks</h3>
-                <div id="my-requests">Loading...</div>
-                <div id="my-jobs">Loading...</div>
-            </div>
-        `;
-        loadProfile();
-        loadTasks();
-    };
-
-    // ... (Keep all your other functions like loadTasks, acceptTask, etc. below this)
-
-    function showToast(message, type = 'success') {
-    // ... rest of your code
+        function showToast(message, type = 'success') {
             const toast = document.getElementById("toast");
             toast.innerText = message;
             toast.className = `toast show ${type}`;
-            setTimeout(() => { toast.className = "toast"; }, 5000);
+            setTimeout(() => { toast.className = "toast"; }, 3000);
         }
 
-        function switchMode(mode) {
-            document.getElementById('login-section').style.display = 'none';
-            document.getElementById('signup-section').style.display = 'none';
-            document.getElementById('otp-section').style.display = 'none';
-
-            if (mode === 'login') document.getElementById('login-section').style.display = 'block';
-            if (mode === 'signup') document.getElementById('signup-section').style.display = 'block';
-            if (mode === 'otp') document.getElementById('otp-section').style.display = 'block';
-        }
-
-        async function registerUser() {
-            const name = document.getElementById('reg-name').value;
-            const address = document.getElementById('reg-address').value;
-            const phone = document.getElementById('reg-phone').value;
-
-            if(!name || !address || !phone) return showToast("Please fill all fields", "error");
-
-            const res = await fetch(`${API_URL}/signup`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, address, phone })
-            });
-            const data = await res.json();
-            
-            showToast(data.message);
-            if(res.ok) {
-                document.getElementById('reg-name').value = '';
-                document.getElementById('reg-address').value = '';
-                document.getElementById('reg-phone').value = '';
-                switchMode('login'); 
-            }
-        }
-
-        async function requestOTP() {
-            const phone = document.getElementById('login-phone').value;
-            if(!phone) return showToast("Enter your mobile number", "error");
-
-            showToast("Connecting...");
-            const res = await fetch(`${API_URL}/login/step1`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone })
-            });
-            const data = await res.json();
-
-            if(res.ok) {
-                showToast(`OTP: ${data.otp}`, "success");
-                switchMode('otp'); 
-            } else {
-                showToast(data.message, "error");
-            }
-        }
-
-        async function verifyOTP() {
-            const otp = document.getElementById('otp-input').value;
-            const phone = document.getElementById('login-phone').value;
-
-            const res = await fetch(`${API_URL}/login/step2`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone, otp })
-            });
-            const data = await res.json();
-
-            if(res.ok) {
-                localStorage.setItem('helpido_user', data.userId);
-                localStorage.setItem('helpido_phone', phone);
-                window.location.href = 'dashboard.html';
-            } else {
-                showToast("Invalid Code", "error");
-            }
-        }
-
-    function loadProfile() {
-        fetch(`${API_URL}/users/${myPhone}`)
-            .then(res => res.json())
-            .then(user => {
-                document.getElementById('profile-info').innerText = `${user.name} - ${user.address}`;
-            })
-            .catch(err => showToast('Error loading profile', 'error'));
-    }
-
-    function loadTasks() {
-        fetch(`${API_URL}/tasks`)
-            .then(res => res.json())
-            .then(tasks => {
-                const list = document.getElementById('tasks-list');
-                list.innerHTML = tasks.map(task => `
-                    <div class="task-card">
-                        <h4>${task.title}</h4>
-                        <p>${task.description}</p>
-                        <p>Reward: ₹${task.reward}</p>
-                        <button class="btn" onclick="acceptTask('${task._id}')">Accept</button>
-                    </div>
-                `).join('');
-            })
-            .catch(err => showToast('Error loading tasks', 'error'));
-        
-        fetch(`${API_URL}/tasks/my-tasks?phone=${myPhone}`)
-            .then(res => res.json())
-            .then(data => {
-                const requests = document.getElementById('my-requests');
-                requests.innerHTML = data.myRequests.map(task => `
-                    <div class="task-card">
-                        <h4>${task.title}</h4>
-                        <p>Status: ${task.status}</p>
-                        <button class="text-btn" onclick="deleteTask('${task._id}')">Delete</button>
-                    </div>
-                `).join('');
-                
-                const jobs = document.getElementById('my-jobs');
-                jobs.innerHTML = data.myJobs.map(task => `
-                    <div class="task-card">
-                        <h4>${task.title}</h4>
-                        <p>Status: ${task.status}</p>
-                        <button class="text-btn" onclick="cancelTask('${task._id}')">Cancel</button>
-                    </div>
-                `).join('');
-            })
-            .catch(err => showToast('Error loading my tasks', 'error'));
-    }
-
-    function showPostModal() {
-        document.getElementById('post-modal').style.display = 'block';
-    }
-
-    function hidePostModal() {
-        document.getElementById('post-modal').style.display = 'none';
-        document.getElementById('task-title').value = '';
-        document.getElementById('task-description').value = '';
-        document.getElementById('task-reward').value = '';
-    }
-
-    function postTask() {
-        const title = document.getElementById('task-title').value.trim();
-        const description = document.getElementById('task-description').value.trim();
-        const reward = parseFloat(document.getElementById('task-reward').value);
-        const userId = localStorage.getItem('helpido_user');
-        
-        if (!title || !description || !reward) return showToast('Fill all fields', 'error');
-        
-        fetch(`${API_URL}/tasks`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, description, postedBy: userId, reward })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (res.ok) {
-                showToast('Task posted!', 'success');
-                hidePostModal();
+        window.onload = () => {
+            if(myPhone) {
+                loadProfile();
                 loadTasks();
-            } else {
-                showToast(data.message || 'Error posting task', 'error');
             }
-        })
-        .catch(err => showToast('Error posting task', 'error'));
-    }
+        };
 
-    function acceptTask(taskId) {
-        fetch(`${API_URL}/tasks/accept`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ taskId, helperPhone: myPhone })
-        })
-        .then(res => res.json())
-        .then(data => {
-            showToast(data.message, res.ok ? 'success' : 'error');
-            if (res.ok) loadTasks();
-        })
-        .catch(err => showToast('Error accepting task', 'error'));
-    }
+        async function loadProfile() {
+            try {
+                const res = await fetch(`${API_URL}/users/${myPhone}`);
+                if (res.ok) {
+                    const user = await res.json();
+                    document.getElementById('profile-name').innerText = user.name;
+                    document.getElementById('profile-phone').innerText = "+91 " + user.phone;
+                    document.getElementById('profile-address').innerText = user.address;
+                    document.getElementById('greeting-name').innerText = `Hi, ${user.name.split(' ')[0]} 👋`;
+                    document.getElementById('home-address').innerText = `📍 ${user.address}`;
+                }
+            } catch (err) { console.error("Profile load failed"); }
+        }
 
-    function deleteTask(taskId) {
-        fetch(`${API_URL}/tasks/${taskId}`, { method: 'DELETE' })
-        .then(res => {
-            showToast(res.ok ? 'Task deleted' : 'Error deleting task', res.ok ? 'success' : 'error');
-            if (res.ok) loadTasks();
-        })
-        .catch(err => showToast('Error deleting task', 'error'));
-    }
+        async function loadTasks() {
+            const feed = document.getElementById('task-feed');
+            try {
+                const res = await fetch(`${API_URL}/tasks`);
+                const allTasks = await res.json();
+                const publicTasks = allTasks.filter(t => t.postedBy !== myPhone);
 
-    function cancelTask(taskId) {
-        fetch(`${API_URL}/tasks/cancel`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ taskId })
-        })
-        .then(res => res.json())
-        .then(data => {
-            showToast(data.message, res.ok ? 'success' : 'error');
-            if (res.ok) loadTasks();
-        })
-        .catch(err => showToast('Error canceling task', 'error'));
-    }
+                if (publicTasks.length === 0) {
+                    feed.innerHTML = `<p style="text-align:center; color:#757575; padding-top:40px;">No tasks available right now.</p>`;
+                } else {
+                    feed.innerHTML = publicTasks.map(task => `
+                        <div class="task-card">
+                            <div class="task-top">
+                                <h4>${task.title}</h4>
+                                <span class="reward-tag">₹${task.reward}</span>
+                            </div>
+                            <p class="task-desc">${task.description}</p>
+                            <div class="task-bottom" style="justify-content: flex-end;">
+                                <button class="accept-btn" onclick="acceptTask('${task._id}')" style="width: 100%;">I can do it</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) {
+                feed.innerHTML = `<p style="text-align:center; color:red;">Failed to load tasks.</p>`;
+            }
+        }
+
+        async function loadMyTasks() {
+            const reqFeed = document.getElementById('my-requests-feed');
+            const jobsFeed = document.getElementById('my-jobs-feed');
+            try {
+                const res = await fetch(`${API_URL}/tasks/my-tasks?phone=${myPhone}`);
+                const data = await res.json();
+
+                reqFeed.innerHTML = data.myRequests.length === 0 
+                    ? `<p style="color:#757575; font-size: 0.9rem;">You haven't uploaded any tasks.</p>`
+                    : data.myRequests.map(task => `
+                        <div class="task-card" style="border-left: 4px solid #FF5722;">
+                            <h4>${task.title} <span style="font-size:0.8rem; color:gray;">(₹${task.reward})</span></h4>
+                            <p class="task-desc" style="margin-bottom: 8px;">Status: <strong>${task.status.toUpperCase()}</strong></p>
+                            <button onclick="deleteMyTask('${task._id}')" style="background: #FFF0F0; color: #D32F2F; border: none; padding: 8px; border-radius: 6px; width: 100%; font-weight:bold; cursor:pointer;">Delete Uploaded Task</button>
+                        </div>
+                    `).join('');
+
+                const sortedJobs = data.myJobs.sort((a, b) => (b.isPrioritized === true) - (a.isPrioritized === true));
+                jobsFeed.innerHTML = sortedJobs.length === 0 
+                    ? `<p style="color:#757575; font-size: 0.9rem;">You haven't accepted any tasks.</p>`
+                    : sortedJobs.map(task => `
+                        <div class="task-card" style="border-left: 4px solid #2E7D32; ${task.isPrioritized ? 'background-color: #FFFDE7;' : ''}">
+                            <h4>${task.title} ${task.isPrioritized ? '<span style="color:#F57F17; font-size:0.8rem;">★ Top Priority</span>' : ''}</h4>
+                            <p class="task-desc" style="margin-bottom: 12px;">Contact: ${task.postedBy}</p>
+                            <div style="display: flex; gap: 10px;">
+                                <button onclick="prioritizeJob('${task._id}')" style="flex: 1; background: #FFF3E0; color: #E64A19; border: none; padding: 8px; border-radius: 6px; font-weight:bold; cursor:pointer;">${task.isPrioritized ? 'Un-Prioritize' : 'Prioritize'}</button>
+                                <button onclick="removeJob('${task._id}')" style="flex: 1; background: #F5F5F5; color: #757575; border: none; padding: 8px; border-radius: 6px; font-weight:bold; cursor:pointer;">Remove</button>
+                            </div>
+                        </div>
+                    `).join('');
+            } catch (err) {
+                reqFeed.innerHTML = `<p style="color:red;">Error loading tasks.</p>`;
+            }
+        }
+
+        async function acceptTask(taskId) {
+            const res = await fetch(`${API_URL}/tasks/accept`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ taskId, helperPhone: myPhone })
+            });
+            if (res.ok) { showToast("Task Accepted!"); loadTasks(); }
+        }
+
+        async function deleteMyTask(taskId) {
+            await fetch(`${API_URL}/tasks/${taskId}`, { method: 'DELETE' });
+            showToast("Task Deleted"); loadMyTasks();
+        }
+
+        async function removeJob(taskId) {
+            await fetch(`${API_URL}/tasks/cancel`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId })
+            });
+            showToast("Task removed"); loadMyTasks();
+        }
+
+        async function prioritizeJob(taskId) {
+            await fetch(`${API_URL}/tasks/prioritize`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId })
+            });
+            loadMyTasks();
+        }
+
+        async function postHelpRequest() {
+            const title = document.getElementById('task-title').value;
+            const description = document.getElementById('task-desc').value;
+            const reward = parseInt(document.getElementById('task-reward').value) || 0;
+            if (!title || !description) return showToast("Please fill all fields!", "error");
+
+            const res = await fetch(`${API_URL}/tasks`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, description, postedBy: myPhone, reward })
+            });
+            if (res.ok) {
+                showToast("Task posted!"); closeModal(); loadTasks();
+                document.getElementById('task-title').value = "";
+                document.getElementById('task-desc').value = "";
+                document.getElementById('task-reward').value = "";
+            }
+        }
+
+        function switchTab(tabName) {
+            document.getElementById('home-view').classList.add('hidden');
+            document.getElementById('tasks-view').classList.add('hidden');
+            document.getElementById('profile-view').classList.add('hidden');
+            document.getElementById('nav-home').classList.remove('active');
+            document.getElementById('nav-tasks').classList.remove('active');
+            document.getElementById('nav-profile').classList.remove('active');
+
+            document.getElementById(`${tabName}-view`).classList.remove('hidden');
+            document.getElementById(`nav-${tabName}`).classList.add('active');
+
+            if (tabName === 'home') loadTasks();
+            if (tabName === 'tasks') loadMyTasks();
+            if (tabName === 'profile') loadProfile();
+        }
+
+        function openModal() { document.getElementById('create-modal').classList.remove('hidden'); }
+        function closeModal() { document.getElementById('create-modal').classList.add('hidden'); }
+        
+        function logout() {
+            localStorage.removeItem('helpido_phone'); 
+            window.location.href = 'index.html';      
+        }
     </script>
 </body>
 </html>

@@ -563,3 +563,177 @@ input[type="number"] {
 .modal-content textarea {
     resize: none; /* Stops users from dragging the text box out of shape */
 }
+
+/* Dashboard Layout */
+.dashboard-layout {
+    padding-bottom: 80px; /* Space for bottom nav */
+}
+
+.feed-section {
+    padding: 0 24px;
+}
+
+.dash-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+    color: white;
+    padding: 24px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+}
+
+.user-greeting h2 {
+    margin-bottom: 4px;
+    font-size: 1.5rem;
+}
+
+.section-title {
+    color: var(--text-dark);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+/* FAB Button */
+.fab-btn {
+    position: fixed;
+    bottom: 100px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 2rem;
+    box-shadow: 0 4px 12px rgba(255, 87, 34, 0.3);
+    cursor: pointer;
+    z-index: 1000;
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.modal-content {
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-actions {
+    margin-top: 16px;
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid #E0E0E0;
+    display: flex;
+    justify-content: space-around;
+    padding: 12px 0;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.nav-item.active {
+    background: rgba(255, 87, 34, 0.1);
+    color: var(--primary-color);
+}
+
+.nav-item span {
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+}
+
+.nav-item p {
+    font-size: 0.75rem;
+    margin: 0;
+    color: var(--text-muted);
+}
+
+.nav-item.active p {
+    color: var(--primary-color);
+}
+
+/* Task Cards */
+.task-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.reward-tag {
+    background: var(--primary-color);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.task-desc {
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin-bottom: 12px;
+}
+
+.task-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.accept-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Logout Button */
+.logout-btn {
+    background: #D32F2F;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+}
+
+/* Hidden Class */
+.hidden {
+    display: none !important;
+}
