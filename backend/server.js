@@ -18,7 +18,18 @@ app.use(cors());
 app.use(express.static(path.join(__dirname, '../frontend')));
 
 mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log("MongoDB Connected"))
+    .then(async () => {
+        console.log("MongoDB Connected");
+        
+        // --- THE GHOST INDEX FIX ---
+        // This forces MongoDB to delete that old hidden email rule so you can sign up!
+        try {
+            await mongoose.connection.collection('users').dropIndex('email_1');
+            console.log("Ghost email index successfully deleted!");
+        } catch (error) {
+            // It will silently ignore this if the index is already gone
+        }
+    })
     .catch((err) => console.error("Mongo Error:", err));
 
 /* ---------------- AUTH ROUTES ---------------- */
