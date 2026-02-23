@@ -25,11 +25,21 @@ mongoose.connect(process.env.MONGO_URI)
 app.post('/api/signup', async (req, res) => {
     const { phone, name, address } = req.body;
     try {
+        // 1. Manually check if the phone number is ACTUALLY in the database
+        const existingUser = await User.findOne({ phone });
+        if (existingUser) {
+            return res.status(400).json({ message: "Phone number is already registered!" });
+        }
+
+        // 2. If it's not there, create the new account
         const newUser = new User({ phone, name, address });
         await newUser.save();
         res.status(201).json({ message: "Account created! You can now login." });
+        
     } catch (err) {
-        res.status(400).json({ message: "Phone number already registered." });
+        // 3. If MongoDB crashes for ANY OTHER reason, print the REAL error to the screen
+        console.error("Database Error:", err);
+        res.status(400).json({ message: `DB Error: ${err.message}` });
     }
 });
 
