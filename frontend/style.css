@@ -737,3 +737,74 @@ input[type="number"] {
 .hidden {
     display: none !important;
 }
+
+/* --- 3-Dot Menu Styles --- */
+.task-card {
+    position: relative; /* Crucial: Keeps the dropdown inside the card */
+    overflow: visible;  /* Crucial: Allows the dropdown shadow to escape the card */
+}
+
+.menu-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0 8px;
+    line-height: 1;
+    transition: color 0.2s ease;
+}
+
+.menu-btn:hover, .menu-btn:active {
+    color: var(--text-dark);
+}
+
+.dropdown-menu {
+    display: none; 
+    position: absolute;
+    top: 35px;
+    right: 15px;
+    background-color: var(--white);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    border-radius: 8px;
+    overflow: hidden;
+    z-index: 50;
+    border: 1px solid #EEEEEE;
+    min-width: 150px;
+}
+
+.dropdown-menu.show {
+    display: block;
+    animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-item {
+    width: 100%;
+    text-align: left;
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid #F9F9F9;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.dropdown-item:hover, .dropdown-item:active {
+    background-color: var(--bg-light);
+}
+
+.dropdown-item.danger {
+    color: #D32F2F; 
+}

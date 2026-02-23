@@ -155,27 +155,41 @@
                 const res = await fetch(`${API_URL}/tasks/my-tasks?phone=${myPhone}`);
                 const data = await res.json();
 
+                // 1. My Uploaded Requests (3-Dot Menu with Delete)
                 reqFeed.innerHTML = data.myRequests.length === 0 
                     ? `<p style="color:#757575; font-size: 0.9rem;">You haven't uploaded any tasks.</p>`
                     : data.myRequests.map(task => `
                         <div class="task-card" style="border-left: 4px solid #FF5722;">
-                            <h4>${task.title} <span style="font-size:0.8rem; color:gray;">(₹${task.reward})</span></h4>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <h4>${task.title} <span style="font-size:0.8rem; color:gray; font-weight:normal;">(₹${task.reward})</span></h4>
+                                
+                                <button class="menu-btn" onclick="toggleMenu('menu-req-${task._id}', event)">⋮</button>
+                                
+                                <div id="menu-req-${task._id}" class="dropdown-menu">
+                                    <button class="dropdown-item danger" onclick="deleteMyTask('${task._id}')">Delete Task</button>
+                                </div>
+                            </div>
                             <p class="task-desc" style="margin-bottom: 8px;">Status: <strong>${task.status.toUpperCase()}</strong></p>
-                            <button onclick="deleteMyTask('${task._id}')" style="background: #FFF0F0; color: #D32F2F; border: none; padding: 8px; border-radius: 6px; width: 100%; font-weight:bold; cursor:pointer;">Delete Uploaded Task</button>
                         </div>
                     `).join('');
 
+                // 2. Tasks I Accepted (3-Dot Menu with Prioritize & Drop)
                 const sortedJobs = data.myJobs.sort((a, b) => (b.isPrioritized === true) - (a.isPrioritized === true));
                 jobsFeed.innerHTML = sortedJobs.length === 0 
                     ? `<p style="color:#757575; font-size: 0.9rem;">You haven't accepted any tasks.</p>`
                     : sortedJobs.map(task => `
                         <div class="task-card" style="border-left: 4px solid #2E7D32; ${task.isPrioritized ? 'background-color: #FFFDE7;' : ''}">
-                            <h4>${task.title} ${task.isPrioritized ? '<span style="color:#F57F17; font-size:0.8rem;">★ Top Priority</span>' : ''}</h4>
-                            <p class="task-desc" style="margin-bottom: 12px;">Contact: ${task.postedBy}</p>
-                            <div style="display: flex; gap: 10px;">
-                                <button onclick="prioritizeJob('${task._id}')" style="flex: 1; background: #FFF3E0; color: #E64A19; border: none; padding: 8px; border-radius: 6px; font-weight:bold; cursor:pointer;">${task.isPrioritized ? 'Un-Prioritize' : 'Prioritize'}</button>
-                                <button onclick="removeJob('${task._id}')" style="flex: 1; background: #F5F5F5; color: #757575; border: none; padding: 8px; border-radius: 6px; font-weight:bold; cursor:pointer;">Remove</button>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <h4>${task.title} ${task.isPrioritized ? '<span style="color:#F57F17; font-size:0.8rem; margin-left:6px;">★ Priority</span>' : ''}</h4>
+                                
+                                <button class="menu-btn" onclick="toggleMenu('menu-job-${task._id}', event)">⋮</button>
+                                
+                                <div id="menu-job-${task._id}" class="dropdown-menu">
+                                    <button class="dropdown-item" onclick="prioritizeJob('${task._id}')">${task.isPrioritized ? 'Remove Priority' : 'Mark as Priority'}</button>
+                                    <button class="dropdown-item danger" onclick="removeJob('${task._id}')">Drop Task</button>
+                                </div>
                             </div>
+                            <p class="task-desc" style="margin-bottom: 0;">Contact: ${task.postedBy}</p>
                         </div>
                     `).join('');
             } catch (err) {
@@ -251,6 +265,26 @@
             localStorage.removeItem('helpido_phone'); 
             window.location.href = 'index.html';      
         }
+
+        // --- NEW: Handle opening and closing the menus ---
+        function toggleMenu(menuId, event) {
+            event.stopPropagation(); // Stops the click from immediately hiding the menu again
+            
+            // Close any other open menus first so only one is open at a time
+            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                if(menu.id !== menuId) menu.classList.remove('show');
+            });
+            
+            // Toggle the one you clicked
+            document.getElementById(menuId).classList.toggle('show');
+        }
+
+        // Close the menu automatically if the user taps anywhere else on the screen
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                menu.classList.remove('show');
+            });
+        });
     </script>
 </body>
 </html>
