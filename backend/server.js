@@ -10,10 +10,11 @@ const User = require("./models/User.js");
 const app = express();
 app.use(express.json());
 app.use(cors());
-// --- BULLETPROOF FOLDER ROUTING ---
-// This tells Render to search EVERY possible folder structure for your HTML files.
-app.use(express.static(__dirname)); 
-app.use(express.static(path.join(__dirname, 'frontend')));
+
+// --- THE CLOUD MAP (Fixes the Bounce) ---
+// This tells Render to serve files if they are in the same folder...
+// app.use(express.static(__dirname));  // Commented out to avoid conflicts
+// ...OR if they are in a 'frontend' folder one level up.
 app.use(express.static(path.join(__dirname, '../frontend')));
 
 mongoose.connect(process.env.MONGO_URI)
@@ -156,18 +157,23 @@ app.post("/api/tasks/prioritize", async (req, res) => {
 });
 
 
-/* ---------------- EXPLICIT FRONTEND ROUTING ---------------- */
-// This guarantees Render knows exactly where to find your files
+// --- IRONCLAD FRONTEND ROUTING ---
+// 1. Tell Express where the frontend folder is
+const frontendPath = path.join(__dirname, '../frontend');
+
+// 2. Explicitly serve the Dashboard
 app.get('/dashboard.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/dashboard.html'));
+    res.sendFile(path.join(frontendPath, 'dashboard.html'));
 });
 
-app.get('/index.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/index.html'));
-});
-
+// 3. Explicitly serve the Login page for the root domain
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/index.html'));
+    res.sendFile(path.join(frontendPath, 'index.html'));
+});
+
+// 4. Catch-All: If anyone types a weird URL, send them to login
+app.get('*', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
