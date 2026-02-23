@@ -172,8 +172,8 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
-// 4. Catch-All: If anyone types a weird URL, send them to login
-app.get('/(.*)', (req, res) => {
+// 4. Catch-All: Bypassing Express 5's strict path parser entirely
+app.use((req, res) => {
     res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
