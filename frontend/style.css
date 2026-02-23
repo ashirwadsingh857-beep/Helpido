@@ -211,8 +211,17 @@ body {
 }
 
 .user-greeting p {
-    font-size: 0.85rem;
-    color: var(--text-muted);
+    font-size: 0.95rem;
+    color: #FFF3E0; /* A crisp, bright soft-white/orange that pops beautifully */
+    font-weight: 500;
+    margin-top: 4px;
+    opacity: 1; /* Removes any dullness */
+}
+
+/* Let's also make the Map Pin stand out */
+.user-greeting p#home-address {
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
 
 .wallet-badge {
@@ -303,9 +312,10 @@ body {
 }
 
 /* Floating Action Button (FAB) */
+/* Floating Action Button (FAB) */
 .fab-btn {
     position: fixed;
-    bottom: 90px; /* Pushes it above the bottom nav */
+    bottom: 90px;
     right: 24px;
     width: 60px;
     height: 60px;
@@ -313,15 +323,18 @@ body {
     color: var(--white);
     border: none;
     border-radius: 50%;
-    font-size: 2rem;
+    font-size: 2.2rem; /* Slightly larger for a modern look */
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     cursor: pointer;
+    
+    /* The Flexbox centering magic (no padding hacks needed) */
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 100; /* Ensures it floats above everything else */
-    line-height: 1;
-    padding-bottom: 4px;
+    padding: 0; 
+    margin: 0;
+    line-height: 0; /* Forces the text to center purely based on flexbox */
+    z-index: 100; 
 }
 
 @media (min-width: 481px) {
@@ -820,3 +833,10 @@ input[type="number"] {
 .dropdown-item:last-child { border-bottom: none; }
 .dropdown-item:active { background-color: var(--bg-light); }
 .dropdown-item.danger { color: #D32F2F; }
+
+/* Profile Address Pop */
+#profile-address {
+    color: var(--primary-color); /* Matches the Helpido Orange */
+    font-weight: 700 !important;
+    font-size: 1.05rem;
+}
