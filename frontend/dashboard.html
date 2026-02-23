@@ -9,7 +9,7 @@
 <body>
     <main class="app-container dashboard-layout">
         <section id="home-view" class="feed-section">
-            <header class="dash-header" style="margin-left: -24px; margin-right: -24px; margin-bottom: 20px;">
+            <header class="dash-header">
                 <div class="user-greeting">
                     <h2 id="greeting-name">Hi, Neighbor 👋</h2>
                     <p id="home-address">📍 Local Area</p>
@@ -22,10 +22,10 @@
         </section>
 
         <section id="tasks-view" class="feed-section hidden">
-            <header class="dash-header" style="margin-left: -24px; margin-right: -24px; margin-bottom: 24px;">
+            <header class="dash-header">
                 <div class="user-greeting">
                     <h2>My Activity 📋</h2>
-                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">Track requests and tasks you accepted.</p>
+                    <p>Track requests and tasks you accepted.</p>
                 </div>
             </header>
             <h3 class="section-title">My Uploaded Requests</h3>
@@ -35,14 +35,18 @@
         </section>
 
         <section id="profile-view" class="feed-section hidden">
-            <h3 class="section-title">My Profile</h3>
-            <div class="task-card" style="text-align: center; padding: 30px 20px;">
-                <div style="font-size: 3.5rem; margin-bottom: 10px;">👤</div>
+            <header class="dash-header">
+                <div class="user-greeting">
+                    <h2>Account 👤</h2>
+                    <p>Manage your profile and settings.</p>
+                </div>
+            </header>
+            <div class="task-card" style="text-align: center; padding: 30px 20px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
                 <h2 id="profile-name" style="margin-bottom: 5px; color: var(--text-dark);">Loading...</h2>
                 <p id="profile-phone" style="color: var(--text-muted); margin-bottom: 20px;">...</p>
-                <div style="background-color: var(--bg-light); padding: 16px; border-radius: 8px; text-align: left; margin-bottom: 24px;">
+                <div style="background-color: var(--bg-light); padding: 16px; border-radius: 12px; text-align: left; margin-bottom: 24px;">
                     <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">Home Address</p>
-                    <p id="profile-address" style="color: var(--text-dark); line-height: 1.4;">...</p>
+                    <p id="profile-address" style="color: var(--text-dark); line-height: 1.4; font-weight: 500;">...</p>
                 </div>
                 <button class="logout-btn" onclick="logout()">Log Out</button>
             </div>
@@ -155,25 +159,23 @@
                 const res = await fetch(`${API_URL}/tasks/my-tasks?phone=${myPhone}`);
                 const data = await res.json();
 
-                // 1. My Uploaded Requests (3-Dot Menu with Delete)
+                // 1. My Uploaded Requests (3-Dot Menu: Delete)
                 reqFeed.innerHTML = data.myRequests.length === 0 
                     ? `<p style="color:#757575; font-size: 0.9rem;">You haven't uploaded any tasks.</p>`
                     : data.myRequests.map(task => `
                         <div class="task-card" style="border-left: 4px solid #FF5722;">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                                 <h4>${task.title} <span style="font-size:0.8rem; color:gray; font-weight:normal;">(₹${task.reward})</span></h4>
-                                
                                 <button class="menu-btn" onclick="toggleMenu('menu-req-${task._id}', event)">⋮</button>
-                                
                                 <div id="menu-req-${task._id}" class="dropdown-menu">
-                                    <button class="dropdown-item danger" onclick="deleteMyTask('${task._id}')">Delete Task</button>
+                                    <button class="dropdown-item danger" onclick="deleteMyTask('${task._id}')">Delete Request</button>
                                 </div>
                             </div>
                             <p class="task-desc" style="margin-bottom: 8px;">Status: <strong>${task.status.toUpperCase()}</strong></p>
                         </div>
                     `).join('');
 
-                // 2. Tasks I Accepted (3-Dot Menu with Prioritize & Drop)
+                // 2. Tasks I Accepted (3-Dot Menu: Prioritize & Drop)
                 const sortedJobs = data.myJobs.sort((a, b) => (b.isPrioritized === true) - (a.isPrioritized === true));
                 jobsFeed.innerHTML = sortedJobs.length === 0 
                     ? `<p style="color:#757575; font-size: 0.9rem;">You haven't accepted any tasks.</p>`
@@ -181,9 +183,7 @@
                         <div class="task-card" style="border-left: 4px solid #2E7D32; ${task.isPrioritized ? 'background-color: #FFFDE7;' : ''}">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                                 <h4>${task.title} ${task.isPrioritized ? '<span style="color:#F57F17; font-size:0.8rem; margin-left:6px;">★ Priority</span>' : ''}</h4>
-                                
                                 <button class="menu-btn" onclick="toggleMenu('menu-job-${task._id}', event)">⋮</button>
-                                
                                 <div id="menu-job-${task._id}" class="dropdown-menu">
                                     <button class="dropdown-item" onclick="prioritizeJob('${task._id}')">${task.isPrioritized ? 'Remove Priority' : 'Mark as Priority'}</button>
                                     <button class="dropdown-item danger" onclick="removeJob('${task._id}')">Drop Task</button>
@@ -196,6 +196,21 @@
                 reqFeed.innerHTML = `<p style="color:red;">Error loading tasks.</p>`;
             }
         }
+
+        // --- NEW MENU LOGIC ---
+        function toggleMenu(menuId, event) {
+            event.stopPropagation(); 
+            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                if(menu.id !== menuId) menu.classList.remove('show');
+            });
+            document.getElementById(menuId).classList.toggle('show');
+        }
+
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                menu.classList.remove('show');
+            });
+        });
 
         async function acceptTask(taskId) {
             const res = await fetch(`${API_URL}/tasks/accept`, {
