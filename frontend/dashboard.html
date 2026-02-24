@@ -138,7 +138,8 @@
                     loadMyTasks();
                     loadProfile(); 
                 });
-                // --- NEW: LIVE ANIMATION LISTENER ---
+                
+                // --- LIVE ANIMATION LISTENER ---
                 // When someone else deletes/accepts a task, animate it off OUR screen!
                 socket.on('taskRemoved', (taskId) => {
                     const cardToAnimate = document.getElementById(`card-${taskId}`);
@@ -233,9 +234,18 @@
                 if (publicTasks.length === 0) {
                     feed.innerHTML = `<p style="text-align:center; color:#757575; padding-top:40px;">No tasks available right now.</p>`;
                 } else {
-                    // Added id="card-..." and inline animation styles with a staggered index delay!
-                    feed.innerHTML = publicTasks.map((task, index) => `
-                        <div class="task-card" id="card-${task._id}" style="animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;">
+                    // SMART MEMORY: Check which cards are already visible on screen
+                    const existingCardIds = new Set(Array.from(feed.querySelectorAll('.task-card')).map(c => c.id.replace('card-', '')));
+
+                    feed.innerHTML = publicTasks.map((task, index) => {
+                        // Only attach the slide-in animation if it is a BRAND NEW task
+                        const isNew = !existingCardIds.has(task._id.toString());
+                        const animStyle = isNew 
+                            ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` 
+                            : `opacity: 1; transform: translateX(0);`; // Old cards just stay put!
+
+                        return `
+                        <div class="task-card" id="card-${task._id}" style="${animStyle}">
                             <div class="task-top">
                                 <div style="display: flex; align-items: center; gap: 8px;">
                                     <h4>${task.title}</h4>
@@ -248,7 +258,8 @@
                                 <button class="accept-btn" onclick="acceptTask('${task._id}')" style="width: 100%;">I can do it</button>
                             </div>
                         </div>
-                    `).join('');
+                        `;
+                    }).join('');
                 }
             } catch (err) { feed.innerHTML = `<p style="text-align:center; color:red;">Failed to load tasks.</p>`; }
         }
@@ -260,10 +271,17 @@
                 const res = await fetch(`${API_URL}/tasks/my-tasks?phone=${myPhone}`);
                 const data = await res.json();
 
+                // SMART MEMORY FOR UPLOADED TASKS
+                const existingReqIds = new Set(Array.from(reqFeed.querySelectorAll('.task-card')).map(c => c.id.replace('card-', '')));
+
                 reqFeed.innerHTML = data.myRequests.length === 0 
                     ? `<p style="color:#757575; font-size: 0.9rem;">You haven't uploaded any tasks.</p>`
-                    : data.myRequests.map((task, index) => `
-                        <div class="task-card" id="card-${task._id}" style="border-left: 4px solid #FF5722; animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;">
+                    : data.myRequests.map((task, index) => {
+                        const isNew = !existingReqIds.has(task._id.toString());
+                        const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
+                        
+                        return `
+                        <div class="task-card" id="card-${task._id}" style="border-left: 4px solid #FF5722; ${animStyle}">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                                 <h4>${task.title} <span style="font-size:0.8rem; color:gray; font-weight:normal;">(₹${task.reward})</span></h4>
                                 <button class="menu-btn" onclick="toggleMenu('menu-req-${task._id}', event)">⋮</button>
@@ -273,13 +291,21 @@
                             </div>
                             <p class="task-desc" style="margin-bottom: 8px;">Status: <strong>${task.status.toUpperCase()}</strong></p>
                         </div>
-                    `).join('');
+                        `;
+                    }).join('');
 
+                // SMART MEMORY FOR ACCEPTED TASKS
+                const existingJobIds = new Set(Array.from(jobsFeed.querySelectorAll('.task-card')).map(c => c.id.replace('card-', '')));
                 const sortedJobs = data.myJobs.sort((a, b) => (b.isPrioritized === true) - (a.isPrioritized === true));
+                
                 jobsFeed.innerHTML = sortedJobs.length === 0 
                     ? `<p style="color:#757575; font-size: 0.9rem;">You haven't accepted any tasks.</p>`
-                    : sortedJobs.map((task, index) => `
-                        <div class="task-card" id="card-${task._id}" style="border-left: 4px solid #2E7D32; ${task.isPrioritized ? 'background-color: #FFFDE7;' : ''} animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;">
+                    : sortedJobs.map((task, index) => {
+                        const isNew = !existingJobIds.has(task._id.toString());
+                        const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
+                        
+                        return `
+                        <div class="task-card" id="card-${task._id}" style="border-left: 4px solid #2E7D32; ${task.isPrioritized ? 'background-color: #FFFDE7;' : ''} ${animStyle}">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                                 <h4>${task.title} ${task.isPrioritized ? '<span style="color:#F57F17; font-size:0.8rem; margin-left:6px;">★ Priority</span>' : ''}</h4>
                                 <button class="menu-btn" onclick="toggleMenu('menu-job-${task._id}', event)">⋮</button>
@@ -290,12 +316,47 @@
                             </div>
                             <p class="task-desc" style="margin-bottom: 0;">Contact: ${task.postedBy}</p>
                         </div>
-                    `).join('');
-            } catch (err) { reqFeed.innerHTML = `<p style="color:red;">Error loading tasks.</p>`; }
+                        `;
+                    }).join('');
+            } catch (err) { reqFeed.innerHTML = `<p style="text-align:center; color:red;">Error loading tasks.</p>`; }
         }
 
+        // --- UPGRADED MENU LOGIC (Fixes the overlapping animation bug) ---
+        function toggleMenu(menuId, event) {
+            event.stopPropagation(); 
+            
+            // 1. Reset all cards back to normal depth
+            document.querySelectorAll('.task-card').forEach(card => {
+                card.style.zIndex = '1';
+            });
+
+            // 2. Close any other open menus
+            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                if(menu.id !== menuId) menu.classList.remove('show');
+            });
+            
+            // 3. Toggle the menu you clicked
+            const menu = document.getElementById(menuId);
+            menu.classList.toggle('show');
+            
+            // 4. CRUCIAL FIX: Bring this specific card to the absolute front 
+            // so the dropdown doesn't hide behind the next animated card!
+            if (menu.classList.contains('show')) {
+                menu.closest('.task-card').style.zIndex = '999';
+            }
+        }
+
+        // Tap anywhere else to close menus and reset the cards
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                menu.classList.remove('show');
+            });
+            document.querySelectorAll('.task-card').forEach(card => {
+                card.style.zIndex = '1';
+            });
+        });
+
         async function acceptTask(taskId) {
-            // Animate it sliding out immediately locally
             const card = document.getElementById(`card-${taskId}`);
             if (card) card.classList.add('slide-out-left');
 
@@ -305,10 +366,34 @@
                     body: JSON.stringify({ taskId, helperPhone: myPhone })
                 });
                 if (res.ok) showToast("Task Accepted!"); 
-                // We don't need to manually reload because WebSocket will broadcast it!
-            }, 350); // Wait for animation to finish
+            }, 350); 
         }
 
+       // --- CUSTOM CONFIRMATION LOGIC ---
+        let pendingConfirmAction = null;
+
+        function showConfirm(title, message, buttonText, actionCallback) {
+            document.getElementById('confirm-title').innerText = title;
+            document.getElementById('confirm-message').innerText = message;
+            const actionBtn = document.getElementById('confirm-action-btn');
+            actionBtn.innerText = buttonText;
+            
+            pendingConfirmAction = actionCallback;
+            document.getElementById('confirm-modal').classList.remove('hidden');
+        }
+
+        function closeConfirm() {
+            document.getElementById('confirm-modal').classList.add('hidden');
+            pendingConfirmAction = null;
+        }
+
+        document.getElementById('confirm-action-btn').addEventListener('click', () => {
+            if (pendingConfirmAction) pendingConfirmAction();
+            closeConfirm();
+        });
+
+
+        // --- UPGRADED DELETE & DROP FUNCTIONS ---
         function deleteMyTask(taskId) {
             showConfirm(
                 "Delete Request?", 
