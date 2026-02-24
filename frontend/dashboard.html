@@ -70,6 +70,17 @@
                 </div>
             </div>
         </div>
+        <div id="confirm-modal" class="modal-overlay hidden">
+            <div class="modal-content" style="text-align: center; max-width: 320px;">
+                <div style="font-size: 2.5rem; margin-bottom: 10px;">⚠️</div>
+                <h3 id="confirm-title" style="margin-bottom: 10px; color: var(--text-dark);">Are you sure?</h3>
+                <p id="confirm-message" style="color: var(--text-muted); margin-bottom: 24px; font-size: 0.95rem; line-height: 1.4;">This action cannot be undone.</p>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn" onclick="closeConfirm()" style="flex: 1; background-color: #F5F5F5; color: #757575; margin-top: 0; box-shadow: none;">Cancel</button>
+                    <button id="confirm-action-btn" class="btn" style="flex: 1; background-color: #D32F2F; margin-top: 0; box-shadow: none;">Yes</button>
+                </div>
+            </div>
+        </div>
 
         <nav class="bottom-nav">
             <div class="nav-item active" id="nav-home" onclick="switchTab('home')">
@@ -280,46 +291,75 @@
             if (res.ok) { showToast("Task Accepted!"); loadTasks(); }
         }
 
-       async function deleteMyTask(taskId) {
-            // Safety check
-            if (!confirm("Are you sure you want to permanently delete this request?")) return;
+       // --- CUSTOM CONFIRMATION LOGIC ---
+        let pendingConfirmAction = null;
 
-            try {
-                const res = await fetch(`${API_URL}/tasks/${taskId}`, { method: 'DELETE' });
-                if (res.ok) {
-                    showToast("Task wiped from database!");
-                    // Aggressively reload both tabs to clear it from your screen
-                    loadMyTasks();
-                    loadTasks(); 
-                } else {
-                    showToast("Failed to delete", "error");
-                }
-            } catch (err) {
-                showToast("Network error", "error");
-            }
+        function showConfirm(title, message, buttonText, actionCallback) {
+            document.getElementById('confirm-title').innerText = title;
+            document.getElementById('confirm-message').innerText = message;
+            const actionBtn = document.getElementById('confirm-action-btn');
+            actionBtn.innerText = buttonText;
+            
+            // Save the function we want to run if they click Yes
+            pendingConfirmAction = actionCallback;
+            
+            document.getElementById('confirm-modal').classList.remove('hidden');
         }
 
-        async function removeJob(taskId) {
-            // Safety check & explanation of what "Dropping" does
-            if (!confirm("Drop this task? It will be returned to the public Home tab for others to accept.")) return;
-
-            try {
-                const res = await fetch(`${API_URL}/tasks/cancel`, {
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ taskId })
-                });
-                
-                if(res.ok) {
-                    showToast("Task returned to public feed"); 
-                    loadMyTasks();
-                    loadTasks();
-                }
-            } catch (err) {
-                showToast("Network error", "error");
-            }
+        function closeConfirm() {
+            document.getElementById('confirm-modal').classList.add('hidden');
+            pendingConfirmAction = null;
         }
 
+        // Listen for the "Yes" click
+        document.getElementById('confirm-action-btn').addEventListener('click', () => {
+            if (pendingConfirmAction) pendingConfirmAction();
+            closeConfirm();
+        });
+
+
+        // --- UPGRADED DELETE & DROP FUNCTIONS ---
+        function deleteMyTask(taskId) {
+            showConfirm(
+                "Delete Request?", 
+                "Are you sure you want to permanently wipe this request from the database?", 
+                "Delete", 
+                async () => {
+                    try {
+                        const res = await fetch(`${API_URL}/tasks/${taskId}`, { method: 'DELETE' });
+                        if (res.ok) {
+                            showToast("Task wiped from database!");
+                            loadMyTasks();
+                            loadTasks(); 
+                        } else {
+                            showToast("Failed to delete", "error");
+                        }
+                    } catch (err) { showToast("Network error", "error"); }
+                }
+            );
+        }
+
+        function removeJob(taskId) {
+            showConfirm(
+                "Drop Task?", 
+                "Drop this task? It will be returned to the public Home tab for others to accept.", 
+                "Drop Task", 
+                async () => {
+                    try {
+                        const res = await fetch(`${API_URL}/tasks/cancel`, {
+                            method: 'POST', 
+                            headers: { 'Content-Type': 'application/json' }, 
+                            body: JSON.stringify({ taskId })
+                        });
+                        if(res.ok) {
+                            showToast("Task returned to public feed"); 
+                            loadMyTasks();
+                            loadTasks();
+                        }
+                    } catch (err) { showToast("Network error", "error"); }
+                }
+            );
+        }
         async function prioritizeJob(taskId) {
             await fetch(`${API_URL}/tasks/prioritize`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId })
