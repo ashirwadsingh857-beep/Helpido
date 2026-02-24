@@ -138,6 +138,26 @@
                     loadMyTasks();
                     loadProfile(); 
                 });
+                // --- NEW: LIVE ANIMATION LISTENER ---
+                // When someone else deletes/accepts a task, animate it off OUR screen!
+                socket.on('taskRemoved', (taskId) => {
+                    const cardToAnimate = document.getElementById(`card-${taskId}`);
+                    
+                    if (cardToAnimate) {
+                        // 1. Play the slide-out animation
+                        cardToAnimate.classList.add('slide-out-left');
+                        
+                        // 2. Wait 350ms for the animation to finish, THEN clean up the feed
+                        setTimeout(() => {
+                            loadTasks();
+                            loadMyTasks();
+                        }, 350);
+                    } else {
+                        // If we don't see the card anyway, just refresh silently
+                        loadTasks();
+                        loadMyTasks();
+                    }
+                });
             }
         };
 
@@ -213,8 +233,9 @@
                 if (publicTasks.length === 0) {
                     feed.innerHTML = `<p style="text-align:center; color:#757575; padding-top:40px;">No tasks available right now.</p>`;
                 } else {
-                    feed.innerHTML = publicTasks.map(task => `
-                        <div class="task-card">
+                    // Added id="card-..." and inline animation styles with a staggered index delay!
+                    feed.innerHTML = publicTasks.map((task, index) => `
+                        <div class="task-card" id="card-${task._id}" style="animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;">
                             <div class="task-top">
                                 <div style="display: flex; align-items: center; gap: 8px;">
                                     <h4>${task.title}</h4>
@@ -229,9 +250,7 @@
                         </div>
                     `).join('');
                 }
-            } catch (err) {
-                feed.innerHTML = `<p style="text-align:center; color:red;">Failed to load tasks.</p>`;
-            }
+            } catch (err) { feed.innerHTML = `<p style="text-align:center; color:red;">Failed to load tasks.</p>`; }
         }
 
         async function loadMyTasks() {
@@ -243,8 +262,8 @@
 
                 reqFeed.innerHTML = data.myRequests.length === 0 
                     ? `<p style="color:#757575; font-size: 0.9rem;">You haven't uploaded any tasks.</p>`
-                    : data.myRequests.map(task => `
-                        <div class="task-card" style="border-left: 4px solid #FF5722;">
+                    : data.myRequests.map((task, index) => `
+                        <div class="task-card" id="card-${task._id}" style="border-left: 4px solid #FF5722; animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                                 <h4>${task.title} <span style="font-size:0.8rem; color:gray; font-weight:normal;">(₹${task.reward})</span></h4>
                                 <button class="menu-btn" onclick="toggleMenu('menu-req-${task._id}', event)">⋮</button>
@@ -259,8 +278,8 @@
                 const sortedJobs = data.myJobs.sort((a, b) => (b.isPrioritized === true) - (a.isPrioritized === true));
                 jobsFeed.innerHTML = sortedJobs.length === 0 
                     ? `<p style="color:#757575; font-size: 0.9rem;">You haven't accepted any tasks.</p>`
-                    : sortedJobs.map(task => `
-                        <div class="task-card" style="border-left: 4px solid #2E7D32; ${task.isPrioritized ? 'background-color: #FFFDE7;' : ''}">
+                    : sortedJobs.map((task, index) => `
+                        <div class="task-card" id="card-${task._id}" style="border-left: 4px solid #2E7D32; ${task.isPrioritized ? 'background-color: #FFFDE7;' : ''} animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                                 <h4>${task.title} ${task.isPrioritized ? '<span style="color:#F57F17; font-size:0.8rem; margin-left:6px;">★ Priority</span>' : ''}</h4>
                                 <button class="menu-btn" onclick="toggleMenu('menu-job-${task._id}', event)">⋮</button>
@@ -272,74 +291,43 @@
                             <p class="task-desc" style="margin-bottom: 0;">Contact: ${task.postedBy}</p>
                         </div>
                     `).join('');
-            } catch (err) {
-                reqFeed.innerHTML = `<p style="color:red;">Error loading tasks.</p>`;
-            }
+            } catch (err) { reqFeed.innerHTML = `<p style="color:red;">Error loading tasks.</p>`; }
         }
-
-        function toggleMenu(menuId, event) {
-            event.stopPropagation(); 
-            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
-                if(menu.id !== menuId) menu.classList.remove('show');
-            });
-            document.getElementById(menuId).classList.toggle('show');
-        }
-
-        document.addEventListener('click', () => {
-            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
-                menu.classList.remove('show');
-            });
-        });
 
         async function acceptTask(taskId) {
-            const res = await fetch(`${API_URL}/tasks/accept`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ taskId, helperPhone: myPhone })
-            });
-            if (res.ok) { showToast("Task Accepted!"); loadTasks(); }
+            // Animate it sliding out immediately locally
+            const card = document.getElementById(`card-${taskId}`);
+            if (card) card.classList.add('slide-out-left');
+
+            setTimeout(async () => {
+                const res = await fetch(`${API_URL}/tasks/accept`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ taskId, helperPhone: myPhone })
+                });
+                if (res.ok) showToast("Task Accepted!"); 
+                // We don't need to manually reload because WebSocket will broadcast it!
+            }, 350); // Wait for animation to finish
         }
 
-       // --- CUSTOM CONFIRMATION LOGIC ---
-        let pendingConfirmAction = null;
-
-        function showConfirm(title, message, buttonText, actionCallback) {
-            document.getElementById('confirm-title').innerText = title;
-            document.getElementById('confirm-message').innerText = message;
-            const actionBtn = document.getElementById('confirm-action-btn');
-            actionBtn.innerText = buttonText;
-            
-            pendingConfirmAction = actionCallback;
-            document.getElementById('confirm-modal').classList.remove('hidden');
-        }
-
-        function closeConfirm() {
-            document.getElementById('confirm-modal').classList.add('hidden');
-            pendingConfirmAction = null;
-        }
-
-        document.getElementById('confirm-action-btn').addEventListener('click', () => {
-            if (pendingConfirmAction) pendingConfirmAction();
-            closeConfirm();
-        });
-
-
-        // --- UPGRADED DELETE & DROP FUNCTIONS ---
         function deleteMyTask(taskId) {
             showConfirm(
                 "Delete Request?", 
                 "Are you sure you want to permanently wipe this request from the database?", 
                 "Delete", 
-                async () => {
-                    try {
-                        const res = await fetch(`${API_URL}/tasks/${taskId}`, { method: 'DELETE' });
-                        if (res.ok) {
-                            showToast("Task wiped from database!");
-                            loadMyTasks();
-                            loadTasks(); 
-                        } else {
-                            showToast("Failed to delete", "error");
+                () => {
+                    const card = document.getElementById(`card-${taskId}`);
+                    if (card) card.classList.add('slide-out-left');
+                    
+                    setTimeout(async () => {
+                        try {
+                            const res = await fetch(`${API_URL}/tasks/${taskId}`, { method: 'DELETE' });
+                            if (res.ok) showToast("Task wiped from database!");
+                            else if(card) card.classList.remove('slide-out-left'); // Revert if failed
+                        } catch (err) { 
+                            showToast("Network error", "error"); 
+                            if(card) card.classList.remove('slide-out-left');
                         }
-                    } catch (err) { showToast("Network error", "error"); }
+                    }, 350);
                 }
             );
         }
@@ -349,19 +337,24 @@
                 "Drop Task?", 
                 "Drop this task? It will be returned to the public Home tab for others to accept.", 
                 "Drop Task", 
-                async () => {
-                    try {
-                        const res = await fetch(`${API_URL}/tasks/cancel`, {
-                            method: 'POST', 
-                            headers: { 'Content-Type': 'application/json' }, 
-                            body: JSON.stringify({ taskId })
-                        });
-                        if(res.ok) {
-                            showToast("Task returned to public feed"); 
-                            loadMyTasks();
-                            loadTasks();
+                () => {
+                    const card = document.getElementById(`card-${taskId}`);
+                    if (card) card.classList.add('slide-out-left');
+
+                    setTimeout(async () => {
+                        try {
+                            const res = await fetch(`${API_URL}/tasks/cancel`, {
+                                method: 'POST', 
+                                headers: { 'Content-Type': 'application/json' }, 
+                                body: JSON.stringify({ taskId })
+                            });
+                            if(res.ok) showToast("Task returned to public feed"); 
+                            else if(card) card.classList.remove('slide-out-left');
+                        } catch (err) { 
+                            showToast("Network error", "error"); 
+                            if(card) card.classList.remove('slide-out-left');
                         }
-                    } catch (err) { showToast("Network error", "error"); }
+                    }, 350);
                 }
             );
         }

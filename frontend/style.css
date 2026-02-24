@@ -956,3 +956,42 @@ input[type="number"] {
     transform: scale(1);
     opacity: 1;
 }
+
+/* =========================================
+   DYNAMIC UI ANIMATIONS
+   ========================================= */
+
+/* 1. Task Card Slide In (From Right) */
+@keyframes slideInRight {
+    0% { transform: translateX(100%); opacity: 0; }
+    70% { transform: translateX(-5%); opacity: 1; } /* Slight bounce effect */
+    100% { transform: translateX(0); opacity: 1; }
+}
+
+/* 2. Task Card Slide Out (To Left) */
+@keyframes slideOutLeft {
+    0% { transform: translateX(0); opacity: 1; }
+    100% { transform: translateX(-120%); opacity: 0; }
+}
+.slide-out-left {
+    /* We use !important so it overrides the slideIn animation when triggered */
+    animation: slideOutLeft 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+}
+
+/* 3. Tab Switching (Soft Fade Up) */
+@keyframes fadeInTab {
+    0% { opacity: 0; transform: translateY(15px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+.feed-section:not(.hidden) {
+    animation: fadeInTab 0.4s ease-out forwards;
+}
+
+/* 4. Modal Pop In */
+@keyframes popIn {
+    0% { transform: scale(0.85); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+.modal-overlay:not(.hidden) .modal-content {
+    animation: popIn 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
