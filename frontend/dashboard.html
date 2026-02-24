@@ -342,6 +342,53 @@
             }
         }
 
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.dropdown-menu.show').forEach(menu => menu.classList.remove('show'));
+            document.querySelectorAll('.task-card').forEach(card => {
+                card.style.zIndex = '1';
+            });
+        });
+
+        // --- UPGRADED ACCEPT TASK FUNCTION ---
+        function acceptTask(taskId) {
+            // 1. Find the card on the screen
+            const card = document.getElementById(`feed-card-${taskId}`);
+            
+            // 2. Instantly slide it off the screen so the app feels lightning fast
+            if (card) {
+                card.classList.add('slide-out-left');
+            }
+
+            // 3. Wait 350ms for the slide animation to finish, then talk to the database
+            setTimeout(async () => {
+                try {
+                    const res = await fetch(`${API_URL}/tasks/accept`, {
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ taskId, helperPhone: myPhone })
+                    });
+                    
+                    const data = await res.json();
+                    
+                    if (res.ok) { 
+                        showToast("Task Accepted! Check 'Tasks' tab."); 
+                        
+                        // Force a local UI refresh so it instantly vanishes from Home 
+                        // and drops perfectly into your 'My Activity' tab!
+                        loadTasks();
+                        loadMyTasks();
+                    } else {
+                        // If the server blocked it (e.g., someone else clicked it a second before you)
+                        showToast(data.message || "Could not accept task", "error");
+                        if (card) card.classList.remove('slide-out-left'); // Slide it back in
+                    }
+                } catch (err) {
+                    showToast("Network Error", "error");
+                    if (card) card.classList.remove('slide-out-left'); // Slide it back in
+                }
+            }, 350); 
+        }
+
         let pendingConfirmAction = null;
 
         function showConfirm(title, message, buttonText, actionCallback) {
