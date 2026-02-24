@@ -102,14 +102,17 @@
         const myPhone = localStorage.getItem('helpido_phone');
         let currentStatus = 'free'; // Default state
 
+        // --- NEW: Silent Redirect for New Users ---
+        // If they have no memory, instantly bounce them to login without a scary error
         if (!myPhone || myPhone === "undefined" || myPhone === "null") {
-            document.body.innerHTML = `
-                <div style="text-align: center; padding: 40px 20px; font-family: sans-serif;">
-                    <h2 style="color: #D32F2F; margin-bottom: 10px;">⚠️ Memory Lost</h2>
-                    <p style="color: #757575; margin-bottom: 20px;">Your browser wiped the login data.</p>
-                    <a href="index.html" style="background: #FF5722; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold;">Return to Login</a>
-                </div>
-            `;
+            window.location.replace('/index.html');
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.className = `toast show ${type}`;
+            setTimeout(() => { toast.className = "toast"; }, 3000);
         }
 
         function showToast(message, type = 'success') {
