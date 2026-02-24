@@ -141,10 +141,18 @@ app.get("/api/tasks/my-tasks", async (req, res) => {
 
 app.delete("/api/tasks/:id", async (req, res) => {
     try {
+        // 1. Permanently wipes the task from the MongoDB database
         await Task.findByIdAndDelete(req.params.id);
-        io.emit('refreshFeed'); // Broadcast deleted task
-        res.json({ message: "Task deleted" });
-    } catch (err) { res.status(500).json({ message: "Error deleting task" }); }
+        
+        // 2. Instantly tells every connected phone to remove it from their Home tab
+        if (typeof io !== 'undefined') {
+            io.emit('refreshFeed'); 
+        }
+        
+        res.json({ message: "Task permanently deleted from database" });
+    } catch (err) {
+        res.status(500).json({ message: "Error deleting task" });
+    }
 });
 
 app.post("/api/tasks/cancel", async (req, res) => {
