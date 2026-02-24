@@ -113,13 +113,24 @@
                 loadProfile();
                 loadTasks();
                 
-                // --- NEW: LIVE REAL-TIME CONNECTION ---
-                const socket = io(); 
+                // --- UPGRADED LIVE CONNECTION ---
+                // 1. Explicitly point to your Render server
+                // 2. Add 'transports' to force a stable connection through mobile networks
+                const socket = io('https://helpido.onrender.com', {
+                    transports: ['websocket', 'polling'] 
+                }); 
                 
-                // When the server shouts 'refreshFeed', silently update the screens!
+                // Optional: Lets us know in the PC console if it successfully connected
+                socket.on('connect', () => {
+                    console.log("🟢 Live feed connected successfully!");
+                });
+
+                // When the server shouts 'refreshFeed', update EVERYTHING
                 socket.on('refreshFeed', () => {
+                    console.log("🔄 Server sent an update! Reloading data...");
                     loadTasks();
                     loadMyTasks();
+                    loadProfile(); // Added this so your header button updates too!
                 });
             }
         };
