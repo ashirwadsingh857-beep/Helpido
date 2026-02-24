@@ -5,17 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Helpido | Dashboard</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
 <body>
     <main class="app-container dashboard-layout">
         <section id="home-view" class="feed-section">
             <header class="dash-header">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                     <div class="user-greeting">
                         <h2 id="greeting-name">Hi, Neighbor 👋</h2>
                         <p id="home-address">📍 Local Area</p>
                     </div>
-                    <button id="availability-btn" class="status-btn free" onclick="toggleAvailability()">🟢 Free</button>
+                    <button id="availability-btn" class="status-btn free" onclick="toggleAvailability()" style="margin-top: 0; white-space: nowrap;">🟢 Free</button>
                 </div>
             </header>
             <h3 class="section-title">Help Needed Nearby</h3>
@@ -111,6 +112,15 @@
             if(myPhone) {
                 loadProfile();
                 loadTasks();
+                
+                // --- NEW: LIVE REAL-TIME CONNECTION ---
+                const socket = io(); 
+                
+                // When the server shouts 'refreshFeed', silently update the screens!
+                socket.on('refreshFeed', () => {
+                    loadTasks();
+                    loadMyTasks();
+                });
             }
         };
 
