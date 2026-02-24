@@ -840,3 +840,54 @@ input[type="number"] {
     font-weight: 700 !important;
     font-size: 1.05rem;
 }
+
+/* =========================================
+   FREE / BUSY STATUS STYLES
+   ========================================= */
+.status-btn {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.status-btn.free {
+    background-color: #FFFFFF;
+    color: #2E7D32;
+    border: 1px solid #E8F5E9;
+}
+
+.status-btn.busy {
+    background-color: #333333;
+    color: #FF5252;
+}
+
+.status-btn:active {
+    transform: scale(0.95);
+}
+
+.poster-badge {
+    font-size: 0.65rem;
+    padding: 3px 6px;
+    border-radius: 8px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+.poster-badge.free {
+    background-color: #E8F5E9;
+    color: #2E7D32;
+}
+
+.poster-badge.busy {
+    background-color: #FFF0F0;
+    color: #D32F2F;
+}

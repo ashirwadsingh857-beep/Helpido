@@ -12,22 +12,17 @@ app.use(express.json());
 app.use(cors());
 
 // --- THE CLOUD MAP (Fixes the Bounce) ---
-// This tells Render to serve files if they are in the same folder...
-// app.use(express.static(__dirname));  // Commented out to avoid conflicts
-// ...OR if they are in a 'frontend' folder one level up.
 app.use(express.static(path.join(__dirname, '../frontend')));
 
 mongoose.connect(process.env.MONGO_URI)
     .then(async () => {
         console.log("MongoDB Connected");
-        
         // --- THE GHOST INDEX FIX ---
-        // This forces MongoDB to delete that old hidden email rule so you can sign up!
         try {
             await mongoose.connection.collection('users').dropIndex('email_1');
             console.log("Ghost email index successfully deleted!");
         } catch (error) {
-            // It will silently ignore this if the index is already gone
+            // Silently ignore if already gone
         }
     })
     .catch((err) => console.error("Mongo Error:", err));
@@ -36,19 +31,14 @@ mongoose.connect(process.env.MONGO_URI)
 app.post('/api/signup', async (req, res) => {
     const { phone, name, address } = req.body;
     try {
-        // 1. Manually check if the phone number is ACTUALLY in the database
         const existingUser = await User.findOne({ phone });
         if (existingUser) {
             return res.status(400).json({ message: "Phone number is already registered!" });
         }
-
-        // 2. If it's not there, create the new account
         const newUser = new User({ phone, name, address });
         await newUser.save();
         res.status(201).json({ message: "Account created! You can now login." });
-        
     } catch (err) {
-        // 3. If MongoDB crashes for ANY OTHER reason, print the REAL error to the screen
         console.error("Database Error:", err);
         res.status(400).json({ message: `DB Error: ${err.message}` });
     }
@@ -83,7 +73,7 @@ app.post('/api/login/step2', async (req, res) => {
     }
 });
 
-/* ---------------- PROFILE ROUTE ---------------- */
+/* ---------------- PROFILE & STATUS ROUTES ---------------- */
 app.get('/api/users/:phone', async (req, res) => {
     try {
         const user = await User.findOne({ phone: req.params.phone }).select('-otp -otpExpiry');
@@ -91,6 +81,16 @@ app.get('/api/users/:phone', async (req, res) => {
         res.json(user);
     } catch (err) {
         res.status(500).json({ message: "Server error" });
+    }
+});
+
+app.post('/api/users/status', async (req, res) => {
+    const { phone, availability } = req.body;
+    try {
+        await User.updateOne({ phone }, { $set: { availability } });
+        res.json({ message: "Status updated" });
+    } catch (err) {
+        res.status(500).json({ message: "Error updating status" });
     }
 });
 
@@ -108,8 +108,25 @@ app.post('/api/tasks', async (req, res) => {
 
 app.get("/api/tasks", async (req, res) => {
     try {
-        const tasks = await Task.find({ status: 'open' }).sort({ createdAt: -1 });
-        res.json(tasks);
+        const tasks = await Task.find({ status: 'open' }).sort({ createdAt: -1 }).lean();
+        
+        // Find all unique poster phone numbers
+        const phones = [...new Set(tasks.map(t => t.postedBy))];
+        
+        // Fetch their Free/Busy statuses
+        const users = await User.find({ phone: { $in: phones } }, 'phone availability');
+        const userStatusMap = {};
+        users.forEach(u => {
+            userStatusMap[u.phone] = u.availability || 'free';
+        });
+
+        // Attach live status to the task feed
+        const tasksWithStatus = tasks.map(task => ({
+            ...task,
+            posterStatus: userStatusMap[task.postedBy] || 'free'
+        }));
+
+        res.json(tasksWithStatus);
     } catch (err) {
         res.status(500).json({ message: "Failed to fetch tasks" });
     }
@@ -177,23 +194,18 @@ app.post("/api/tasks/prioritize", async (req, res) => {
     }
 });
 
-
 // --- IRONCLAD FRONTEND ROUTING ---
-// 1. Tell Express where the frontend folder is
 const frontendPath = path.join(__dirname, '../frontend');
 app.use(express.static(frontendPath));
 
-// 2. Explicitly serve the Dashboard
 app.get('/dashboard.html', (req, res) => {
     res.sendFile(path.join(frontendPath, 'dashboard.html'));
 });
 
-// 3. Explicitly serve the Login page for the root domain
 app.get('/', (req, res) => {
     res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
-// 4. Catch-All: Bypassing Express 5's strict path parser entirely
 app.use((req, res) => {
     res.sendFile(path.join(frontendPath, 'index.html'));
 });

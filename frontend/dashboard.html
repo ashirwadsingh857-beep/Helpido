@@ -10,9 +10,12 @@
     <main class="app-container dashboard-layout">
         <section id="home-view" class="feed-section">
             <header class="dash-header">
-                <div class="user-greeting">
-                    <h2 id="greeting-name">Hi, Neighbor 👋</h2>
-                    <p id="home-address">📍 Local Area</p>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div class="user-greeting">
+                        <h2 id="greeting-name">Hi, Neighbor 👋</h2>
+                        <p id="home-address">📍 Local Area</p>
+                    </div>
+                    <button id="availability-btn" class="status-btn free" onclick="toggleAvailability()">🟢 Free</button>
                 </div>
             </header>
             <h3 class="section-title">Help Needed Nearby</h3>
@@ -85,6 +88,7 @@
     <script>
         const API_URL = 'https://helpido.onrender.com/api';
         const myPhone = localStorage.getItem('helpido_phone');
+        let currentStatus = 'free'; // Default state
 
         if (!myPhone || myPhone === "undefined" || myPhone === "null") {
             document.body.innerHTML = `
@@ -110,6 +114,35 @@
             }
         };
 
+        // --- STATUS TOGGLE LOGIC ---
+        async function toggleAvailability() {
+            currentStatus = currentStatus === 'free' ? 'busy' : 'free';
+            updateStatusUI();
+
+            try {
+                await fetch(`${API_URL}/users/status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: myPhone, availability: currentStatus })
+                });
+            } catch (err) {
+                showToast("Failed to save status", "error");
+                currentStatus = currentStatus === 'free' ? 'busy' : 'free'; // Revert
+                updateStatusUI();
+            }
+        }
+
+        function updateStatusUI() {
+            const btn = document.getElementById('availability-btn');
+            if(currentStatus === 'free') {
+                btn.innerHTML = '🟢 Free';
+                btn.className = 'status-btn free';
+            } else {
+                btn.innerHTML = '🔴 Busy';
+                btn.className = 'status-btn busy';
+            }
+        }
+
         async function loadProfile() {
             try {
                 const res = await fetch(`${API_URL}/users/${myPhone}`);
@@ -120,6 +153,12 @@
                     document.getElementById('profile-address').innerText = user.address;
                     document.getElementById('greeting-name').innerText = `Hi, ${user.name.split(' ')[0]} 👋`;
                     document.getElementById('home-address').innerText = `📍 ${user.address}`;
+                    
+                    // Match the button to the saved DB state
+                    if(user.availability) {
+                        currentStatus = user.availability;
+                        updateStatusUI();
+                    }
                 }
             } catch (err) { console.error("Profile load failed"); }
         }
@@ -137,7 +176,10 @@
                     feed.innerHTML = publicTasks.map(task => `
                         <div class="task-card">
                             <div class="task-top">
-                                <h4>${task.title}</h4>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <h4>${task.title}</h4>
+                                    <span class="poster-badge ${task.posterStatus}">${task.posterStatus.toUpperCase()}</span>
+                                </div>
                                 <span class="reward-tag">₹${task.reward}</span>
                             </div>
                             <p class="task-desc">${task.description}</p>
@@ -159,7 +201,6 @@
                 const res = await fetch(`${API_URL}/tasks/my-tasks?phone=${myPhone}`);
                 const data = await res.json();
 
-                // 1. My Uploaded Requests (3-Dot Menu: Delete)
                 reqFeed.innerHTML = data.myRequests.length === 0 
                     ? `<p style="color:#757575; font-size: 0.9rem;">You haven't uploaded any tasks.</p>`
                     : data.myRequests.map(task => `
@@ -175,7 +216,6 @@
                         </div>
                     `).join('');
 
-                // 2. Tasks I Accepted (3-Dot Menu: Prioritize & Drop)
                 const sortedJobs = data.myJobs.sort((a, b) => (b.isPrioritized === true) - (a.isPrioritized === true));
                 jobsFeed.innerHTML = sortedJobs.length === 0 
                     ? `<p style="color:#757575; font-size: 0.9rem;">You haven't accepted any tasks.</p>`
@@ -197,7 +237,6 @@
             }
         }
 
-        // --- NEW MENU LOGIC ---
         function toggleMenu(menuId, event) {
             event.stopPropagation(); 
             document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
@@ -280,26 +319,6 @@
             localStorage.removeItem('helpido_phone'); 
             window.location.href = 'index.html';      
         }
-
-        // --- NEW: Handle opening and closing the menus ---
-        function toggleMenu(menuId, event) {
-            event.stopPropagation(); // Stops the click from immediately hiding the menu again
-            
-            // Close any other open menus first so only one is open at a time
-            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
-                if(menu.id !== menuId) menu.classList.remove('show');
-            });
-            
-            // Toggle the one you clicked
-            document.getElementById(menuId).classList.toggle('show');
-        }
-
-        // Close the menu automatically if the user taps anywhere else on the screen
-        document.addEventListener('click', () => {
-            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
-                menu.classList.remove('show');
-            });
-        });
     </script>
 </body>
 </html>
