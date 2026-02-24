@@ -8,7 +8,11 @@
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
 <body>
-    <main class="app-container dashboard-layout">
+    <div id="splash-screen" class="splash-screen">
+        <h2 id="splash-greeting" class="splash-greeting">Loading...</h2>
+    </div>
+
+    <main id="main-dash" class="app-container dashboard-layout blur-start">
         <section id="home-view" class="feed-section">
             <header class="dash-header">
                 <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
@@ -102,17 +106,9 @@
         const myPhone = localStorage.getItem('helpido_phone');
         let currentStatus = 'free'; // Default state
 
-        // --- NEW: Silent Redirect for New Users ---
-        // If they have no memory, instantly bounce them to login without a scary error
+        // --- Silent Redirect for New Users ---
         if (!myPhone || myPhone === "undefined" || myPhone === "null") {
             window.location.replace('/index.html');
-        }
-
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById("toast");
-            toast.innerText = message;
-            toast.className = `toast show ${type}`;
-            setTimeout(() => { toast.className = "toast"; }, 3000);
         }
 
         function showToast(message, type = 'success') {
@@ -128,23 +124,19 @@
                 loadTasks();
                 
                 // --- UPGRADED LIVE CONNECTION ---
-                // 1. Explicitly point to your Render server
-                // 2. Add 'transports' to force a stable connection through mobile networks
                 const socket = io('https://helpido.onrender.com', {
                     transports: ['websocket', 'polling'] 
                 }); 
                 
-                // Optional: Lets us know in the PC console if it successfully connected
                 socket.on('connect', () => {
                     console.log("🟢 Live feed connected successfully!");
                 });
 
-                // When the server shouts 'refreshFeed', update EVERYTHING
                 socket.on('refreshFeed', () => {
                     console.log("🔄 Server sent an update! Reloading data...");
                     loadTasks();
                     loadMyTasks();
-                    loadProfile(); // Added this so your header button updates too!
+                    loadProfile(); 
                 });
             }
         };
@@ -183,17 +175,30 @@
                 const res = await fetch(`${API_URL}/users/${myPhone}`);
                 if (res.ok) {
                     const user = await res.json();
+                    
+                    // Extracts just the first name for the greeting
+                    const firstName = user.name.split(' ')[0];
+                    
+                    // 1. Set the big splash screen text
+                    document.getElementById('splash-greeting').innerText = `Hi, ${firstName} 👋`;
+
+                    // 2. Set the actual dashboard text
                     document.getElementById('profile-name').innerText = user.name;
                     document.getElementById('profile-phone').innerText = "+91 " + user.phone;
                     document.getElementById('profile-address').innerText = user.address;
-                    document.getElementById('greeting-name').innerText = `Hi, ${user.name.split(' ')[0]} 👋`;
+                    document.getElementById('greeting-name').innerText = `Hi, ${firstName} 👋`;
                     document.getElementById('home-address').innerText = `📍 ${user.address}`;
                     
-                    // Match the button to the saved DB state
                     if(user.availability) {
                         currentStatus = user.availability;
                         updateStatusUI();
                     }
+
+                    // 3. TRIGGER THE ANIMATION SEQUENCE
+                    setTimeout(() => {
+                        document.getElementById('splash-screen').classList.add('hide');
+                        document.getElementById('main-dash').classList.add('unblur');
+                    }, 800);
                 }
             } catch (err) { console.error("Profile load failed"); }
         }
@@ -303,9 +308,7 @@
             const actionBtn = document.getElementById('confirm-action-btn');
             actionBtn.innerText = buttonText;
             
-            // Save the function we want to run if they click Yes
             pendingConfirmAction = actionCallback;
-            
             document.getElementById('confirm-modal').classList.remove('hidden');
         }
 
@@ -314,7 +317,6 @@
             pendingConfirmAction = null;
         }
 
-        // Listen for the "Yes" click
         document.getElementById('confirm-action-btn').addEventListener('click', () => {
             if (pendingConfirmAction) pendingConfirmAction();
             closeConfirm();
@@ -363,6 +365,7 @@
                 }
             );
         }
+
         async function prioritizeJob(taskId) {
             await fetch(`${API_URL}/tasks/prioritize`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId })

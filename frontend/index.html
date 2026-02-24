@@ -8,12 +8,12 @@
 </head>
 <body>
     <main class="app-container">
-        <header class="header">
+        <header class="header fade-in-up">
             <h1>Helpido</h1>
             <p>Neighborly help for SIT Lonavala.</p>
         </header>
 
-        <div class="auth-container"> 
+        <div class="auth-container fade-in-up" style="animation-delay: 0.15s;"> 
             <div id="login-section" class="form-group">
                 <input type="tel" id="login-phone" class="input-field" placeholder="10-digit Mobile Number" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
                 <button type="button" class="btn" onclick="requestOTP()">Get OTP</button>

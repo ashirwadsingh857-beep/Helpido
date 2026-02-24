@@ -891,3 +891,68 @@ input[type="number"] {
     background-color: #FFF0F0;
     color: #D32F2F;
 }
+
+/* =========================================
+   APP ANIMATIONS
+   ========================================= */
+
+/* 1. Login Page Load (Fade Up) */
+.fade-in-up {
+    animation: fadeInUp 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 2. Dashboard Splash & Unblur Sequence */
+.splash-screen {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: var(--bg-light);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.6s ease 0.6s; /* Fades out after the text moves */
+    pointer-events: none;
+}
+
+.splash-greeting {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--primary-color);
+    letter-spacing: -1px;
+    transform: translateY(0) scale(1);
+    transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.5s ease 0.4s;
+}
+
+/* When the JS triggers the 'hide' class, it moves the text and fades the overlay */
+.splash-screen.hide {
+    opacity: 0;
+}
+
+.splash-screen.hide .splash-greeting {
+    transform: translateY(-40vh) scale(0.5); /* Creates the illusion of moving into the header */
+    opacity: 0;
+}
+
+/* The Dashboard starts blurred and zoomed out */
+.blur-start {
+    filter: blur(20px);
+    transform: scale(0.92);
+    opacity: 0;
+    transition: filter 1s ease 0.4s, transform 1s cubic-bezier(0.25, 1, 0.5, 1) 0.4s, opacity 0.8s ease 0.4s;
+}
+
+/* When the JS triggers 'unblur', it snaps into focus */
+.blur-start.unblur {
+    filter: blur(0);
+    transform: scale(1);
+    opacity: 1;
+}
