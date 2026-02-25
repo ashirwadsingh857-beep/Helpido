@@ -6,6 +6,24 @@
     <title>Helpido | Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <style>
+        /* --- MOBILE HEIGHT FIX --- */
+        :root { --vh: 1vh; }
+        html, body { height: 100%; overflow: hidden; }
+        .app-container { height: 100vh; height: calc(var(--vh, 1vh) * 100); display: flex; flex-direction: column; }
+        .feed-section { flex: 1; overflow-y: auto; padding-bottom: 80px; }
+
+        /* --- SKELETON LOADER ANIMATIONS --- */
+        .skeleton-card { border-left: none !important; box-shadow: 0 2px 8px rgba(0,0,0,0.03); pointer-events: none; }
+        .skeleton-element {
+            background: #e0e0e0;
+            background: linear-gradient(90deg, #e0e0e0 25%, #f5f5f5 50%, #e0e0e0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite linear;
+            border-radius: 4px;
+        }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+    </style>
 </head>
 <body>
     <div id="splash-screen" class="splash-screen">
@@ -25,8 +43,7 @@
             </header>
             <h3 class="section-title">Help Needed Nearby</h3>
             <div id="task-feed">
-                <p style="text-align: center; color: #757575; margin-top: 40px;">Loading tasks...</p>
-            </div>
+                </div>
         </section>
 
         <section id="tasks-view" class="feed-section hidden">
@@ -103,9 +120,22 @@
     <div id="toast" class="toast"></div>
 
     <script>
+        // --- MOBILE HEIGHT CALCULATION ---
+        function resetHeight() {
+            let vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        }
+        window.addEventListener('resize', resetHeight);
+        window.addEventListener('orientationchange', resetHeight);
+        resetHeight();
+
         const API_URL = 'https://helpido.onrender.com/api';
         const myPhone = localStorage.getItem('helpido_phone');
         let currentStatus = 'free';
+        
+        // Flags to ensure we only show the 3-second delay on the very first load
+        let isInitialHomeLoad = true;
+        let isInitialTasksLoad = true;
 
         if (!myPhone || myPhone === "undefined" || myPhone === "null") {
             window.location.replace('/index.html');
@@ -123,13 +153,9 @@
                 loadProfile();
                 loadTasks();
                 
-                const socket = io('https://helpido.onrender.com', {
-                    transports: ['websocket', 'polling'] 
-                }); 
+                const socket = io('https://helpido.onrender.com', { transports: ['websocket', 'polling'] }); 
                 
-                socket.on('connect', () => {
-                    console.log("🟢 Live feed connected successfully!");
-                });
+                socket.on('connect', () => { console.log("🟢 Live feed connected!"); });
 
                 socket.on('refreshFeed', () => {
                     loadTasks();
@@ -137,9 +163,7 @@
                     loadProfile(); 
                 });
                 
-                // --- UPGRADED LIVE ANIMATION LISTENER ---
                 socket.on('taskRemoved', (taskId) => {
-                    // Only find cards in the Home Feed or Jobs feed to slide out
                     const feedCard = document.getElementById(`feed-card-${taskId}`);
                     const jobCard = document.getElementById(`job-card-${taskId}`);
                     let isAnimating = false;
@@ -148,45 +172,29 @@
                     if (jobCard) { jobCard.classList.add('slide-out-left'); isAnimating = true; }
                     
                     if (isAnimating) {
-                        setTimeout(() => {
-                            loadTasks();
-                            loadMyTasks();
-                        }, 350);
+                        setTimeout(() => { loadTasks(); loadMyTasks(); }, 350);
                     } else {
-                        // If it's a "req-card" (your uploaded task), just refresh silently so the text updates!
-                        loadTasks();
-                        loadMyTasks();
+                        loadTasks(); loadMyTasks();
                     }
                 });
             }
         };
 
-        async function toggleAvailability() {
-            currentStatus = currentStatus === 'free' ? 'busy' : 'free';
-            updateStatusUI();
-
-            try {
-                await fetch(`${API_URL}/users/status`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone: myPhone, availability: currentStatus })
-                });
-            } catch (err) {
-                showToast("Failed to save status", "error");
-                currentStatus = currentStatus === 'free' ? 'busy' : 'free'; 
-                updateStatusUI();
-            }
-        }
-
-        function updateStatusUI() {
-            const btn = document.getElementById('availability-btn');
-            if(currentStatus === 'free') {
-                btn.innerHTML = '🟢 Free';
-                btn.className = 'status-btn free';
-            } else {
-                btn.innerHTML = '🔴 Busy';
-                btn.className = 'status-btn busy';
-            }
+        // --- SKELETON GENERATOR ---
+        function getSkeletonHTML(count) {
+            return Array(count).fill(`
+                <div class="task-card skeleton-card">
+                    <div class="task-top" style="margin-bottom: 12px;">
+                        <div class="skeleton-element" style="width: 50%; height: 22px;"></div>
+                        <div class="skeleton-element" style="width: 60px; height: 22px; border-radius: 12px;"></div>
+                    </div>
+                    <div class="skeleton-element" style="width: 100%; height: 14px; margin-bottom: 8px;"></div>
+                    <div class="skeleton-element" style="width: 75%; height: 14px; margin-bottom: 20px;"></div>
+                    <div class="task-bottom" style="justify-content: flex-end;">
+                        <div class="skeleton-element" style="width: 100%; height: 38px; border-radius: 8px;"></div>
+                    </div>
+                </div>
+            `).join('');
         }
 
         async function loadProfile() {
@@ -216,30 +224,11 @@
             } catch (err) { console.error("Profile load failed"); }
         }
 
-        // --- NEW: SKELETON GENERATOR ---
-        // Creates the HTML for shimmering placeholder cards
-        function getSkeletonHTML(count = 4) {
-            return Array(count).fill(`
-                <div class="task-card skeleton-card">
-                    <div class="task-top" style="margin-bottom: 12px;">
-                        <div class="skeleton-element" style="width: 40%; height: 20px;"></div>
-                        <div class="skeleton-element" style="width: 60px; height: 20px; border-radius: 12px;"></div>
-                    </div>
-                    <div class="skeleton-element" style="width: 100%; height: 14px; margin-bottom: 8px;"></div>
-                    <div class="skeleton-element" style="width: 80%; height: 14px; margin-bottom: 16px;"></div>
-                    <div class="task-bottom" style="justify-content: flex-end;">
-                        <div class="skeleton-element" style="width: 100%; height: 36px; border-radius: 8px;"></div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // --- UPGRADED LOAD TASKS ---
         async function loadTasks() {
             const feed = document.getElementById('task-feed');
             
-            // 1. Instantly fill the screen with 4 skeleton cards
-            if (feed.innerHTML.includes('Loading tasks...') || feed.innerHTML.trim() === '') {
+            // 1. Instantly draw 4 skeletons on the very first load
+            if (isInitialHomeLoad) {
                 feed.innerHTML = getSkeletonHTML(4);
             }
 
@@ -248,12 +237,17 @@
                 const allTasks = await res.json();
                 const publicTasks = allTasks.filter(t => t.postedBy !== myPhone);
 
+                // 2. Force the app to wait exactly 3 seconds on the first load to show off the animation!
+                if (isInitialHomeLoad) {
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    isInitialHomeLoad = false; // Never delay it again
+                }
+
                 if (publicTasks.length === 0) {
                     feed.innerHTML = `<p style="text-align:center; color:#757575; padding-top:40px;">No tasks available right now.</p>`;
                 } else {
                     const existingCardIds = new Set(Array.from(feed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('feed-card-', '')));
 
-                    // 2. Overwrite the skeletons with real data!
                     feed.innerHTML = publicTasks.map((task, index) => {
                         const isNew = !existingCardIds.has(task._id.toString());
                         const animStyle = isNew 
@@ -280,18 +274,25 @@
             } catch (err) { feed.innerHTML = `<p style="text-align:center; color:red;">Failed to load tasks.</p>`; }
         }
 
-        // --- UPGRADED LOAD MY TASKS ---
         async function loadMyTasks() {
             const reqFeed = document.getElementById('my-requests-feed');
             const jobsFeed = document.getElementById('my-jobs-feed');
             
-            // 1. Fill the screen with skeletons for both sections
-            if (reqFeed.innerHTML === '') reqFeed.innerHTML = getSkeletonHTML(2);
-            if (jobsFeed.innerHTML === '') jobsFeed.innerHTML = getSkeletonHTML(3);
+            // 1. Draw 2 skeletons for Uploaded, 3 skeletons for Accepted
+            if (isInitialTasksLoad) {
+                reqFeed.innerHTML = getSkeletonHTML(2);
+                jobsFeed.innerHTML = getSkeletonHTML(3);
+            }
 
             try {
                 const res = await fetch(`${API_URL}/tasks/my-tasks?phone=${myPhone}`);
                 const data = await res.json();
+
+                // 2. Wait 3 seconds on the very first load
+                if (isInitialTasksLoad) {
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    isInitialTasksLoad = false;
+                }
 
                 const existingReqIds = new Set(Array.from(reqFeed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('req-card-', '')));
 
@@ -341,85 +342,68 @@
             } catch (err) { reqFeed.innerHTML = `<p style="text-align:center; color:red;">Error loading tasks.</p>`; }
         }
 
-        // --- BULLETPROOF MENU LOGIC ---
+        async function toggleAvailability() {
+            currentStatus = currentStatus === 'free' ? 'busy' : 'free';
+            updateStatusUI();
+
+            try {
+                await fetch(`${API_URL}/users/status`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: myPhone, availability: currentStatus })
+                });
+            } catch (err) {
+                showToast("Failed to save status", "error");
+                currentStatus = currentStatus === 'free' ? 'busy' : 'free'; 
+                updateStatusUI();
+            }
+        }
+
+        function updateStatusUI() {
+            const btn = document.getElementById('availability-btn');
+            if(currentStatus === 'free') {
+                btn.innerHTML = '🟢 Free'; btn.className = 'status-btn free';
+            } else {
+                btn.innerHTML = '🔴 Busy'; btn.className = 'status-btn busy';
+            }
+        }
+
         function toggleMenu(menuId, event) {
             event.stopPropagation(); 
-            
-            // 1. Reset all cards and temporarily disable the GPU animation layers
             document.querySelectorAll('.task-card').forEach(card => {
-                card.style.zIndex = '1';
-                card.style.animation = 'none';     // Kills the GPU lock
-                card.style.transform = 'none';     // Removes the stacking trap
-                card.style.overflow = 'visible';   // Forces the boundaries open
+                card.style.zIndex = '1'; card.style.animation = 'none'; card.style.transform = 'none'; card.style.overflow = 'visible';
             });
-
-            // 2. Close any other open menus
             document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
                 if(menu.id !== menuId) menu.classList.remove('show');
             });
-            
-            // 3. Toggle the menu you clicked
             const menu = document.getElementById(menuId);
             if (menu) {
                 menu.classList.toggle('show');
-                
-                // 4. Rip this specific card to the absolute front
-                if (menu.classList.contains('show')) {
-                    const parentCard = menu.closest('.task-card');
-                    parentCard.style.zIndex = '9999';
-                }
+                if (menu.classList.contains('show')) menu.closest('.task-card').style.zIndex = '9999';
             }
         }
 
         document.addEventListener('click', () => {
             document.querySelectorAll('.dropdown-menu.show').forEach(menu => menu.classList.remove('show'));
-            document.querySelectorAll('.task-card').forEach(card => {
-                card.style.zIndex = '1';
-            });
+            document.querySelectorAll('.task-card').forEach(card => card.style.zIndex = '1');
         });
 
-        // --- UPGRADED ACCEPT TASK FUNCTION ---
-        function acceptTask(taskId) {
-            // 1. Find the card on the screen
+        async function acceptTask(taskId) {
             const card = document.getElementById(`feed-card-${taskId}`);
-            
-            // 2. Instantly slide it off the screen so the app feels lightning fast
-            if (card) {
-                card.classList.add('slide-out-left');
-            }
-
-            // 3. Wait 350ms for the slide animation to finish, then talk to the database
+            if (card) card.classList.add('slide-out-left');
             setTimeout(async () => {
                 try {
                     const res = await fetch(`${API_URL}/tasks/accept`, {
-                        method: 'POST', 
-                        headers: { 'Content-Type': 'application/json' },
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ taskId, helperPhone: myPhone })
                     });
-                    
                     const data = await res.json();
-                    
-                    if (res.ok) { 
-                        showToast("Task Accepted! Check 'Tasks' tab."); 
-                        
-                        // Force a local UI refresh so it instantly vanishes from Home 
-                        // and drops perfectly into your 'My Activity' tab!
-                        loadTasks();
-                        loadMyTasks();
-                    } else {
-                        // If the server blocked it (e.g., someone else clicked it a second before you)
-                        showToast(data.message || "Could not accept task", "error");
-                        if (card) card.classList.remove('slide-out-left'); // Slide it back in
-                    }
-                } catch (err) {
-                    showToast("Network Error", "error");
-                    if (card) card.classList.remove('slide-out-left'); // Slide it back in
-                }
+                    if (res.ok) { showToast("Task Accepted! Check 'Tasks' tab."); loadTasks(); loadMyTasks(); } 
+                    else { showToast(data.message || "Could not accept task", "error"); if (card) card.classList.remove('slide-out-left'); }
+                } catch (err) { showToast("Network Error", "error"); if (card) card.classList.remove('slide-out-left'); }
             }, 350); 
         }
 
         let pendingConfirmAction = null;
-
         function showConfirm(title, message, buttonText, actionCallback) {
             document.getElementById('confirm-title').innerText = title;
             document.getElementById('confirm-message').innerText = message;
@@ -429,70 +413,42 @@
             document.getElementById('confirm-modal').classList.remove('hidden');
         }
 
-        function closeConfirm() {
-            document.getElementById('confirm-modal').classList.add('hidden');
-            pendingConfirmAction = null;
-        }
+        function closeConfirm() { document.getElementById('confirm-modal').classList.add('hidden'); pendingConfirmAction = null; }
 
         document.getElementById('confirm-action-btn').addEventListener('click', () => {
-            if (pendingConfirmAction) pendingConfirmAction();
-            closeConfirm();
+            if (pendingConfirmAction) pendingConfirmAction(); closeConfirm();
         });
 
         function deleteMyTask(taskId) {
-            showConfirm(
-                "Delete Request?", 
-                "Are you sure you want to permanently wipe this request from the database?", 
-                "Delete", 
-                () => {
-                    const card = document.getElementById(`req-card-${taskId}`);
-                    if (card) card.classList.add('slide-out-left');
-                    
-                    setTimeout(async () => {
-                        try {
-                            const res = await fetch(`${API_URL}/tasks/${taskId}`, { method: 'DELETE' });
-                            if (res.ok) showToast("Task wiped from database!");
-                            else if(card) card.classList.remove('slide-out-left'); 
-                        } catch (err) { 
-                            showToast("Network error", "error"); 
-                            if(card) card.classList.remove('slide-out-left');
-                        }
-                    }, 350);
-                }
-            );
+            showConfirm("Delete Request?", "Are you sure you want to permanently wipe this request from the database?", "Delete", () => {
+                const card = document.getElementById(`req-card-${taskId}`);
+                if (card) card.classList.add('slide-out-left');
+                setTimeout(async () => {
+                    try {
+                        const res = await fetch(`${API_URL}/tasks/${taskId}`, { method: 'DELETE' });
+                        if (res.ok) showToast("Task wiped from database!"); else if(card) card.classList.remove('slide-out-left'); 
+                    } catch (err) { showToast("Network error", "error"); if(card) card.classList.remove('slide-out-left'); }
+                }, 350);
+            });
         }
 
         function removeJob(taskId) {
-            showConfirm(
-                "Drop Task?", 
-                "Drop this task? It will be returned to the public Home tab for others to accept.", 
-                "Drop Task", 
-                () => {
-                    const card = document.getElementById(`job-card-${taskId}`);
-                    if (card) card.classList.add('slide-out-left');
-
-                    setTimeout(async () => {
-                        try {
-                            const res = await fetch(`${API_URL}/tasks/cancel`, {
-                                method: 'POST', 
-                                headers: { 'Content-Type': 'application/json' }, 
-                                body: JSON.stringify({ taskId })
-                            });
-                            if(res.ok) showToast("Task returned to public feed"); 
-                            else if(card) card.classList.remove('slide-out-left');
-                        } catch (err) { 
-                            showToast("Network error", "error"); 
-                            if(card) card.classList.remove('slide-out-left');
-                        }
-                    }, 350);
-                }
-            );
+            showConfirm("Drop Task?", "Drop this task? It will be returned to the public Home tab for others to accept.", "Drop Task", () => {
+                const card = document.getElementById(`job-card-${taskId}`);
+                if (card) card.classList.add('slide-out-left');
+                setTimeout(async () => {
+                    try {
+                        const res = await fetch(`${API_URL}/tasks/cancel`, {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId })
+                        });
+                        if(res.ok) showToast("Task returned to public feed"); else if(card) card.classList.remove('slide-out-left');
+                    } catch (err) { showToast("Network error", "error"); if(card) card.classList.remove('slide-out-left'); }
+                }, 350);
+            });
         }
 
         async function prioritizeJob(taskId) {
-            await fetch(`${API_URL}/tasks/prioritize`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId })
-            });
+            await fetch(`${API_URL}/tasks/prioritize`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId }) });
             loadMyTasks();
         }
 
@@ -501,16 +457,13 @@
             const description = document.getElementById('task-desc').value;
             const reward = parseInt(document.getElementById('task-reward').value) || 0;
             if (!title || !description) return showToast("Please fill all fields!", "error");
-
             const res = await fetch(`${API_URL}/tasks`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title, description, postedBy: myPhone, reward })
             });
             if (res.ok) {
                 showToast("Task posted!"); closeModal(); loadTasks();
-                document.getElementById('task-title').value = "";
-                document.getElementById('task-desc').value = "";
-                document.getElementById('task-reward').value = "";
+                document.getElementById('task-title').value = ""; document.getElementById('task-desc').value = ""; document.getElementById('task-reward').value = "";
             }
         }
 
@@ -521,22 +474,20 @@
             document.getElementById('nav-home').classList.remove('active');
             document.getElementById('nav-tasks').classList.remove('active');
             document.getElementById('nav-profile').classList.remove('active');
-
             document.getElementById(`${tabName}-view`).classList.remove('hidden');
             document.getElementById(`nav-${tabName}`).classList.add('active');
 
-            if (tabName === 'home') loadTasks();
-            if (tabName === 'tasks') loadMyTasks();
-            if (tabName === 'profile') loadProfile();
+            if (tabName === 'home') {
+                if(isInitialHomeLoad) loadTasks(); // Only re-trigger if it hasn't loaded yet
+            }
+            if (tabName === 'tasks') {
+                if(isInitialTasksLoad) loadMyTasks(); // Let the skeleton run if it's the first time
+            }
         }
 
         function openModal() { document.getElementById('create-modal').classList.remove('hidden'); }
         function closeModal() { document.getElementById('create-modal').classList.add('hidden'); }
-        
-        function logout() {
-            localStorage.removeItem('helpido_phone'); 
-            window.location.href = 'index.html';      
-        }
+        function logout() { localStorage.removeItem('helpido_phone'); window.location.href = 'index.html'; }
     </script>
 </body>
 </html>
