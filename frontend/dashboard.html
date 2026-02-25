@@ -598,7 +598,7 @@
                 globalSocket.on('newTask', (task) => {
                     if (task.postedBy !== myPhone && activeTab !== 'home') {
                         // Updated text format for new tasks
-                        showAppNotification('👋', `New task posted: ${task.title}`, 'Check the Home feed!');
+                        showAppNotification('👋', `New task posted: ${task.title} for ${taskTitle}`);
                     }
                 });
 
