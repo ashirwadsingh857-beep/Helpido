@@ -995,3 +995,26 @@ input[type="number"] {
 .modal-overlay:not(.hidden) .modal-content {
     animation: popIn 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
+
+/* =========================================
+   SKELETON LOADERS
+   ========================================= */
+.skeleton-card {
+    border-left: none !important; /* Removes colored borders during load */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    pointer-events: none; /* Prevents clicking while loading */
+}
+
+.skeleton-element {
+    background: #e0e0e0;
+    /* The shimmering gradient */
+    background: linear-gradient(90deg, #e0e0e0 25%, #f5f5f5 50%, #e0e0e0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite linear;
+    border-radius: 4px;
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}

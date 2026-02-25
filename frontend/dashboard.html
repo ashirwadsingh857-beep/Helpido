@@ -216,8 +216,33 @@
             } catch (err) { console.error("Profile load failed"); }
         }
 
+        // --- NEW: SKELETON GENERATOR ---
+        // Creates the HTML for shimmering placeholder cards
+        function getSkeletonHTML(count = 4) {
+            return Array(count).fill(`
+                <div class="task-card skeleton-card">
+                    <div class="task-top" style="margin-bottom: 12px;">
+                        <div class="skeleton-element" style="width: 40%; height: 20px;"></div>
+                        <div class="skeleton-element" style="width: 60px; height: 20px; border-radius: 12px;"></div>
+                    </div>
+                    <div class="skeleton-element" style="width: 100%; height: 14px; margin-bottom: 8px;"></div>
+                    <div class="skeleton-element" style="width: 80%; height: 14px; margin-bottom: 16px;"></div>
+                    <div class="task-bottom" style="justify-content: flex-end;">
+                        <div class="skeleton-element" style="width: 100%; height: 36px; border-radius: 8px;"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- UPGRADED LOAD TASKS ---
         async function loadTasks() {
             const feed = document.getElementById('task-feed');
+            
+            // 1. Instantly fill the screen with 4 skeleton cards
+            if (feed.innerHTML.includes('Loading tasks...') || feed.innerHTML.trim() === '') {
+                feed.innerHTML = getSkeletonHTML(4);
+            }
+
             try {
                 const res = await fetch(`${API_URL}/tasks`);
                 const allTasks = await res.json();
@@ -226,9 +251,9 @@
                 if (publicTasks.length === 0) {
                     feed.innerHTML = `<p style="text-align:center; color:#757575; padding-top:40px;">No tasks available right now.</p>`;
                 } else {
-                    // PREFIX CHECK: feed-card-
-                    const existingCardIds = new Set(Array.from(feed.querySelectorAll('.task-card')).map(c => c.id.replace('feed-card-', '')));
+                    const existingCardIds = new Set(Array.from(feed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('feed-card-', '')));
 
+                    // 2. Overwrite the skeletons with real data!
                     feed.innerHTML = publicTasks.map((task, index) => {
                         const isNew = !existingCardIds.has(task._id.toString());
                         const animStyle = isNew 
@@ -255,15 +280,20 @@
             } catch (err) { feed.innerHTML = `<p style="text-align:center; color:red;">Failed to load tasks.</p>`; }
         }
 
+        // --- UPGRADED LOAD MY TASKS ---
         async function loadMyTasks() {
             const reqFeed = document.getElementById('my-requests-feed');
             const jobsFeed = document.getElementById('my-jobs-feed');
+            
+            // 1. Fill the screen with skeletons for both sections
+            if (reqFeed.innerHTML === '') reqFeed.innerHTML = getSkeletonHTML(2);
+            if (jobsFeed.innerHTML === '') jobsFeed.innerHTML = getSkeletonHTML(3);
+
             try {
                 const res = await fetch(`${API_URL}/tasks/my-tasks?phone=${myPhone}`);
                 const data = await res.json();
 
-                // PREFIX CHECK: req-card-
-                const existingReqIds = new Set(Array.from(reqFeed.querySelectorAll('.task-card')).map(c => c.id.replace('req-card-', '')));
+                const existingReqIds = new Set(Array.from(reqFeed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('req-card-', '')));
 
                 reqFeed.innerHTML = data.myRequests.length === 0 
                     ? `<p style="color:#757575; font-size: 0.9rem;">You haven't uploaded any tasks.</p>`
@@ -285,8 +315,7 @@
                         `;
                     }).join('');
 
-                // PREFIX CHECK: job-card-
-                const existingJobIds = new Set(Array.from(jobsFeed.querySelectorAll('.task-card')).map(c => c.id.replace('job-card-', '')));
+                const existingJobIds = new Set(Array.from(jobsFeed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('job-card-', '')));
                 const sortedJobs = data.myJobs.sort((a, b) => (b.isPrioritized === true) - (a.isPrioritized === true));
                 
                 jobsFeed.innerHTML = sortedJobs.length === 0 
