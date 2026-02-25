@@ -40,18 +40,19 @@
            ========================================= */
         /* --- BOTTOM NAVIGATION BAR --- */
         .bottom-nav {
-            position: fixed !important; 
-            bottom: 0 !important; 
-            left: 50% !important; 
-            transform: translateX(-50%) !important; 
-            width: 100%; 
-            max-width: 500px; 
-            z-index: 9000 !important; /* Extremely high z-index */
-            padding-bottom: env(safe-area-inset-bottom); 
-            background-color: #ffffff; 
-            border-top: 1px solid #eee; 
-            height: 65px; 
-            display: flex; 
+            position: fixed !important;
+            bottom: 0 !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            width: 100%;
+            max-width: 500px;
+            z-index: 9000 !important;
+            /* Extremely high z-index */
+            padding-bottom: env(safe-area-inset-bottom);
+            background-color: #ffffff;
+            border-top: 1px solid #eee;
+            height: 65px;
+            display: flex;
             align-items: center;
         }
 
@@ -178,17 +179,18 @@
         /* =========================================
            5. IN-APP CHAT UI & ANIMATIONS
            ========================================= */
-        /* --- FIXED CHAT UI (Using dvh for mobile safety) --- */
+        /* --- FIXED CHAT OVERLAY --- */
         .chat-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100dvh;
-            /* KEY FIX: Adjusts to browser bars so input isn't hidden */
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            /* Locks it exactly to the screen edges */
+            height: auto !important;
             background: rgba(0, 0, 0, 0.4);
-            z-index: 9999;
-            /* Higher than everything else */
+            z-index: 10000 !important;
+            /* Forces it to sit ABOVE the bottom nav bar */
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
@@ -355,18 +357,28 @@
         }
 
         /* --- 1. FLOATING ACTION BUTTON (Fixed above Nav) --- */
-      
+
         .fab-btn {
-            position: fixed !important; 
-            bottom: 85px !important; /* Sits just above the nav bar */
+            position: fixed !important;
+            bottom: 85px !important;
+            /* Sits just above the nav bar */
             right: 20px !important;
-            width: 56px; height: 56px; border-radius: 50%;
-            background-color: #FF5722; color: white; font-size: 28px; 
-            border: none; box-shadow: 0 4px 12px rgba(255, 87, 34, 0.4);
-            cursor: pointer; display: flex; justify-content: center; align-items: center;
-            z-index: 9500 !important; /* Sits above the nav bar */
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background-color: #FF5722;
+            color: white;
+            font-size: 28px;
+            border: none;
+            box-shadow: 0 4px 12px rgba(255, 87, 34, 0.4);
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9500 !important;
+            /* Sits above the nav bar */
             -webkit-tap-highlight-color: transparent;
-            transition: transform 0.2s, opacity 0.2s; 
+            transition: transform 0.2s, opacity 0.2s;
         }
 
         /* New class to hide it on the profile tab */
@@ -375,6 +387,7 @@
             pointer-events: none !important;
             transform: scale(0) !important;
         }
+
         /* --- 2. ADD REQUEST MODAL (Centered perfectly) --- */
         .modal-overlay {
             position: fixed;
@@ -474,50 +487,6 @@
 
 
 
-        <div id="create-modal" class="modal-overlay hidden">
-            <div class="modal-content">
-                <h3 style="margin-bottom: 16px; color: var(--text-dark);">Ask for Help</h3>
-                <input type="text" id="task-title" placeholder="What do you need?" required>
-                <textarea id="task-desc" rows="3" placeholder="Provide some details..." required></textarea>
-                <input type="number" id="task-reward" placeholder="Reward amount (₹)" required>
-                <div class="modal-actions" style="display: flex; justify-content: space-between; margin-top: 10px;">
-                    <button class="text-btn" onclick="closeModal()" style="color: #757575;">Cancel</button>
-                    <button class="btn" onclick="postHelpRequest()" style="width: auto; padding: 10px 20px;">Post
-                        Request</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="chat-modal" class="chat-overlay hidden" onclick="if(event.target === this) closeChat()">
-            <div class="chat-drawer">
-                <div class="chat-header">
-                    <h3 id="chat-header-title" style="margin: 0; font-size: 1.2rem; color: #333;">Task Chat</h3>
-                    <button onclick="closeChat()"
-                        style="background: none; border: none; font-size: 1.5rem; color: #999; cursor: pointer;">&times;</button>
-                </div>
-                <div id="chat-messages" class="chat-messages"></div>
-                <div class="chat-input-area">
-                    <input type="text" id="chat-input" placeholder="Message..." autocomplete="off">
-                    <button onclick="sendChatMessage()">Send</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="confirm-modal" class="modal-overlay hidden">
-            <div class="modal-content" style="text-align: center; max-width: 320px;">
-                <div style="font-size: 2.5rem; margin-bottom: 10px;">⚠️</div>
-                <h3 id="confirm-title" style="margin-bottom: 10px; color: var(--text-dark);">Are you sure?</h3>
-                <p id="confirm-message"
-                    style="color: var(--text-muted); margin-bottom: 24px; font-size: 0.95rem; line-height: 1.4;">This
-                    action cannot be undone.</p>
-                <div style="display: flex; gap: 12px;">
-                    <button class="btn" onclick="closeConfirm()"
-                        style="flex: 1; background-color: #F5F5F5; color: #757575; margin-top: 0; box-shadow: none;">Cancel</button>
-                    <button id="confirm-action-btn" class="btn"
-                        style="flex: 1; background-color: #D32F2F; margin-top: 0; box-shadow: none;">Yes</button>
-                </div>
-            </div>
-        </div>
 
         <div id="app-notification" class="app-notification" onclick="this.classList.remove('show')">
             <div class="app-notif-icon" id="app-notif-icon">🔔</div>
@@ -529,6 +498,52 @@
 
 
     </main>
+    <div id="create-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 16px; color: var(--text-dark);">Ask for Help</h3>
+            <input type="text" id="task-title" placeholder="What do you need?" required>
+            <textarea id="task-desc" rows="3" placeholder="Provide some details..." required></textarea>
+            <input type="number" id="task-reward" placeholder="Reward amount (₹)" required>
+            <div class="modal-actions" style="display: flex; justify-content: space-between; margin-top: 10px;">
+                <button class="text-btn" onclick="closeModal()" style="color: #757575;">Cancel</button>
+                <button class="btn" onclick="postHelpRequest()" style="width: auto; padding: 10px 20px;">Post
+                    Request</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="chat-modal" class="chat-overlay hidden" onclick="if(event.target === this) closeChat()">
+        <div class="chat-drawer">
+            <div class="chat-header">
+                <h3 id="chat-header-title" style="margin: 0; font-size: 1.2rem; color: #333;">Task Chat</h3>
+                <button onclick="closeChat()"
+                    style="background: none; border: none; font-size: 1.5rem; color: #999; cursor: pointer;">&times;</button>
+            </div>
+            <div id="chat-messages" class="chat-messages"></div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Message..." autocomplete="off">
+                <button onclick="sendChatMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="text-align: center; max-width: 320px;">
+            <div style="font-size: 2.5rem; margin-bottom: 10px;">⚠️</div>
+            <h3 id="confirm-title" style="margin-bottom: 10px; color: var(--text-dark);">Are you sure?</h3>
+            <p id="confirm-message"
+                style="color: var(--text-muted); margin-bottom: 24px; font-size: 0.95rem; line-height: 1.4;">This
+                action cannot be undone.</p>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn" onclick="closeConfirm()"
+                    style="flex: 1; background-color: #F5F5F5; color: #757575; margin-top: 0; box-shadow: none;">Cancel</button>
+                <button id="confirm-action-btn" class="btn"
+                    style="flex: 1; background-color: #D32F2F; margin-top: 0; box-shadow: none;">Yes</button>
+            </div>
+        </div>
+    </div>
+
+
     <button class="fab-btn" onclick="openModal()">+</button>
     <nav class="bottom-nav">
         <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><span>🏠</span>
