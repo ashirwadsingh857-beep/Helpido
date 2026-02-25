@@ -190,31 +190,44 @@ app.get("/api/tasks/my-tasks", async (req, res) => {
     } catch (err) { res.status(500).json({ message: "Error fetching tasks" }); }
 });
 
-app.delete("/api/tasks/:id", async (req, res) => {
+app.delete('/api/tasks/:id', async (req, res) => {
     try {
-        await Task.findByIdAndDelete(req.params.id);
-        
-        // Tell all phones exactly WHICH task was deleted
-        io.emit('taskRemoved', req.params.id); 
-        res.json({ message: "Task deleted" });
-    } catch (err) { res.status(500).json({ message: "Error deleting task" }); }
+        const task = await Task.findByIdAndDelete(req.params.id);
+        if (!task) return res.status(404).json({ message: "Task not found" });
+
+        // --- NEW: Shred all chat messages linked to this dead task ---
+        await Message.deleteMany({ taskId: req.params.id });
+
+        io.emit('taskRemoved', req.params.id);
+        res.json({ message: "Task and associated chats wiped successfully" });
+    } catch (err) {
+        console.error("Delete error:", err);
+        res.status(500).json({ message: "Error deleting task" });
+    }
 });
 
-app.post("/api/tasks/cancel", async (req, res) => {
+// --- DROP A TASK (Helper cancels) ---
+app.post('/api/tasks/cancel', async (req, res) => {
     const { taskId } = req.body;
     try {
         const task = await Task.findById(taskId);
-        task.status = 'open'; 
-        task.helperPhone = null; 
-        task.isPrioritized = false; 
+        if (!task) return res.status(404).json({ message: "Task not found" });
+        
+        // Reset task to open state
+        task.status = 'open';
+        task.helperPhone = null;
+        task.isPrioritized = false;
         await task.save();
-        
-        // --- NEW: Wipe old chat history so the next helper starts fresh! ---
+
+        // --- NEW: Shred old chat history so the next helper starts with a clean slate ---
         await Message.deleteMany({ taskId: taskId });
-        
+
         io.emit('refreshFeed'); 
-        res.json({ message: "Task returned to feed" });
-    } catch (err) { res.status(500).json({ message: "Error removing task" }); }
+        res.json({ message: "Task returned to public feed and chat wiped" });
+    } catch (err) {
+        console.error("Drop error:", err);
+        res.status(500).json({ message: "Error dropping task" });
+    }
 });
 
 app.post("/api/tasks/prioritize", async (req, res) => {
