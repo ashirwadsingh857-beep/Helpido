@@ -13,18 +13,16 @@
         html, body { 
             margin: 0; padding: 0; min-height: 100%; 
             background-color: var(--bg-light); 
-            overflow-x: hidden; /* Allows the browser's top URL bar to slide away naturally */
+            overflow-x: hidden; 
         }
         
         .app-container { 
-            min-height: 100dvh; /* Uses Dynamic Viewport Height for mobile screens */
+            min-height: 100dvh; 
             display: flex; flex-direction: column; 
             max-width: 500px; margin: 0 auto; position: relative; 
         }
         
-        .feed-section { 
-            flex: 1; padding-bottom: 110px; /* Prevents the bottom nav from covering the last card */
-        }
+        .feed-section { flex: 1; padding-bottom: 110px; }
 
         /* =========================================
            2. BOTTOM NAVIGATION BAR
@@ -32,7 +30,7 @@
         .bottom-nav {
             position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); 
             width: 100%; max-width: 500px; z-index: 1000;
-            padding-bottom: env(safe-area-inset-bottom); /* Protects against iPhone/Android swipe bars */
+            padding-bottom: env(safe-area-inset-bottom); 
             background-color: #ffffff; border-top: 1px solid #eee; 
             height: 65px; display: flex; align-items: center;
         }
@@ -40,88 +38,20 @@
         .nav-item { 
             flex: 1; height: 100%; display: flex; flex-direction: column; 
             justify-content: center; align-items: center; cursor: pointer; 
-            -webkit-tap-highlight-color: transparent; /* Removes ugly blue tap highlight */
+            -webkit-tap-highlight-color: transparent; 
         }
 
         /* =========================================
-           3. TOAST NOTIFICATIONS (Success/Error popups)
+           3. TOAST & IN-APP NOTIFICATIONS
            ========================================= */
         .toast {
-            visibility: hidden; opacity: 0; 
-            pointer-events: none; /* Allows user to click THROUGH the invisible toast box */
-            transition: opacity 0.3s, transform 0.3s; position: fixed; 
-            bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); 
-            z-index: 2000; background: #333; color: white; padding: 12px 24px; 
-            border-radius: 25px; font-size: 0.9rem; text-align: center; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: max-content; max-width: 80%;
+            visibility: hidden; opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s; 
+            position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); 
+            z-index: 2000; background: #333; color: white; padding: 12px 24px; border-radius: 25px; 
+            font-size: 0.9rem; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: max-content; max-width: 80%;
         }
         .toast.show { visibility: visible; opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        /* =========================================
-           4. SKELETON LOADERS (The Shimmer Effect)
-           ========================================= */
-        .skeleton-card { border-left: none !important; box-shadow: 0 2px 8px rgba(0,0,0,0.03); pointer-events: none; }
-        .skeleton-element { 
-            background: #e0e0e0; 
-            background: linear-gradient(90deg, #e0e0e0 25%, #f5f5f5 50%, #e0e0e0 75%); 
-            background-size: 200% 100%; 
-            animation: shimmer 1.5s infinite linear; border-radius: 4px; 
-        }
-        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-
-        /* =========================================
-           5. IN-APP CHAT UI (Bottom Drawer)
-           ========================================= */
-        .chat-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.4); z-index: 3000; display: flex; 
-            flex-direction: column; justify-content: flex-end; transition: opacity 0.3s;
-        }
-        .chat-overlay.hidden { opacity: 0; pointer-events: none; }
-        
-        .chat-drawer {
-            background: #fff; width: 100%; max-width: 500px; margin: 0 auto; 
-            height: 85vh; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; 
-            transform: translateY(0); transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-        .chat-overlay.hidden .chat-drawer { transform: translateY(100%); }
-        
-        .chat-header { padding: 16px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; background: #f9f9f9; }
-        
-       .msg-bubble { 
-            max-width: 75%; padding: 10px 14px; border-radius: 18px; 
-            font-size: 0.95rem; line-height: 1.4; word-wrap: break-word;
-            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
-            transform-origin: bottom;
-        }
-        .msg-sent { background: #FF5722; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
-        .msg-received { background: #e0e0e0; color: #333; align-self: flex-start; border-bottom-left-radius: 4px; }
-        @keyframes popIn { 
-            0% { opacity: 0; transform: translateY(15px) scale(0.9); } 
-            100% { opacity: 1; transform: translateY(0) scale(1); } 
-        }
-        .typing-wrapper {
-            display: flex; gap: 4px; padding: 12px 16px; background: #e0e0e0;
-            border-radius: 18px; border-bottom-left-radius: 4px; align-self: flex-start;
-            width: fit-content; animation: popIn 0.3s forwards; transform-origin: bottom left;
-        }
-        .typing-dot {
-            width: 6px; height: 6px; background: #888; border-radius: 50%;
-            animation: bounce 1.4s infinite ease-in-out both;
-        }
-        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
-        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); } 
-            40% { transform: scale(1); }
-        }
-        
-        .chat-input-area { padding: 12px 16px; border-top: 1px solid #eee; display: flex; gap: 10px; background: #fff; padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
-        .chat-input-area input { flex: 1; padding: 12px 16px; border: 1px solid #ddd; border-radius: 24px; outline: none; font-size: 0.95rem; }
-        .chat-input-area button { background: #FF5722; color: #fff; border: none; border-radius: 24px; padding: 0 20px; font-weight: 600; cursor: pointer; }
-
-        /* --- IN-APP NOTIFICATIONS --- */
         .app-notification {
             position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(50px);
             opacity: 0; visibility: hidden; background: #ffffff; border: 1px solid #eee;
@@ -134,6 +64,57 @@
         .app-notif-text { flex: 1; overflow: hidden; }
         .app-notif-text h4 { margin: 0 0 2px 0; font-size: 0.95rem; color: #333; }
         .app-notif-text p { margin: 0; font-size: 0.85rem; color: #757575; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* =========================================
+           4. SKELETON LOADERS
+           ========================================= */
+        .skeleton-card { border-left: none !important; box-shadow: 0 2px 8px rgba(0,0,0,0.03); pointer-events: none; }
+        .skeleton-element { 
+            background: #e0e0e0; background: linear-gradient(90deg, #e0e0e0 25%, #f5f5f5 50%, #e0e0e0 75%); 
+            background-size: 200% 100%; animation: shimmer 1.5s infinite linear; border-radius: 4px; 
+        }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+        /* =========================================
+           5. IN-APP CHAT UI & ANIMATIONS
+           ========================================= */
+        .chat-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); 
+            z-index: 3000; display: flex; flex-direction: column; justify-content: flex-end; transition: opacity 0.3s;
+        }
+        .chat-overlay.hidden { opacity: 0; pointer-events: none; }
+        
+        .chat-drawer {
+            background: #fff; width: 100%; max-width: 500px; margin: 0 auto; height: 85vh; border-radius: 20px 20px 0 0; 
+            display: flex; flex-direction: column; transform: translateY(0); transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .chat-overlay.hidden .chat-drawer { transform: translateY(100%); }
+        
+        .chat-header { padding: 16px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; background: #f9f9f9; }
+        
+        @keyframes popIn { 0% { opacity: 0; transform: translateY(15px) scale(0.9); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+        
+        .msg-bubble { 
+            max-width: 75%; padding: 10px 14px; border-radius: 18px; font-size: 0.95rem; line-height: 1.4; 
+            word-wrap: break-word; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; transform-origin: bottom;
+        }
+        .msg-sent { background: #FF5722; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; transform-origin: bottom right; }
+        .msg-received { background: #e0e0e0; color: #333; align-self: flex-start; border-bottom-left-radius: 4px; transform-origin: bottom left; }
+        
+        .chat-input-area { padding: 12px 16px; border-top: 1px solid #eee; display: flex; gap: 10px; background: #fff; padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+        .chat-input-area input { flex: 1; padding: 12px 16px; border: 1px solid #ddd; border-radius: 24px; outline: none; font-size: 0.95rem; }
+        .chat-input-area button { background: #FF5722; color: #fff; border: none; border-radius: 24px; padding: 0 20px; font-weight: 600; cursor: pointer; }
+
+        /* Typing Indicator Styles */
+        .typing-wrapper {
+            display: flex; gap: 4px; padding: 12px 16px; background: #e0e0e0; border-radius: 18px; border-bottom-left-radius: 4px; 
+            align-self: flex-start; width: fit-content; animation: popIn 0.3s forwards; transform-origin: bottom left;
+        }
+        .typing-dot { width: 6px; height: 6px; background: #888; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
     </style>
 </head>
 <body>
@@ -152,7 +133,8 @@
                 </div>
             </header>
             <h3 class="section-title">Help Needed Nearby</h3>
-            <div id="task-feed"></div> </section>
+            <div id="task-feed"></div>
+        </section>
 
         <section id="tasks-view" class="feed-section hidden">
             <header class="dash-header">
@@ -238,118 +220,77 @@
     <div id="toast" class="toast"></div>
 
     <script>
-        let activeTab = 'home'; // Tracks where the user is looking
-        let notifTimeout = null;
         const API_URL = 'https://helpido.onrender.com/api';
         const myPhone = localStorage.getItem('helpido_phone');
         let currentStatus = 'free';
         
-        // Timer flags so skeletons only delay on the very first page load
         let isInitialHomeLoad = true;
         let isInitialTasksLoad = true;
+        let activeTab = 'home';
+        let notifTimeout = null;
 
-        // Chat Variables
         let globalSocket = null;
         let currentChatTaskId = null;
-        let typingTimeout = null; // Add this
+        let typingTimeout = null;
 
-        // Security check: Redirect to login if user isn't logged in
-        if (!myPhone || myPhone === "undefined" || myPhone === "null") {
-            window.location.replace('/index.html');
-        }
+        if (!myPhone || myPhone === "undefined" || myPhone === "null") window.location.replace('/index.html');
 
-        /* ----------------------------------------------------
-           1. INITIALIZATION & WEBSOCKET SETUP
-           ---------------------------------------------------- */
+        /* -----------------------------------------
+           1. INITIALIZATION & SOCKET LISTENERS
+           ----------------------------------------- */
         window.onload = () => {
             if(myPhone) {
                 loadProfile();
                 loadTasks();
                 
-                // Connect to Render backend
                 globalSocket = io('https://helpido.onrender.com', { transports: ['websocket', 'polling'] }); 
                 
                 globalSocket.on('connect', () => { console.log("🟢 Live feed connected!"); });
 
-                // Triggers when someone posts a new task or changes Free/Busy status
-                globalSocket.on('refreshFeed', () => { 
-                    loadTasks(); 
-                    loadMyTasks(); 
-                    loadProfile(); 
-                });
+                globalSocket.on('refreshFeed', () => { loadTasks(); loadMyTasks(); loadProfile(); });
                 
-                // Triggers when a specific task is accepted/deleted so we can animate it sliding away
-                globalSocket.on('taskRemoved', (taskId) => {
-                    const feedCard = document.getElementById(`feed-card-${taskId}`);
-                    const jobCard = document.getElementById(`job-card-${taskId}`);
-                    let isAnimating = false;
-                    
-                    if (feedCard) { feedCard.classList.add('slide-out-left'); isAnimating = true; }
-                    if (jobCard) { jobCard.classList.add('slide-out-left'); isAnimating = true; }
-                    
-                    // Wait for the slide animation to finish before updating the data
-                    if (isAnimating) { 
-                        setTimeout(() => { loadTasks(); loadMyTasks(); }, 350); 
-                    } else { 
-                        loadTasks(); loadMyTasks(); 
-                    }
-                });
-
-                /* Notification for mesages an posts*/
-                function showAppNotification(icon, title, desc) {
-            const notif = document.getElementById('app-notification');
-            document.getElementById('app-notif-icon').innerText = icon;
-            document.getElementById('app-notif-title').innerText = title;
-            document.getElementById('app-notif-desc').innerText = desc;
-            
-            notif.classList.add('show');
-            clearTimeout(notifTimeout);
-            notifTimeout = setTimeout(() => { notif.classList.remove('show'); }, 4000);
-        }
-
-                // 1. Listen for new tasks (Only alert if not in Home tab)
                 globalSocket.on('newTask', (task) => {
                     if (task.postedBy !== myPhone && activeTab !== 'home') {
                         showAppNotification('👋', 'New Help Request', task.title);
                     }
                 });
 
-                // 2. Listen for messages (Alert unless already in that specific chat)
+                globalSocket.on('taskRemoved', (taskId) => {
+                    const feedCard = document.getElementById(`feed-card-${taskId}`);
+                    const jobCard = document.getElementById(`job-card-${taskId}`);
+                    let isAnimating = false;
+                    if (feedCard) { feedCard.classList.add('slide-out-left'); isAnimating = true; }
+                    if (jobCard) { jobCard.classList.add('slide-out-left'); isAnimating = true; }
+                    if (isAnimating) { setTimeout(() => { loadTasks(); loadMyTasks(); }, 350); } 
+                    else { loadTasks(); loadMyTasks(); }
+                });
+
                 globalSocket.on('receiveMessage', async (msg) => {
                     if (currentChatTaskId === msg.taskId) {
                         appendMessageUI(msg);
                     } else if (msg.senderPhone !== myPhone) {
-                        // Fetch the sender's real name for the notification!
                         try {
                             const res = await fetch(`${API_URL}/users/${msg.senderPhone}`);
                             const user = await res.json();
                             const firstName = user.name.split(' ')[0];
                             showAppNotification('💬', `New message from ${firstName}`, msg.text);
-                        } catch(e) {
-                            showAppNotification('💬', 'New message', msg.text);
-                        }
-                    }
-                });
-                // --- Add inside window.onload ---
-                globalSocket.on('userTyping', (data) => {
-                    if (currentChatTaskId === data.taskId && data.senderPhone !== myPhone) {
-                        showTypingIndicator();
+                        } catch(e) { showAppNotification('💬', 'New message', msg.text); }
                     }
                 });
 
+                globalSocket.on('userTyping', (data) => {
+                    if (currentChatTaskId === data.taskId && data.senderPhone !== myPhone) showTypingIndicator();
+                });
+
                 globalSocket.on('userStoppedTyping', (data) => {
-                    if (currentChatTaskId === data.taskId && data.senderPhone !== myPhone) {
-                        removeTypingIndicator();
-                    }
+                    if (currentChatTaskId === data.taskId && data.senderPhone !== myPhone) removeTypingIndicator();
                 });
             }
         };
 
-        /* ----------------------------------------------------
-           2. DATA FETCHING (PROFILE, HOME FEED, TASKS FEED)
-           ---------------------------------------------------- */
-        
-        // Helper function: Generates the shimmering grey boxes
+        /* -----------------------------------------
+           2. DATA FETCHING & RENDERING
+           ----------------------------------------- */
         function getSkeletonHTML(count) {
             return Array(count).fill(`
                 <div class="task-card skeleton-card">
@@ -372,22 +313,13 @@
                 if (res.ok) {
                     const user = await res.json();
                     const firstName = user.name.split(' ')[0];
-                    
-                    // Update Text Elements
                     document.getElementById('splash-greeting').innerText = `Hi, ${firstName} 👋`;
                     document.getElementById('profile-name').innerText = user.name;
                     document.getElementById('profile-phone').innerText = "+91 " + user.phone;
                     document.getElementById('profile-address').innerText = user.address;
                     document.getElementById('greeting-name').innerText = `Hi, ${firstName} 👋`;
                     document.getElementById('home-address').innerText = `📍 ${user.address}`;
-                    
-                    // Apply saved Free/Busy status
-                    if(user.availability) { 
-                        currentStatus = user.availability; 
-                        updateStatusUI(); 
-                    }
-
-                    // Reveal Dashboard after 800ms
+                    if(user.availability) { currentStatus = user.availability; updateStatusUI(); }
                     setTimeout(() => {
                         document.getElementById('splash-screen').classList.add('hide');
                         document.getElementById('main-dash').classList.add('unblur');
@@ -398,33 +330,20 @@
 
         async function loadTasks() {
             const feed = document.getElementById('task-feed');
-            
-            // Instantly draw skeletons on first load
-            if (isInitialHomeLoad) {
-                feed.innerHTML = getSkeletonHTML(4);
-            }
-
+            if (isInitialHomeLoad) feed.innerHTML = getSkeletonHTML(4);
             try {
                 const res = await fetch(`${API_URL}/tasks`);
                 const allTasks = await res.json();
                 const publicTasks = allTasks.filter(t => t.postedBy !== myPhone);
-
-                // REDUCED DELAY: Wait 1.5 seconds on first load to show the animation 
-                if (isInitialHomeLoad) { 
-                    await new Promise(resolve => setTimeout(resolve, 1500)); 
-                    isInitialHomeLoad = false; 
-                }
+                if (isInitialHomeLoad) { await new Promise(resolve => setTimeout(resolve, 1500)); isInitialHomeLoad = false; }
 
                 if (publicTasks.length === 0) {
                     feed.innerHTML = `<p style="text-align:center; color:#757575; padding-top:40px;">No tasks available right now.</p>`;
                 } else {
-                    // Smart Memory: Remember which cards are already on screen to prevent them from animating again
                     const existingCardIds = new Set(Array.from(feed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('feed-card-', '')));
-                    
                     feed.innerHTML = publicTasks.map((task, index) => {
                         const isNew = !existingCardIds.has(task._id.toString());
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`; 
-                        
                         return `
                         <div class="task-card" id="feed-card-${task._id}" style="${animStyle}">
                             <div class="task-top">
@@ -448,33 +367,20 @@
         async function loadMyTasks() {
             const reqFeed = document.getElementById('my-requests-feed');
             const jobsFeed = document.getElementById('my-jobs-feed');
-            
-            // Instantly draw skeletons on first load
-            if (isInitialTasksLoad) { 
-                reqFeed.innerHTML = getSkeletonHTML(2); 
-                jobsFeed.innerHTML = getSkeletonHTML(3); 
-            }
+            if (isInitialTasksLoad) { reqFeed.innerHTML = getSkeletonHTML(2); jobsFeed.innerHTML = getSkeletonHTML(3); }
 
             try {
                 const res = await fetch(`${API_URL}/tasks/my-tasks?phone=${myPhone}`);
                 const data = await res.json();
-                
-                // REDUCED DELAY: Wait 1.5 seconds on first load to show the animation
-                if (isInitialTasksLoad) { 
-                    await new Promise(resolve => setTimeout(resolve, 1500)); 
-                    isInitialTasksLoad = false; 
-                }
+                if (isInitialTasksLoad) { await new Promise(resolve => setTimeout(resolve, 1500)); isInitialTasksLoad = false; }
 
-                // 1. Render Uploaded Requests
                 const existingReqIds = new Set(Array.from(reqFeed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('req-card-', '')));
                 reqFeed.innerHTML = data.myRequests.length === 0 
                     ? `<p style="color:#757575; font-size: 0.9rem;">You haven't uploaded any tasks.</p>`
                     : data.myRequests.map((task, index) => {
                         const isNew = !existingReqIds.has(task._id.toString());
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
-                        
-                        // Creates Chat Button if accepted
-                        const chatBtn = task.status === 'accepted' ? `<button class="btn" style="width:100%; margin-top:12px; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.helperPhone}')">💬 Chat with Helper</button>` : '';
+                        const chatBtn = task.status === 'accepted' ? `<button class="btn" style="width:100%; margin-top:12px; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.helperPhone}')">💬 Chat</button>` : '';
 
                         return `
                         <div class="task-card" id="req-card-${task._id}" style="border-left: 4px solid #FF5722; ${animStyle}">
@@ -491,7 +397,6 @@
                         `;
                     }).join('');
 
-                // 2. Render Accepted Jobs
                 const existingJobIds = new Set(Array.from(jobsFeed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('job-card-', '')));
                 const sortedJobs = data.myJobs.sort((a, b) => (b.isPrioritized === true) - (a.isPrioritized === true));
                 jobsFeed.innerHTML = sortedJobs.length === 0 
@@ -511,22 +416,21 @@
                                 </div>
                             </div>
                             <p class="task-desc" style="margin-bottom: 12px;">Contact: ${task.postedBy}</p>
-                            <button class="btn" style="width:100%; margin:0; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.postedBy}')">💬 Chat with Poster</button>
+                            <button class="btn" style="width:100%; margin:0; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.postedBy}')">💬 Chat</button>
                         </div>
                         `;
                     }).join('');
             } catch (err) { reqFeed.innerHTML = `<p style="text-align:center; color:red;">Error loading tasks.</p>`; }
         }
 
-        /* ----------------------------------------------------
+        /* -----------------------------------------
            3. CHAT ENGINE
-           ---------------------------------------------------- */
+           ----------------------------------------- */
         async function openChat(taskId, targetPhone) {
             currentChatTaskId = taskId;
             document.getElementById('chat-header-title').innerText = `Loading...`;
             document.getElementById('chat-modal').classList.remove('hidden');
             
-            // Fetch real name for the header!
             fetch(`${API_URL}/users/${targetPhone}`)
                 .then(res => res.json())
                 .then(user => {
@@ -536,7 +440,6 @@
 
             const msgBox = document.getElementById('chat-messages');
             msgBox.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">Loading messages...</p>';
-            
             globalSocket.emit('joinChat', taskId);
 
             try {
@@ -555,44 +458,7 @@
 
         function closeChat() {
             document.getElementById('chat-modal').classList.add('hidden');
-            currentChatTaskId = null; // Unlink from room
-        }
-        
-        // 1. Detect when the user types in the box
-        document.getElementById('chat-input').addEventListener('input', () => {
-            if (!currentChatTaskId) return;
-            globalSocket.emit('typing', { taskId: currentChatTaskId, senderPhone: myPhone });
-            
-            // Clear the old timer, start a new 1.5s countdown to stop typing
-            clearTimeout(typingTimeout);
-            typingTimeout = setTimeout(() => {
-                globalSocket.emit('stopTyping', { taskId: currentChatTaskId, senderPhone: myPhone });
-            }, 1500);
-        });
-
-        // 2. Show the animated dots
-        function showTypingIndicator() {
-            if (document.getElementById('typing-indicator')) return; // Prevent duplicates
-            const msgBox = document.getElementById('chat-messages');
-            
-            // Remove "Say Hi!" text if it's there
-            const emptyTxt = document.getElementById('empty-chat-msg');
-            if (emptyTxt) emptyTxt.remove();
-
-            const typingHtml = `
-                <div id="typing-indicator" class="typing-wrapper">
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                </div>`;
-            msgBox.insertAdjacentHTML('beforeend', typingHtml);
-            msgBox.scrollTop = msgBox.scrollHeight;
-        }
-
-        // 3. Hide the dots
-        function removeTypingIndicator() {
-            const el = document.getElementById('typing-indicator');
-            if (el) el.remove();
+            currentChatTaskId = null;
         }
 
         function sendChatMessage() {
@@ -600,11 +466,7 @@
             const text = input.value.trim();
             if (!text || !currentChatTaskId) return;
 
-            globalSocket.emit('sendMessage', {
-                taskId: currentChatTaskId,
-                senderPhone: myPhone,
-                text: text
-            });
+            globalSocket.emit('sendMessage', { taskId: currentChatTaskId, senderPhone: myPhone, text: text });
             input.value = ''; 
         }
 
@@ -614,7 +476,6 @@
             const emptyTxt = document.getElementById('empty-chat-msg');
             if (emptyTxt) emptyTxt.remove();
 
-            // Determines if the message should go on the Right (Me) or Left (Them)
             const isMe = msg.senderPhone === myPhone;
             const bubble = document.createElement('div');
             bubble.className = `msg-bubble ${isMe ? 'msg-sent' : 'msg-received'}`;
@@ -623,117 +484,48 @@
             msgBox.appendChild(bubble);
             msgBox.scrollTop = msgBox.scrollHeight; 
         }
-        
-        // Allows pressing Enter to send
+
+        document.getElementById('chat-input').addEventListener('input', () => {
+            if (!currentChatTaskId) return;
+            globalSocket.emit('typing', { taskId: currentChatTaskId, senderPhone: myPhone });
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => { globalSocket.emit('stopTyping', { taskId: currentChatTaskId, senderPhone: myPhone }); }, 1500);
+        });
+
         document.getElementById('chat-input').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') sendChatMessage();
         });
 
-        /* ----------------------------------------------------
-           4. TASK ACTIONS & SERVER COMMUNICATION
-           ---------------------------------------------------- */
-        async function toggleAvailability() {
-            currentStatus = currentStatus === 'free' ? 'busy' : 'free';
-            updateStatusUI();
-            try { 
-                await fetch(`${API_URL}/users/status`, { 
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ phone: myPhone, availability: currentStatus }) 
-                }); 
-            } catch (err) { 
-                showToast("Failed to save status", "error"); 
-                currentStatus = currentStatus === 'free' ? 'busy' : 'free'; 
-                updateStatusUI(); 
-            }
+        function showTypingIndicator() {
+            if (document.getElementById('typing-indicator')) return;
+            const msgBox = document.getElementById('chat-messages');
+            const emptyTxt = document.getElementById('empty-chat-msg');
+            if (emptyTxt) emptyTxt.remove();
+
+            const typingHtml = `<div id="typing-indicator" class="typing-wrapper"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+            msgBox.insertAdjacentHTML('beforeend', typingHtml);
+            msgBox.scrollTop = msgBox.scrollHeight;
         }
 
-        function updateStatusUI() {
-            const btn = document.getElementById('availability-btn');
-            if(currentStatus === 'free') { 
-                btn.innerHTML = '🟢 Free'; btn.className = 'status-btn free'; 
-            } else { 
-                btn.innerHTML = '🔴 Busy'; btn.className = 'status-btn busy'; 
-            }
+        function removeTypingIndicator() {
+            const el = document.getElementById('typing-indicator');
+            if (el) el.remove();
         }
 
-        async function acceptTask(taskId) {
-            const card = document.getElementById(`feed-card-${taskId}`);
-            if (card) card.classList.add('slide-out-left');
-            setTimeout(async () => {
-                try {
-                    const res = await fetch(`${API_URL}/tasks/accept`, { 
-                        method: 'POST', headers: { 'Content-Type': 'application/json' }, 
-                        body: JSON.stringify({ taskId, helperPhone: myPhone }) 
-                    });
-                    const data = await res.json();
-                    if (res.ok) { 
-                        showToast("Task Accepted! Check 'Tasks' tab."); loadTasks(); loadMyTasks(); 
-                    } else { 
-                        showToast(data.message || "Could not accept task", "error"); 
-                        if (card) card.classList.remove('slide-out-left'); 
-                    }
-                } catch (err) { 
-                    showToast("Network Error", "error"); 
-                    if (card) card.classList.remove('slide-out-left'); 
-                }
-            }, 350); 
-        }
-
-        function deleteMyTask(taskId) {
-            showConfirm("Delete Request?", "Are you sure you want to permanently wipe this request from the database?", "Delete", () => {
-                const card = document.getElementById(`req-card-${taskId}`); 
-                if (card) card.classList.add('slide-out-left');
-                setTimeout(async () => {
-                    try {
-                        const res = await fetch(`${API_URL}/tasks/${taskId}`, { method: 'DELETE' });
-                        if (res.ok) showToast("Task wiped from database!"); 
-                        else if(card) card.classList.remove('slide-out-left'); 
-                    } catch (err) { showToast("Network error", "error"); if(card) card.classList.remove('slide-out-left'); }
-                }, 350);
-            });
-        }
-
-        function removeJob(taskId) {
-            showConfirm("Drop Task?", "Drop this task? It will be returned to the public Home tab for others to accept.", "Drop Task", () => {
-                const card = document.getElementById(`job-card-${taskId}`); 
-                if (card) card.classList.add('slide-out-left');
-                setTimeout(async () => {
-                    try {
-                        const res = await fetch(`${API_URL}/tasks/cancel`, { 
-                            method: 'POST', headers: { 'Content-Type': 'application/json' }, 
-                            body: JSON.stringify({ taskId }) 
-                        });
-                        if(res.ok) showToast("Task returned to public feed"); 
-                        else if(card) card.classList.remove('slide-out-left');
-                    } catch (err) { showToast("Network error", "error"); if(card) card.classList.remove('slide-out-left'); }
-                }, 350);
-            });
-        }
-
-        async function prioritizeJob(taskId) { 
-            await fetch(`${API_URL}/tasks/prioritize`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId }) }); 
-            loadMyTasks(); 
-        }
-
-        async function postHelpRequest() {
-            const title = document.getElementById('task-title').value; 
-            const description = document.getElementById('task-desc').value; 
-            const reward = parseInt(document.getElementById('task-reward').value) || 0;
-            if (!title || !description) return showToast("Please fill all fields!", "error");
+        /* -----------------------------------------
+           4. SYSTEM & UI UTILITIES
+           ----------------------------------------- */
+        function showAppNotification(icon, title, desc) {
+            const notif = document.getElementById('app-notification');
+            document.getElementById('app-notif-icon').innerText = icon;
+            document.getElementById('app-notif-title').innerText = title;
+            document.getElementById('app-notif-desc').innerText = desc;
             
-            const res = await fetch(`${API_URL}/tasks`, { 
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ title, description, postedBy: myPhone, reward }) 
-            });
-            if (res.ok) { 
-                showToast("Task posted!"); closeModal(); loadTasks(); 
-                document.getElementById('task-title').value = ""; document.getElementById('task-desc').value = ""; document.getElementById('task-reward').value = ""; 
-            }
+            notif.classList.add('show');
+            clearTimeout(notifTimeout);
+            notifTimeout = setTimeout(() => { notif.classList.remove('show'); }, 4000);
         }
 
-        /* ----------------------------------------------------
-           5. UI & UX UTILITIES
-           ---------------------------------------------------- */
         function showToast(message, type = 'success') {
             const toast = document.getElementById("toast");
             toast.innerText = message; toast.className = `toast show ${type}`;
@@ -741,20 +533,24 @@
         }
 
         function switchTab(tabName) {
-            activeTab = tabName; 
+            activeTab = tabName;
             document.getElementById('home-view').classList.add('hidden'); document.getElementById('tasks-view').classList.add('hidden'); document.getElementById('profile-view').classList.add('hidden');
             document.getElementById('nav-home').classList.remove('active'); document.getElementById('nav-tasks').classList.remove('active'); document.getElementById('nav-profile').classList.remove('active');
             document.getElementById(`${tabName}-view`).classList.remove('hidden'); document.getElementById(`nav-${tabName}`).classList.add('active');
-            
-            // Only force a reload if the page hasn't initially loaded yet
             if (tabName === 'home') { if(isInitialHomeLoad) loadTasks(); }
             if (tabName === 'tasks') { if(isInitialTasksLoad) loadMyTasks(); }
         }
 
+        // --- DISAPPEARING CARD BUG FIX ---
         function toggleMenu(menuId, event) {
             event.stopPropagation(); 
-            // Removes animations temporarily so the menu z-index isn't trapped
-            document.querySelectorAll('.task-card').forEach(card => { card.style.zIndex = '1'; card.style.animation = 'none'; card.style.transform = 'none'; card.style.overflow = 'visible'; });
+            document.querySelectorAll('.task-card').forEach(card => { 
+                card.style.zIndex = '1'; 
+                card.style.animation = 'none'; 
+                card.style.transform = 'none'; 
+                card.style.overflow = 'visible'; 
+                card.style.opacity = '1'; // Forces card to stay visible when animation stops
+            });
             document.querySelectorAll('.dropdown-menu.show').forEach(menu => { if(menu.id !== menuId) menu.classList.remove('show'); });
             
             const menu = document.getElementById(menuId);
@@ -764,12 +560,76 @@
             }
         }
 
+        // Click outside to close menus and preserve card opacity
         document.addEventListener('click', () => {
             document.querySelectorAll('.dropdown-menu.show').forEach(menu => menu.classList.remove('show'));
-            document.querySelectorAll('.task-card').forEach(card => card.style.zIndex = '1');
+            document.querySelectorAll('.task-card').forEach(card => {
+                card.style.zIndex = '1';
+                card.style.opacity = '1'; // Safety net 
+            });
         });
 
-        // Confirmation Modal Logic
+        /* -----------------------------------------
+           5. TASK ACTIONS (Accept, Delete, Post)
+           ----------------------------------------- */
+        async function toggleAvailability() {
+            currentStatus = currentStatus === 'free' ? 'busy' : 'free'; updateStatusUI();
+            try { await fetch(`${API_URL}/users/status`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: myPhone, availability: currentStatus }) }); } 
+            catch (err) { showToast("Failed to save status", "error"); currentStatus = currentStatus === 'free' ? 'busy' : 'free'; updateStatusUI(); }
+        }
+
+        function updateStatusUI() {
+            const btn = document.getElementById('availability-btn');
+            if(currentStatus === 'free') { btn.innerHTML = '🟢 Free'; btn.className = 'status-btn free'; } 
+            else { btn.innerHTML = '🔴 Busy'; btn.className = 'status-btn busy'; }
+        }
+
+        async function acceptTask(taskId) {
+            const card = document.getElementById(`feed-card-${taskId}`);
+            if (card) card.classList.add('slide-out-left');
+            setTimeout(async () => {
+                try {
+                    const res = await fetch(`${API_URL}/tasks/accept`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId, helperPhone: myPhone }) });
+                    const data = await res.json();
+                    if (res.ok) { showToast("Task Accepted! Check 'Tasks' tab."); loadTasks(); loadMyTasks(); } 
+                    else { showToast(data.message || "Could not accept", "error"); if (card) card.classList.remove('slide-out-left'); }
+                } catch (err) { showToast("Network Error", "error"); if (card) card.classList.remove('slide-out-left'); }
+            }, 350); 
+        }
+
+        function deleteMyTask(taskId) {
+            showConfirm("Delete Request?", "Are you sure you want to permanently wipe this request from the database?", "Delete", () => {
+                const card = document.getElementById(`req-card-${taskId}`); if (card) card.classList.add('slide-out-left');
+                setTimeout(async () => {
+                    try {
+                        const res = await fetch(`${API_URL}/tasks/${taskId}`, { method: 'DELETE' });
+                        if (res.ok) showToast("Task wiped from database!"); else if(card) card.classList.remove('slide-out-left'); 
+                    } catch (err) { showToast("Network error", "error"); if(card) card.classList.remove('slide-out-left'); }
+                }, 350);
+            });
+        }
+
+        function removeJob(taskId) {
+            showConfirm("Drop Task?", "Drop this task? It will be returned to the public Home tab for others to accept.", "Drop Task", () => {
+                const card = document.getElementById(`job-card-${taskId}`); if (card) card.classList.add('slide-out-left');
+                setTimeout(async () => {
+                    try {
+                        const res = await fetch(`${API_URL}/tasks/cancel`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId }) });
+                        if(res.ok) showToast("Task returned to public feed"); else if(card) card.classList.remove('slide-out-left');
+                    } catch (err) { showToast("Network error", "error"); if(card) card.classList.remove('slide-out-left'); }
+                }, 350);
+            });
+        }
+
+        async function prioritizeJob(taskId) { await fetch(`${API_URL}/tasks/prioritize`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId }) }); loadMyTasks(); }
+
+        async function postHelpRequest() {
+            const title = document.getElementById('task-title').value; const description = document.getElementById('task-desc').value; const reward = parseInt(document.getElementById('task-reward').value) || 0;
+            if (!title || !description) return showToast("Please fill all fields!", "error");
+            const res = await fetch(`${API_URL}/tasks`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, description, postedBy: myPhone, reward }) });
+            if (res.ok) { showToast("Task posted!"); closeModal(); loadTasks(); document.getElementById('task-title').value = ""; document.getElementById('task-desc').value = ""; document.getElementById('task-reward').value = ""; }
+        }
+
         let pendingConfirmAction = null;
         function showConfirm(title, message, buttonText, actionCallback) {
             document.getElementById('confirm-title').innerText = title; document.getElementById('confirm-message').innerText = message;
