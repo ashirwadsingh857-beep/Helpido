@@ -3,6 +3,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
+const Message = require("./models/Message.js");
 
 // --- NEW: WEBSOCKET IMPORTS ---
 const http = require("http");
@@ -21,8 +22,38 @@ const io = new Server(server, {
     cors: { origin: "*" }
 });
 
+// --- UPGRADED WEBSOCKET CHAT LOGIC ---
 io.on('connection', (socket) => {
     console.log('A user connected to the live feed');
+
+    // 1. Put the user in a private room specifically for this task
+    socket.on('joinChat', (taskId) => {
+        socket.join(taskId);
+    });
+
+    // 2. Receive a message, save it, and bounce it back to the room instantly
+    socket.on('sendMessage', async (data) => {
+        try {
+            const newMsg = new Message({
+                taskId: data.taskId,
+                senderPhone: data.senderPhone,
+                text: data.text
+            });
+            await newMsg.save();
+            
+            // Shouts the message ONLY to people looking at this specific task chat
+            io.to(data.taskId).emit('receiveMessage', newMsg); 
+        } catch(err) { console.error("Message save error", err); }
+    });
+});
+
+// --- NEW API ROUTE: Get Chat History ---
+// Add this right above your /* ---------------- AUTH ROUTES ---------------- */
+app.get('/api/chat/:taskId', async (req, res) => {
+    try {
+        const messages = await Message.find({ taskId: req.params.taskId }).sort({ createdAt: 1 });
+        res.json(messages);
+    } catch(err) { res.status(500).json({ message: "Error fetching chat" }); }
 });
 
 app.use(express.static(path.join(__dirname, '../frontend')));
