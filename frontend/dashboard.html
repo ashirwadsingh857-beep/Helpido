@@ -441,10 +441,22 @@
                         `;
                     }).join('');
 
-                // Render Accepted Jobs
-                const existingJobIds = new Set(Array.from(jobsFeed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('job-card-', '')));
-                const sortedJobs = data.myJobs.sort((a, b) => (b.isPrioritized === true) - (a.isPrioritized === true));
                 
+               // 2. Render Accepted Jobs with Dual-Layer Sorting
+                const existingJobIds = new Set(Array.from(jobsFeed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('job-card-', '')));
+                
+                // --- NEW SORTING LOGIC ---
+                const sortedJobs = data.myJobs.sort((a, b) => {
+                    // Layer 1: Check if one is Prioritized and the other isn't
+                    const pA = a.isPrioritized ? 1 : 0;
+                    const pB = b.isPrioritized ? 1 : 0;
+                    if (pA !== pB) return pB - pA; // Higher priority wins
+                    
+                    // Layer 2: If priority is the same, sort by Last Message Time (Newest First)
+                    const timeA = a.lastActivity ? new Date(a.lastActivity).getTime() : 0;
+                    const timeB = b.lastActivity ? new Date(b.lastActivity).getTime() : 0;
+                    return timeB - timeA; 
+                }); 
                 jobsFeed.innerHTML = sortedJobs.length === 0 
                     ? `<p style="color:#757575; font-size: 0.9rem;">You haven't accepted any tasks.</p>`
                     : sortedJobs.map((task, index) => {
