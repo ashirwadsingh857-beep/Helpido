@@ -7,11 +7,38 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
-        /* --- MOBILE HEIGHT FIX --- */
-        :root { --vh: 1vh; }
-        html, body { height: 100%; overflow: hidden; }
-        .app-container { height: 100vh; height: calc(var(--vh, 1vh) * 100); display: flex; flex-direction: column; }
-        .feed-section { flex: 1; overflow-y: auto; padding-bottom: 80px; }
+        /* --- NATIVE MOBILE SCROLL FIX --- */
+        html, body { 
+            margin: 0; 
+            padding: 0; 
+            min-height: 100%;
+            background-color: var(--bg-light);
+            /* Removed overflow: hidden so the browser toolbar can slide away! */
+        }
+        
+        .app-container { 
+            min-height: 100dvh; /* Dynamic Viewport adjusts automatically to browser toolbars */
+            display: flex; 
+            flex-direction: column; 
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .feed-section { 
+            flex: 1; 
+            padding-bottom: 100px; /* Extra space so cards don't hide behind the nav bar */
+        }
+
+        /* Forces the nav bar to permanently stick to the bottom of the glass */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 500px;
+            z-index: 1000;
+        }
 
         /* --- SKELETON LOADER ANIMATIONS --- */
         .skeleton-card { border-left: none !important; box-shadow: 0 2px 8px rgba(0,0,0,0.03); pointer-events: none; }
@@ -120,20 +147,10 @@
     <div id="toast" class="toast"></div>
 
     <script>
-        // --- MOBILE HEIGHT CALCULATION ---
-        function resetHeight() {
-            let vh = window.innerHeight * 0.01;
-            document.documentElement.style.setProperty('--vh', `${vh}px`);
-        }
-        window.addEventListener('resize', resetHeight);
-        window.addEventListener('orientationchange', resetHeight);
-        resetHeight();
-
         const API_URL = 'https://helpido.onrender.com/api';
         const myPhone = localStorage.getItem('helpido_phone');
         let currentStatus = 'free';
         
-        // Flags to ensure we only show the 3-second delay on the very first load
         let isInitialHomeLoad = true;
         let isInitialTasksLoad = true;
 
@@ -180,7 +197,6 @@
             }
         };
 
-        // --- SKELETON GENERATOR ---
         function getSkeletonHTML(count) {
             return Array(count).fill(`
                 <div class="task-card skeleton-card">
@@ -227,7 +243,6 @@
         async function loadTasks() {
             const feed = document.getElementById('task-feed');
             
-            // 1. Instantly draw 4 skeletons on the very first load
             if (isInitialHomeLoad) {
                 feed.innerHTML = getSkeletonHTML(4);
             }
@@ -237,10 +252,9 @@
                 const allTasks = await res.json();
                 const publicTasks = allTasks.filter(t => t.postedBy !== myPhone);
 
-                // 2. Force the app to wait exactly 3 seconds on the first load to show off the animation!
                 if (isInitialHomeLoad) {
                     await new Promise(resolve => setTimeout(resolve, 3000));
-                    isInitialHomeLoad = false; // Never delay it again
+                    isInitialHomeLoad = false; 
                 }
 
                 if (publicTasks.length === 0) {
@@ -278,7 +292,6 @@
             const reqFeed = document.getElementById('my-requests-feed');
             const jobsFeed = document.getElementById('my-jobs-feed');
             
-            // 1. Draw 2 skeletons for Uploaded, 3 skeletons for Accepted
             if (isInitialTasksLoad) {
                 reqFeed.innerHTML = getSkeletonHTML(2);
                 jobsFeed.innerHTML = getSkeletonHTML(3);
@@ -288,7 +301,6 @@
                 const res = await fetch(`${API_URL}/tasks/my-tasks?phone=${myPhone}`);
                 const data = await res.json();
 
-                // 2. Wait 3 seconds on the very first load
                 if (isInitialTasksLoad) {
                     await new Promise(resolve => setTimeout(resolve, 3000));
                     isInitialTasksLoad = false;
@@ -478,10 +490,10 @@
             document.getElementById(`nav-${tabName}`).classList.add('active');
 
             if (tabName === 'home') {
-                if(isInitialHomeLoad) loadTasks(); // Only re-trigger if it hasn't loaded yet
+                if(isInitialHomeLoad) loadTasks();
             }
             if (tabName === 'tasks') {
-                if(isInitialTasksLoad) loadMyTasks(); // Let the skeleton run if it's the first time
+                if(isInitialTasksLoad) loadMyTasks();
             }
         }
 
