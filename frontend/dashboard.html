@@ -7,38 +7,82 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
-        /* --- NATIVE MOBILE SCROLL FIX --- */
-        html, body { margin: 0; padding: 0; min-height: 100%; background-color: var(--bg-light); overflow-x: hidden; }
-        .app-container { min-height: 100dvh; display: flex; flex-direction: column; max-width: 500px; margin: 0 auto; position: relative; }
-        .feed-section { flex: 1; padding-bottom: 110px; }
-
-        .bottom-nav {
-            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; z-index: 1000;
-            padding-bottom: env(safe-area-inset-bottom); background-color: #ffffff; border-top: 1px solid #eee; height: 65px; display: flex; align-items: center;
+        /* =========================================
+           1. CORE LAYOUT & MOBILE FIXES
+           ========================================= */
+        html, body { 
+            margin: 0; padding: 0; min-height: 100%; 
+            background-color: var(--bg-light); 
+            overflow-x: hidden; /* Allows the browser's top URL bar to slide away naturally */
         }
-        .nav-item { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        
+        .app-container { 
+            min-height: 100dvh; /* Uses Dynamic Viewport Height for mobile screens */
+            display: flex; flex-direction: column; 
+            max-width: 500px; margin: 0 auto; position: relative; 
+        }
+        
+        .feed-section { 
+            flex: 1; padding-bottom: 110px; /* Prevents the bottom nav from covering the last card */
+        }
 
+        /* =========================================
+           2. BOTTOM NAVIGATION BAR
+           ========================================= */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); 
+            width: 100%; max-width: 500px; z-index: 1000;
+            padding-bottom: env(safe-area-inset-bottom); /* Protects against iPhone/Android swipe bars */
+            background-color: #ffffff; border-top: 1px solid #eee; 
+            height: 65px; display: flex; align-items: center;
+        }
+
+        .nav-item { 
+            flex: 1; height: 100%; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; cursor: pointer; 
+            -webkit-tap-highlight-color: transparent; /* Removes ugly blue tap highlight */
+        }
+
+        /* =========================================
+           3. TOAST NOTIFICATIONS (Success/Error popups)
+           ========================================= */
         .toast {
-            visibility: hidden; opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s; position: fixed; bottom: 90px; left: 50%;
-            transform: translateX(-50%) translateY(20px); z-index: 2000; background: #333; color: white; padding: 12px 24px; border-radius: 25px;
-            font-size: 0.9rem; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: max-content; max-width: 80%;
+            visibility: hidden; opacity: 0; 
+            pointer-events: none; /* Allows user to click THROUGH the invisible toast box */
+            transition: opacity 0.3s, transform 0.3s; position: fixed; 
+            bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); 
+            z-index: 2000; background: #333; color: white; padding: 12px 24px; 
+            border-radius: 25px; font-size: 0.9rem; text-align: center; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: max-content; max-width: 80%;
         }
         .toast.show { visibility: visible; opacity: 1; transform: translateX(-50%) translateY(0); }
 
+        /* =========================================
+           4. SKELETON LOADERS (The Shimmer Effect)
+           ========================================= */
         .skeleton-card { border-left: none !important; box-shadow: 0 2px 8px rgba(0,0,0,0.03); pointer-events: none; }
-        .skeleton-element { background: #e0e0e0; background: linear-gradient(90deg, #e0e0e0 25%, #f5f5f5 50%, #e0e0e0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite linear; border-radius: 4px; }
+        .skeleton-element { 
+            background: #e0e0e0; 
+            background: linear-gradient(90deg, #e0e0e0 25%, #f5f5f5 50%, #e0e0e0 75%); 
+            background-size: 200% 100%; 
+            animation: shimmer 1.5s infinite linear; border-radius: 4px; 
+        }
         @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 
-        /* --- NEW: CHAT UI STYLES --- */
+        /* =========================================
+           5. IN-APP CHAT UI (Bottom Drawer)
+           ========================================= */
         .chat-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 3000;
-            display: flex; flex-direction: column; justify-content: flex-end; transition: opacity 0.3s;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.4); z-index: 3000; display: flex; 
+            flex-direction: column; justify-content: flex-end; transition: opacity 0.3s;
         }
         .chat-overlay.hidden { opacity: 0; pointer-events: none; }
         
         .chat-drawer {
-            background: #fff; width: 100%; max-width: 500px; margin: 0 auto; height: 85vh; border-radius: 20px 20px 0 0;
-            display: flex; flex-direction: column; transform: translateY(0); transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            background: #fff; width: 100%; max-width: 500px; margin: 0 auto; 
+            height: 85vh; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; 
+            transform: translateY(0); transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
         }
         .chat-overlay.hidden .chat-drawer { transform: translateY(100%); }
         
@@ -58,6 +102,7 @@
     <div id="splash-screen" class="splash-screen"><h2 id="splash-greeting" class="splash-greeting">Loading...</h2></div>
 
     <main id="main-dash" class="app-container dashboard-layout blur-start">
+        
         <section id="home-view" class="feed-section">
             <header class="dash-header">
                 <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
@@ -69,8 +114,7 @@
                 </div>
             </header>
             <h3 class="section-title">Help Needed Nearby</h3>
-            <div id="task-feed"></div>
-        </section>
+            <div id="task-feed"></div> </section>
 
         <section id="tasks-view" class="feed-section hidden">
             <header class="dash-header">
@@ -118,8 +162,7 @@
                     <h3 id="chat-header-title" style="margin: 0; font-size: 1.2rem; color: #333;">Task Chat</h3>
                     <button onclick="closeChat()" style="background: none; border: none; font-size: 1.5rem; color: #999; cursor: pointer;">&times;</button>
                 </div>
-                <div id="chat-messages" class="chat-messages">
-                    </div>
+                <div id="chat-messages" class="chat-messages"></div>
                 <div class="chat-input-area">
                     <input type="text" id="chat-input" placeholder="Message..." autocomplete="off">
                     <button onclick="sendChatMessage()">Send</button>
@@ -152,45 +195,60 @@
         const API_URL = 'https://helpido.onrender.com/api';
         const myPhone = localStorage.getItem('helpido_phone');
         let currentStatus = 'free';
+        
+        // Timer flags so skeletons only delay on the very first page load
         let isInitialHomeLoad = true;
         let isInitialTasksLoad = true;
 
-        // --- NEW CHAT VARIABLES ---
+        // Chat Variables
         let globalSocket = null;
         let currentChatTaskId = null;
 
-        if (!myPhone || myPhone === "undefined" || myPhone === "null") window.location.replace('/index.html');
-
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById("toast");
-            toast.innerText = message; toast.className = `toast show ${type}`;
-            setTimeout(() => { toast.className = "toast"; }, 3000);
+        // Security check: Redirect to login if user isn't logged in
+        if (!myPhone || myPhone === "undefined" || myPhone === "null") {
+            window.location.replace('/index.html');
         }
 
+        /* ----------------------------------------------------
+           1. INITIALIZATION & WEBSOCKET SETUP
+           ---------------------------------------------------- */
         window.onload = () => {
             if(myPhone) {
                 loadProfile();
                 loadTasks();
                 
+                // Connect to Render backend
                 globalSocket = io('https://helpido.onrender.com', { transports: ['websocket', 'polling'] }); 
                 
                 globalSocket.on('connect', () => { console.log("🟢 Live feed connected!"); });
 
-                globalSocket.on('refreshFeed', () => { loadTasks(); loadMyTasks(); loadProfile(); });
+                // Triggers when someone posts a new task or changes Free/Busy status
+                globalSocket.on('refreshFeed', () => { 
+                    loadTasks(); 
+                    loadMyTasks(); 
+                    loadProfile(); 
+                });
                 
+                // Triggers when a specific task is accepted/deleted so we can animate it sliding away
                 globalSocket.on('taskRemoved', (taskId) => {
                     const feedCard = document.getElementById(`feed-card-${taskId}`);
                     const jobCard = document.getElementById(`job-card-${taskId}`);
                     let isAnimating = false;
+                    
                     if (feedCard) { feedCard.classList.add('slide-out-left'); isAnimating = true; }
                     if (jobCard) { jobCard.classList.add('slide-out-left'); isAnimating = true; }
-                    if (isAnimating) { setTimeout(() => { loadTasks(); loadMyTasks(); }, 350); } 
-                    else { loadTasks(); loadMyTasks(); }
+                    
+                    // Wait for the slide animation to finish before updating the data
+                    if (isAnimating) { 
+                        setTimeout(() => { loadTasks(); loadMyTasks(); }, 350); 
+                    } else { 
+                        loadTasks(); loadMyTasks(); 
+                    }
                 });
 
-                // --- NEW: RECEIVE REAL-TIME MESSAGES ---
+                // Triggers when a chat message arrives from the server
                 globalSocket.on('receiveMessage', (msg) => {
-                    // Only draw it if we are currently looking at THIS specific chat
+                    // Only draw it if we are currently looking at THIS specific task's chat
                     if (currentChatTaskId === msg.taskId) {
                         appendMessageUI(msg);
                     }
@@ -198,6 +256,11 @@
             }
         };
 
+        /* ----------------------------------------------------
+           2. DATA FETCHING (PROFILE, HOME FEED, TASKS FEED)
+           ---------------------------------------------------- */
+        
+        // Helper function: Generates the shimmering grey boxes
         function getSkeletonHTML(count) {
             return Array(count).fill(`
                 <div class="task-card skeleton-card">
@@ -220,13 +283,22 @@
                 if (res.ok) {
                     const user = await res.json();
                     const firstName = user.name.split(' ')[0];
+                    
+                    // Update Text Elements
                     document.getElementById('splash-greeting').innerText = `Hi, ${firstName} 👋`;
                     document.getElementById('profile-name').innerText = user.name;
                     document.getElementById('profile-phone').innerText = "+91 " + user.phone;
                     document.getElementById('profile-address').innerText = user.address;
                     document.getElementById('greeting-name').innerText = `Hi, ${firstName} 👋`;
                     document.getElementById('home-address').innerText = `📍 ${user.address}`;
-                    if(user.availability) { currentStatus = user.availability; updateStatusUI(); }
+                    
+                    // Apply saved Free/Busy status
+                    if(user.availability) { 
+                        currentStatus = user.availability; 
+                        updateStatusUI(); 
+                    }
+
+                    // Reveal Dashboard after 800ms
                     setTimeout(() => {
                         document.getElementById('splash-screen').classList.add('hide');
                         document.getElementById('main-dash').classList.add('unblur');
@@ -237,20 +309,33 @@
 
         async function loadTasks() {
             const feed = document.getElementById('task-feed');
-            if (isInitialHomeLoad) feed.innerHTML = getSkeletonHTML(4);
+            
+            // Instantly draw skeletons on first load
+            if (isInitialHomeLoad) {
+                feed.innerHTML = getSkeletonHTML(4);
+            }
+
             try {
                 const res = await fetch(`${API_URL}/tasks`);
                 const allTasks = await res.json();
                 const publicTasks = allTasks.filter(t => t.postedBy !== myPhone);
-                if (isInitialHomeLoad) { await new Promise(resolve => setTimeout(resolve, 3000)); isInitialHomeLoad = false; }
+
+                // REDUCED DELAY: Wait 1.5 seconds on first load to show the animation 
+                if (isInitialHomeLoad) { 
+                    await new Promise(resolve => setTimeout(resolve, 1500)); 
+                    isInitialHomeLoad = false; 
+                }
 
                 if (publicTasks.length === 0) {
                     feed.innerHTML = `<p style="text-align:center; color:#757575; padding-top:40px;">No tasks available right now.</p>`;
                 } else {
+                    // Smart Memory: Remember which cards are already on screen to prevent them from animating again
                     const existingCardIds = new Set(Array.from(feed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('feed-card-', '')));
+                    
                     feed.innerHTML = publicTasks.map((task, index) => {
                         const isNew = !existingCardIds.has(task._id.toString());
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`; 
+                        
                         return `
                         <div class="task-card" id="feed-card-${task._id}" style="${animStyle}">
                             <div class="task-top">
@@ -274,22 +359,32 @@
         async function loadMyTasks() {
             const reqFeed = document.getElementById('my-requests-feed');
             const jobsFeed = document.getElementById('my-jobs-feed');
-            if (isInitialTasksLoad) { reqFeed.innerHTML = getSkeletonHTML(2); jobsFeed.innerHTML = getSkeletonHTML(3); }
+            
+            // Instantly draw skeletons on first load
+            if (isInitialTasksLoad) { 
+                reqFeed.innerHTML = getSkeletonHTML(2); 
+                jobsFeed.innerHTML = getSkeletonHTML(3); 
+            }
 
             try {
                 const res = await fetch(`${API_URL}/tasks/my-tasks?phone=${myPhone}`);
                 const data = await res.json();
-                if (isInitialTasksLoad) { await new Promise(resolve => setTimeout(resolve, 3000)); isInitialTasksLoad = false; }
+                
+                // REDUCED DELAY: Wait 1.5 seconds on first load to show the animation
+                if (isInitialTasksLoad) { 
+                    await new Promise(resolve => setTimeout(resolve, 1500)); 
+                    isInitialTasksLoad = false; 
+                }
 
+                // 1. Render Uploaded Requests
                 const existingReqIds = new Set(Array.from(reqFeed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('req-card-', '')));
-
                 reqFeed.innerHTML = data.myRequests.length === 0 
                     ? `<p style="color:#757575; font-size: 0.9rem;">You haven't uploaded any tasks.</p>`
                     : data.myRequests.map((task, index) => {
                         const isNew = !existingReqIds.has(task._id.toString());
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
                         
-                        // NEW: Add a Chat Button if the task is accepted!
+                        // Creates Chat Button if accepted
                         const chatBtn = task.status === 'accepted' ? `<button class="btn" style="width:100%; margin-top:12px; background-color:#2196F3;" onclick="openChat('${task._id}', 'Helper')">💬 Chat with Helper</button>` : '';
 
                         return `
@@ -307,9 +402,9 @@
                         `;
                     }).join('');
 
+                // 2. Render Accepted Jobs
                 const existingJobIds = new Set(Array.from(jobsFeed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('job-card-', '')));
                 const sortedJobs = data.myJobs.sort((a, b) => (b.isPrioritized === true) - (a.isPrioritized === true));
-                
                 jobsFeed.innerHTML = sortedJobs.length === 0 
                     ? `<p style="color:#757575; font-size: 0.9rem;">You haven't accepted any tasks.</p>`
                     : sortedJobs.map((task, index) => {
@@ -334,35 +429,37 @@
             } catch (err) { reqFeed.innerHTML = `<p style="text-align:center; color:red;">Error loading tasks.</p>`; }
         }
 
-        // --- NEW: CHAT ENGINE LOGIC ---
+        /* ----------------------------------------------------
+           3. CHAT ENGINE
+           ---------------------------------------------------- */
         async function openChat(taskId, chatWith) {
             currentChatTaskId = taskId;
             document.getElementById('chat-header-title').innerText = `Chat with ${chatWith}`;
             document.getElementById('chat-modal').classList.remove('hidden');
+            
             const msgBox = document.getElementById('chat-messages');
             msgBox.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">Loading messages...</p>';
             
-            // Tell the server to put us in a private room for this task
+            // Connect specifically to this task's private chat room
             globalSocket.emit('joinChat', taskId);
 
-            // Fetch old messages from the database
             try {
                 const res = await fetch(`${API_URL}/chat/${taskId}`);
                 const history = await res.json();
-                msgBox.innerHTML = ''; // Clear loading text
+                msgBox.innerHTML = ''; 
                 
                 if (history.length === 0) {
                     msgBox.innerHTML = '<p id="empty-chat-msg" style="text-align:center; color:#999; margin-top:20px;">No messages yet. Say hi!</p>';
                 } else {
                     history.forEach(msg => appendMessageUI(msg));
                 }
-                msgBox.scrollTop = msgBox.scrollHeight; // Auto-scroll to bottom
+                msgBox.scrollTop = msgBox.scrollHeight; 
             } catch (err) { msgBox.innerHTML = '<p style="color:red; text-align:center;">Failed to load chat.</p>'; }
         }
 
         function closeChat() {
             document.getElementById('chat-modal').classList.add('hidden');
-            currentChatTaskId = null;
+            currentChatTaskId = null; // Unlink from room
         }
 
         function sendChatMessage() {
@@ -370,13 +467,12 @@
             const text = input.value.trim();
             if (!text || !currentChatTaskId) return;
 
-            // Send through the WebSocket
             globalSocket.emit('sendMessage', {
                 taskId: currentChatTaskId,
                 senderPhone: myPhone,
                 text: text
             });
-            input.value = ''; // Clear box
+            input.value = ''; 
         }
 
         function appendMessageUI(msg) {
@@ -384,79 +480,80 @@
             const emptyTxt = document.getElementById('empty-chat-msg');
             if (emptyTxt) emptyTxt.remove();
 
+            // Determines if the message should go on the Right (Me) or Left (Them)
             const isMe = msg.senderPhone === myPhone;
             const bubble = document.createElement('div');
             bubble.className = `msg-bubble ${isMe ? 'msg-sent' : 'msg-received'}`;
             bubble.innerText = msg.text;
             
             msgBox.appendChild(bubble);
-            msgBox.scrollTop = msgBox.scrollHeight; // Keep scrolling down as new texts arrive
+            msgBox.scrollTop = msgBox.scrollHeight; 
         }
         
-        // Let users press 'Enter' on their phone keyboard to send text
+        // Allows pressing Enter to send
         document.getElementById('chat-input').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') sendChatMessage();
         });
-        
-        // ----------------------------------------------
 
+        /* ----------------------------------------------------
+           4. TASK ACTIONS & SERVER COMMUNICATION
+           ---------------------------------------------------- */
         async function toggleAvailability() {
             currentStatus = currentStatus === 'free' ? 'busy' : 'free';
             updateStatusUI();
-            try { await fetch(`${API_URL}/users/status`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: myPhone, availability: currentStatus }) }); } 
-            catch (err) { showToast("Failed to save status", "error"); currentStatus = currentStatus === 'free' ? 'busy' : 'free'; updateStatusUI(); }
+            try { 
+                await fetch(`${API_URL}/users/status`, { 
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ phone: myPhone, availability: currentStatus }) 
+                }); 
+            } catch (err) { 
+                showToast("Failed to save status", "error"); 
+                currentStatus = currentStatus === 'free' ? 'busy' : 'free'; 
+                updateStatusUI(); 
+            }
         }
 
         function updateStatusUI() {
             const btn = document.getElementById('availability-btn');
-            if(currentStatus === 'free') { btn.innerHTML = '🟢 Free'; btn.className = 'status-btn free'; } 
-            else { btn.innerHTML = '🔴 Busy'; btn.className = 'status-btn busy'; }
+            if(currentStatus === 'free') { 
+                btn.innerHTML = '🟢 Free'; btn.className = 'status-btn free'; 
+            } else { 
+                btn.innerHTML = '🔴 Busy'; btn.className = 'status-btn busy'; 
+            }
         }
-
-        function toggleMenu(menuId, event) {
-            event.stopPropagation(); 
-            document.querySelectorAll('.task-card').forEach(card => { card.style.zIndex = '1'; card.style.animation = 'none'; card.style.transform = 'none'; card.style.overflow = 'visible'; });
-            document.querySelectorAll('.dropdown-menu.show').forEach(menu => { if(menu.id !== menuId) menu.classList.remove('show'); });
-            const menu = document.getElementById(menuId);
-            if (menu) { menu.classList.toggle('show'); if (menu.classList.contains('show')) menu.closest('.task-card').style.zIndex = '9999'; }
-        }
-
-        document.addEventListener('click', () => {
-            document.querySelectorAll('.dropdown-menu.show').forEach(menu => menu.classList.remove('show'));
-            document.querySelectorAll('.task-card').forEach(card => card.style.zIndex = '1');
-        });
 
         async function acceptTask(taskId) {
             const card = document.getElementById(`feed-card-${taskId}`);
             if (card) card.classList.add('slide-out-left');
             setTimeout(async () => {
                 try {
-                    const res = await fetch(`${API_URL}/tasks/accept`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId, helperPhone: myPhone }) });
+                    const res = await fetch(`${API_URL}/tasks/accept`, { 
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify({ taskId, helperPhone: myPhone }) 
+                    });
                     const data = await res.json();
-                    if (res.ok) { showToast("Task Accepted! Check 'Tasks' tab."); loadTasks(); loadMyTasks(); } 
-                    else { showToast(data.message || "Could not accept", "error"); if (card) card.classList.remove('slide-out-left'); }
-                } catch (err) { showToast("Network Error", "error"); if (card) card.classList.remove('slide-out-left'); }
+                    if (res.ok) { 
+                        showToast("Task Accepted! Check 'Tasks' tab."); loadTasks(); loadMyTasks(); 
+                    } else { 
+                        showToast(data.message || "Could not accept task", "error"); 
+                        if (card) card.classList.remove('slide-out-left'); 
+                    }
+                } catch (err) { 
+                    showToast("Network Error", "error"); 
+                    if (card) card.classList.remove('slide-out-left'); 
+                }
             }, 350); 
         }
 
-        let pendingConfirmAction = null;
-        function showConfirm(title, message, buttonText, actionCallback) {
-            document.getElementById('confirm-title').innerText = title; document.getElementById('confirm-message').innerText = message;
-            const actionBtn = document.getElementById('confirm-action-btn'); actionBtn.innerText = buttonText;
-            pendingConfirmAction = actionCallback; document.getElementById('confirm-modal').classList.remove('hidden');
-        }
-
-        function closeConfirm() { document.getElementById('confirm-modal').classList.add('hidden'); pendingConfirmAction = null; }
-
-        document.getElementById('confirm-action-btn').addEventListener('click', () => { if (pendingConfirmAction) pendingConfirmAction(); closeConfirm(); });
-
         function deleteMyTask(taskId) {
             showConfirm("Delete Request?", "Are you sure you want to permanently wipe this request from the database?", "Delete", () => {
-                const card = document.getElementById(`req-card-${taskId}`); if (card) card.classList.add('slide-out-left');
+                const card = document.getElementById(`req-card-${taskId}`); 
+                if (card) card.classList.add('slide-out-left');
                 setTimeout(async () => {
                     try {
                         const res = await fetch(`${API_URL}/tasks/${taskId}`, { method: 'DELETE' });
-                        if (res.ok) showToast("Task wiped from database!"); else if(card) card.classList.remove('slide-out-left'); 
+                        if (res.ok) showToast("Task wiped from database!"); 
+                        else if(card) card.classList.remove('slide-out-left'); 
                     } catch (err) { showToast("Network error", "error"); if(card) card.classList.remove('slide-out-left'); }
                 }, 350);
             });
@@ -464,32 +561,88 @@
 
         function removeJob(taskId) {
             showConfirm("Drop Task?", "Drop this task? It will be returned to the public Home tab for others to accept.", "Drop Task", () => {
-                const card = document.getElementById(`job-card-${taskId}`); if (card) card.classList.add('slide-out-left');
+                const card = document.getElementById(`job-card-${taskId}`); 
+                if (card) card.classList.add('slide-out-left');
                 setTimeout(async () => {
                     try {
-                        const res = await fetch(`${API_URL}/tasks/cancel`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId }) });
-                        if(res.ok) showToast("Task returned to public feed"); else if(card) card.classList.remove('slide-out-left');
+                        const res = await fetch(`${API_URL}/tasks/cancel`, { 
+                            method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+                            body: JSON.stringify({ taskId }) 
+                        });
+                        if(res.ok) showToast("Task returned to public feed"); 
+                        else if(card) card.classList.remove('slide-out-left');
                     } catch (err) { showToast("Network error", "error"); if(card) card.classList.remove('slide-out-left'); }
                 }, 350);
             });
         }
 
-        async function prioritizeJob(taskId) { await fetch(`${API_URL}/tasks/prioritize`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId }) }); loadMyTasks(); }
+        async function prioritizeJob(taskId) { 
+            await fetch(`${API_URL}/tasks/prioritize`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId }) }); 
+            loadMyTasks(); 
+        }
 
         async function postHelpRequest() {
-            const title = document.getElementById('task-title').value; const description = document.getElementById('task-desc').value; const reward = parseInt(document.getElementById('task-reward').value) || 0;
+            const title = document.getElementById('task-title').value; 
+            const description = document.getElementById('task-desc').value; 
+            const reward = parseInt(document.getElementById('task-reward').value) || 0;
             if (!title || !description) return showToast("Please fill all fields!", "error");
-            const res = await fetch(`${API_URL}/tasks`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, description, postedBy: myPhone, reward }) });
-            if (res.ok) { showToast("Task posted!"); closeModal(); loadTasks(); document.getElementById('task-title').value = ""; document.getElementById('task-desc').value = ""; document.getElementById('task-reward').value = ""; }
+            
+            const res = await fetch(`${API_URL}/tasks`, { 
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ title, description, postedBy: myPhone, reward }) 
+            });
+            if (res.ok) { 
+                showToast("Task posted!"); closeModal(); loadTasks(); 
+                document.getElementById('task-title').value = ""; document.getElementById('task-desc').value = ""; document.getElementById('task-reward').value = ""; 
+            }
+        }
+
+        /* ----------------------------------------------------
+           5. UI & UX UTILITIES
+           ---------------------------------------------------- */
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById("toast");
+            toast.innerText = message; toast.className = `toast show ${type}`;
+            setTimeout(() => { toast.className = "toast"; }, 3000);
         }
 
         function switchTab(tabName) {
             document.getElementById('home-view').classList.add('hidden'); document.getElementById('tasks-view').classList.add('hidden'); document.getElementById('profile-view').classList.add('hidden');
             document.getElementById('nav-home').classList.remove('active'); document.getElementById('nav-tasks').classList.remove('active'); document.getElementById('nav-profile').classList.remove('active');
             document.getElementById(`${tabName}-view`).classList.remove('hidden'); document.getElementById(`nav-${tabName}`).classList.add('active');
+            
+            // Only force a reload if the page hasn't initially loaded yet
             if (tabName === 'home') { if(isInitialHomeLoad) loadTasks(); }
             if (tabName === 'tasks') { if(isInitialTasksLoad) loadMyTasks(); }
         }
+
+        function toggleMenu(menuId, event) {
+            event.stopPropagation(); 
+            // Removes animations temporarily so the menu z-index isn't trapped
+            document.querySelectorAll('.task-card').forEach(card => { card.style.zIndex = '1'; card.style.animation = 'none'; card.style.transform = 'none'; card.style.overflow = 'visible'; });
+            document.querySelectorAll('.dropdown-menu.show').forEach(menu => { if(menu.id !== menuId) menu.classList.remove('show'); });
+            
+            const menu = document.getElementById(menuId);
+            if (menu) { 
+                menu.classList.toggle('show'); 
+                if (menu.classList.contains('show')) menu.closest('.task-card').style.zIndex = '9999'; 
+            }
+        }
+
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.dropdown-menu.show').forEach(menu => menu.classList.remove('show'));
+            document.querySelectorAll('.task-card').forEach(card => card.style.zIndex = '1');
+        });
+
+        // Confirmation Modal Logic
+        let pendingConfirmAction = null;
+        function showConfirm(title, message, buttonText, actionCallback) {
+            document.getElementById('confirm-title').innerText = title; document.getElementById('confirm-message').innerText = message;
+            const actionBtn = document.getElementById('confirm-action-btn'); actionBtn.innerText = buttonText;
+            pendingConfirmAction = actionCallback; document.getElementById('confirm-modal').classList.remove('hidden');
+        }
+        function closeConfirm() { document.getElementById('confirm-modal').classList.add('hidden'); pendingConfirmAction = null; }
+        document.getElementById('confirm-action-btn').addEventListener('click', () => { if (pendingConfirmAction) pendingConfirmAction(); closeConfirm(); });
 
         function openModal() { document.getElementById('create-modal').classList.remove('hidden'); }
         function closeModal() { document.getElementById('create-modal').classList.add('hidden'); }
