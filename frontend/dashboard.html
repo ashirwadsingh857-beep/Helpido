@@ -222,8 +222,8 @@
     <script>
         const API_URL = 'https://helpido.onrender.com/api';
         const myPhone = localStorage.getItem('helpido_phone');
-        let currentStatus = 'free';
         
+        let currentStatus = 'free';
         let isInitialHomeLoad = true;
         let isInitialTasksLoad = true;
         let activeTab = 'home';
@@ -233,11 +233,13 @@
         let currentChatTaskId = null;
         let typingTimeout = null;
 
-        if (!myPhone || myPhone === "undefined" || myPhone === "null") window.location.replace('/index.html');
+        if (!myPhone || myPhone === "undefined" || myPhone === "null") {
+            window.location.replace('/index.html');
+        }
 
-        /* -----------------------------------------
-           1. INITIALIZATION & SOCKET LISTENERS
-           ----------------------------------------- */
+        /* =========================================
+           1. INITIALIZATION & SOCKET EVENTS
+           ========================================= */
         window.onload = () => {
             if(myPhone) {
                 loadProfile();
@@ -259,10 +261,15 @@
                     const feedCard = document.getElementById(`feed-card-${taskId}`);
                     const jobCard = document.getElementById(`job-card-${taskId}`);
                     let isAnimating = false;
+                    
                     if (feedCard) { feedCard.classList.add('slide-out-left'); isAnimating = true; }
                     if (jobCard) { jobCard.classList.add('slide-out-left'); isAnimating = true; }
-                    if (isAnimating) { setTimeout(() => { loadTasks(); loadMyTasks(); }, 350); } 
-                    else { loadTasks(); loadMyTasks(); }
+                    
+                    if (isAnimating) { 
+                        setTimeout(() => { loadTasks(); loadMyTasks(); }, 350); 
+                    } else { 
+                        loadTasks(); loadMyTasks(); 
+                    }
                 });
 
                 globalSocket.on('receiveMessage', async (msg) => {
@@ -274,7 +281,9 @@
                             const user = await res.json();
                             const firstName = user.name.split(' ')[0];
                             showAppNotification('💬', `New message from ${firstName}`, msg.text);
-                        } catch(e) { showAppNotification('💬', 'New message', msg.text); }
+                        } catch(e) { 
+                            showAppNotification('💬', 'New message', msg.text); 
+                        }
                     }
                 });
 
@@ -288,9 +297,9 @@
             }
         };
 
-        /* -----------------------------------------
-           2. DATA FETCHING & RENDERING
-           ----------------------------------------- */
+        /* =========================================
+           2. DATA RENDERING & API CALLS
+           ========================================= */
         function getSkeletonHTML(count) {
             return Array(count).fill(`
                 <div class="task-card skeleton-card">
@@ -313,13 +322,16 @@
                 if (res.ok) {
                     const user = await res.json();
                     const firstName = user.name.split(' ')[0];
+                    
                     document.getElementById('splash-greeting').innerText = `Hi, ${firstName} 👋`;
                     document.getElementById('profile-name').innerText = user.name;
                     document.getElementById('profile-phone').innerText = "+91 " + user.phone;
                     document.getElementById('profile-address').innerText = user.address;
                     document.getElementById('greeting-name').innerText = `Hi, ${firstName} 👋`;
                     document.getElementById('home-address').innerText = `📍 ${user.address}`;
+                    
                     if(user.availability) { currentStatus = user.availability; updateStatusUI(); }
+                    
                     setTimeout(() => {
                         document.getElementById('splash-screen').classList.add('hide');
                         document.getElementById('main-dash').classList.add('unblur');
@@ -330,20 +342,34 @@
 
         async function loadTasks() {
             const feed = document.getElementById('task-feed');
+            
             if (isInitialHomeLoad) feed.innerHTML = getSkeletonHTML(4);
+            
             try {
                 const res = await fetch(`${API_URL}/tasks`);
                 const allTasks = await res.json();
-                const publicTasks = allTasks.filter(t => t.postedBy !== myPhone);
-                if (isInitialHomeLoad) { await new Promise(resolve => setTimeout(resolve, 1500)); isInitialHomeLoad = false; }
+                
+                // Exclude tasks created by user
+                let publicTasks = allTasks.filter(t => t.postedBy !== myPhone);
+                
+                // Exclude tasks the user has manually dropped
+                const droppedTasks = JSON.parse(localStorage.getItem('dropped_tasks') || "[]");
+                publicTasks = publicTasks.filter(t => !droppedTasks.includes(t._id));
+
+                if (isInitialHomeLoad) { 
+                    await new Promise(resolve => setTimeout(resolve, 1500)); 
+                    isInitialHomeLoad = false; 
+                }
 
                 if (publicTasks.length === 0) {
                     feed.innerHTML = `<p style="text-align:center; color:#757575; padding-top:40px;">No tasks available right now.</p>`;
                 } else {
                     const existingCardIds = new Set(Array.from(feed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('feed-card-', '')));
+                    
                     feed.innerHTML = publicTasks.map((task, index) => {
                         const isNew = !existingCardIds.has(task._id.toString());
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`; 
+                        
                         return `
                         <div class="task-card" id="feed-card-${task._id}" style="${animStyle}">
                             <div class="task-top">
@@ -367,13 +393,22 @@
         async function loadMyTasks() {
             const reqFeed = document.getElementById('my-requests-feed');
             const jobsFeed = document.getElementById('my-jobs-feed');
-            if (isInitialTasksLoad) { reqFeed.innerHTML = getSkeletonHTML(2); jobsFeed.innerHTML = getSkeletonHTML(3); }
+            
+            if (isInitialTasksLoad) { 
+                reqFeed.innerHTML = getSkeletonHTML(2); 
+                jobsFeed.innerHTML = getSkeletonHTML(3); 
+            }
 
             try {
                 const res = await fetch(`${API_URL}/tasks/my-tasks?phone=${myPhone}`);
                 const data = await res.json();
-                if (isInitialTasksLoad) { await new Promise(resolve => setTimeout(resolve, 1500)); isInitialTasksLoad = false; }
+                
+                if (isInitialTasksLoad) { 
+                    await new Promise(resolve => setTimeout(resolve, 1500)); 
+                    isInitialTasksLoad = false; 
+                }
 
+                // Render Uploaded Requests
                 const existingReqIds = new Set(Array.from(reqFeed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('req-card-', '')));
                 reqFeed.innerHTML = data.myRequests.length === 0 
                     ? `<p style="color:#757575; font-size: 0.9rem;">You haven't uploaded any tasks.</p>`
@@ -397,8 +432,10 @@
                         `;
                     }).join('');
 
+                // Render Accepted Jobs
                 const existingJobIds = new Set(Array.from(jobsFeed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('job-card-', '')));
                 const sortedJobs = data.myJobs.sort((a, b) => (b.isPrioritized === true) - (a.isPrioritized === true));
+                
                 jobsFeed.innerHTML = sortedJobs.length === 0 
                     ? `<p style="color:#757575; font-size: 0.9rem;">You haven't accepted any tasks.</p>`
                     : sortedJobs.map((task, index) => {
@@ -423,14 +460,15 @@
             } catch (err) { reqFeed.innerHTML = `<p style="text-align:center; color:red;">Error loading tasks.</p>`; }
         }
 
-        /* -----------------------------------------
+        /* =========================================
            3. CHAT ENGINE
-           ----------------------------------------- */
+           ========================================= */
         async function openChat(taskId, targetPhone) {
             currentChatTaskId = taskId;
             document.getElementById('chat-header-title').innerText = `Loading...`;
             document.getElementById('chat-modal').classList.remove('hidden');
             
+            // Fetch real name for header
             fetch(`${API_URL}/users/${targetPhone}`)
                 .then(res => res.json())
                 .then(user => {
@@ -512,9 +550,9 @@
             if (el) el.remove();
         }
 
-        /* -----------------------------------------
+        /* =========================================
            4. SYSTEM & UI UTILITIES
-           ----------------------------------------- */
+           ========================================= */
         function showAppNotification(icon, title, desc) {
             const notif = document.getElementById('app-notification');
             document.getElementById('app-notif-icon').innerText = icon;
@@ -537,19 +575,20 @@
             document.getElementById('home-view').classList.add('hidden'); document.getElementById('tasks-view').classList.add('hidden'); document.getElementById('profile-view').classList.add('hidden');
             document.getElementById('nav-home').classList.remove('active'); document.getElementById('nav-tasks').classList.remove('active'); document.getElementById('nav-profile').classList.remove('active');
             document.getElementById(`${tabName}-view`).classList.remove('hidden'); document.getElementById(`nav-${tabName}`).classList.add('active');
+            
             if (tabName === 'home') { if(isInitialHomeLoad) loadTasks(); }
             if (tabName === 'tasks') { if(isInitialTasksLoad) loadMyTasks(); }
         }
 
-        // --- DISAPPEARING CARD BUG FIX ---
         function toggleMenu(menuId, event) {
             event.stopPropagation(); 
+            // Fix: Keep opacity 1 so cards don't disappear when animation is removed
             document.querySelectorAll('.task-card').forEach(card => { 
                 card.style.zIndex = '1'; 
                 card.style.animation = 'none'; 
                 card.style.transform = 'none'; 
                 card.style.overflow = 'visible'; 
-                card.style.opacity = '1'; // Forces card to stay visible when animation stops
+                card.style.opacity = '1'; 
             });
             document.querySelectorAll('.dropdown-menu.show').forEach(menu => { if(menu.id !== menuId) menu.classList.remove('show'); });
             
@@ -560,22 +599,28 @@
             }
         }
 
-        // Click outside to close menus and preserve card opacity
         document.addEventListener('click', () => {
             document.querySelectorAll('.dropdown-menu.show').forEach(menu => menu.classList.remove('show'));
             document.querySelectorAll('.task-card').forEach(card => {
                 card.style.zIndex = '1';
-                card.style.opacity = '1'; // Safety net 
+                card.style.opacity = '1'; 
             });
         });
 
-        /* -----------------------------------------
-           5. TASK ACTIONS (Accept, Delete, Post)
-           ----------------------------------------- */
+        /* =========================================
+           5. TASK ACTIONS (Accept, Post, Drop, Delete)
+           ========================================= */
         async function toggleAvailability() {
             currentStatus = currentStatus === 'free' ? 'busy' : 'free'; updateStatusUI();
-            try { await fetch(`${API_URL}/users/status`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: myPhone, availability: currentStatus }) }); } 
-            catch (err) { showToast("Failed to save status", "error"); currentStatus = currentStatus === 'free' ? 'busy' : 'free'; updateStatusUI(); }
+            try { 
+                await fetch(`${API_URL}/users/status`, { 
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ phone: myPhone, availability: currentStatus }) 
+                }); 
+            } catch (err) { 
+                showToast("Failed to save status", "error"); 
+                currentStatus = currentStatus === 'free' ? 'busy' : 'free'; updateStatusUI(); 
+            }
         }
 
         function updateStatusUI() {
@@ -587,23 +632,35 @@
         async function acceptTask(taskId) {
             const card = document.getElementById(`feed-card-${taskId}`);
             if (card) card.classList.add('slide-out-left');
+            
             setTimeout(async () => {
                 try {
-                    const res = await fetch(`${API_URL}/tasks/accept`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId, helperPhone: myPhone }) });
+                    const res = await fetch(`${API_URL}/tasks/accept`, { 
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify({ taskId, helperPhone: myPhone }) 
+                    });
                     const data = await res.json();
-                    if (res.ok) { showToast("Task Accepted! Check 'Tasks' tab."); loadTasks(); loadMyTasks(); } 
-                    else { showToast(data.message || "Could not accept", "error"); if (card) card.classList.remove('slide-out-left'); }
+                    
+                    if (res.ok) { 
+                        showToast("Task Accepted! Check 'Tasks' tab."); loadTasks(); loadMyTasks(); 
+                    } else { 
+                        showToast(data.message || "Could not accept", "error"); 
+                        if (card) card.classList.remove('slide-out-left'); 
+                    }
                 } catch (err) { showToast("Network Error", "error"); if (card) card.classList.remove('slide-out-left'); }
             }, 350); 
         }
 
         function deleteMyTask(taskId) {
             showConfirm("Delete Request?", "Are you sure you want to permanently wipe this request from the database?", "Delete", () => {
-                const card = document.getElementById(`req-card-${taskId}`); if (card) card.classList.add('slide-out-left');
+                const card = document.getElementById(`req-card-${taskId}`); 
+                if (card) card.classList.add('slide-out-left');
+                
                 setTimeout(async () => {
                     try {
                         const res = await fetch(`${API_URL}/tasks/${taskId}`, { method: 'DELETE' });
-                        if (res.ok) showToast("Task wiped from database!"); else if(card) card.classList.remove('slide-out-left'); 
+                        if (res.ok) showToast("Task wiped from database!"); 
+                        else if(card) card.classList.remove('slide-out-left'); 
                     } catch (err) { showToast("Network error", "error"); if(card) card.classList.remove('slide-out-left'); }
                 }, 350);
             });
@@ -611,25 +668,64 @@
 
         function removeJob(taskId) {
             showConfirm("Drop Task?", "Drop this task? It will be returned to the public Home tab for others to accept.", "Drop Task", () => {
-                const card = document.getElementById(`job-card-${taskId}`); if (card) card.classList.add('slide-out-left');
+                const card = document.getElementById(`job-card-${taskId}`); 
+                if (card) card.classList.add('slide-out-left');
+                
                 setTimeout(async () => {
                     try {
-                        const res = await fetch(`${API_URL}/tasks/cancel`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId }) });
-                        if(res.ok) showToast("Task returned to public feed"); else if(card) card.classList.remove('slide-out-left');
+                        const res = await fetch(`${API_URL}/tasks/cancel`, { 
+                            method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+                            body: JSON.stringify({ taskId }) 
+                        });
+                        
+                        if(res.ok) {
+                            // Add to local blacklist so the user doesn't see it again
+                            let droppedTasks = JSON.parse(localStorage.getItem('dropped_tasks') || "[]");
+                            if(!droppedTasks.includes(taskId)) {
+                                droppedTasks.push(taskId);
+                                localStorage.setItem('dropped_tasks', JSON.stringify(droppedTasks));
+                            }
+                            
+                            showToast("Task dropped and hidden."); 
+                            loadTasks(); 
+                            loadMyTasks();
+                        } else {
+                            if(card) card.classList.remove('slide-out-left');
+                        }
                     } catch (err) { showToast("Network error", "error"); if(card) card.classList.remove('slide-out-left'); }
                 }, 350);
             });
         }
 
-        async function prioritizeJob(taskId) { await fetch(`${API_URL}/tasks/prioritize`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId }) }); loadMyTasks(); }
-
-        async function postHelpRequest() {
-            const title = document.getElementById('task-title').value; const description = document.getElementById('task-desc').value; const reward = parseInt(document.getElementById('task-reward').value) || 0;
-            if (!title || !description) return showToast("Please fill all fields!", "error");
-            const res = await fetch(`${API_URL}/tasks`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, description, postedBy: myPhone, reward }) });
-            if (res.ok) { showToast("Task posted!"); closeModal(); loadTasks(); document.getElementById('task-title').value = ""; document.getElementById('task-desc').value = ""; document.getElementById('task-reward').value = ""; }
+        async function prioritizeJob(taskId) { 
+            await fetch(`${API_URL}/tasks/prioritize`, { 
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ taskId }) 
+            }); 
+            loadMyTasks(); 
         }
 
+        async function postHelpRequest() {
+            const title = document.getElementById('task-title').value; 
+            const description = document.getElementById('task-desc').value; 
+            const reward = parseInt(document.getElementById('task-reward').value) || 0;
+            
+            if (!title || !description) return showToast("Please fill all fields!", "error");
+            
+            const res = await fetch(`${API_URL}/tasks`, { 
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ title, description, postedBy: myPhone, reward }) 
+            });
+            
+            if (res.ok) { 
+                showToast("Task posted!"); closeModal(); loadTasks(); 
+                document.getElementById('task-title').value = ""; document.getElementById('task-desc').value = ""; document.getElementById('task-reward').value = ""; 
+            }
+        }
+
+        /* =========================================
+           6. MODAL & SESSION UTILITIES
+           ========================================= */
         let pendingConfirmAction = null;
         function showConfirm(title, message, buttonText, actionCallback) {
             document.getElementById('confirm-title').innerText = title; document.getElementById('confirm-message').innerText = message;
