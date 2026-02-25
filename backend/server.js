@@ -26,12 +26,16 @@ const io = new Server(server, {
 io.on('connection', (socket) => {
     console.log('A user connected to the live feed');
 
-    // 1. Put the user in a private room specifically for this task
+    // 1. User joins a personal room based on their phone number
+    socket.on('registerPhone', (phone) => {
+        socket.join(phone);
+    });
+
     socket.on('joinChat', (taskId) => {
         socket.join(taskId);
     });
 
-    // 2. Receive a message, save it, and bounce it back to the room instantly
+    // 2. Save message, update active chat, and send private notification
     socket.on('sendMessage', async (data) => {
         try {
             const newMsg = new Message({
@@ -41,13 +45,17 @@ io.on('connection', (socket) => {
             });
             await newMsg.save();
             
-            // Shouts the message ONLY to people looking at this specific task chat
+            // Updates the screen for anyone actively looking at the chat
             io.to(data.taskId).emit('receiveMessage', newMsg); 
+            
+            // Sends a private push notification ONLY to the person receiving the text
+            if (data.targetPhone) {
+                io.to(data.targetPhone).emit('notifyMessage', newMsg);
+            }
         } catch(err) { console.error("Message save error", err); }
     });
-    // --- Add these inside io.on('connection', ...) ---
+
     socket.on('typing', (data) => {
-        // Broadcasts to everyone in the room EXCEPT the person typing
         socket.to(data.taskId).emit('userTyping', data);
     });
 
@@ -201,7 +209,9 @@ app.post("/api/tasks/cancel", async (req, res) => {
         task.isPrioritized = false; 
         await task.save();
         
-        // Tells phones to refresh so the dropped task slides BACK in
+        // --- NEW: Wipe old chat history so the next helper starts fresh! ---
+        await Message.deleteMany({ taskId: taskId });
+        
         io.emit('refreshFeed'); 
         res.json({ message: "Task returned to feed" });
     } catch (err) { res.status(500).json({ message: "Error removing task" }); }

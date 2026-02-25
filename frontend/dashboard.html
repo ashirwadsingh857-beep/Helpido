@@ -232,6 +232,7 @@
         let globalSocket = null;
         let currentChatTaskId = null;
         let typingTimeout = null;
+        let currentChatTargetPhone = null; // Add this line
 
         if (!myPhone || myPhone === "undefined" || myPhone === "null") {
             window.location.replace('/index.html');
@@ -247,7 +248,11 @@
                 
                 globalSocket = io('https://helpido.onrender.com', { transports: ['websocket', 'polling'] }); 
                 
-                globalSocket.on('connect', () => { console.log("🟢 Live feed connected!"); });
+                // --- UPDATE 1: Add registerPhone to connect ---
+                globalSocket.on('connect', () => { 
+                    console.log("🟢 Live feed connected!"); 
+                    globalSocket.emit('registerPhone', myPhone); 
+                });
 
                 globalSocket.on('refreshFeed', () => { loadTasks(); loadMyTasks(); loadProfile(); });
                 
@@ -272,10 +277,14 @@
                     }
                 });
 
-                globalSocket.on('receiveMessage', async (msg) => {
+               globalSocket.on('receiveMessage', (msg) => {
                     if (currentChatTaskId === msg.taskId) {
                         appendMessageUI(msg);
-                    } else if (msg.senderPhone !== myPhone) {
+                    }
+                });
+
+                globalSocket.on('notifyMessage', async (msg) => {
+                    if (currentChatTaskId !== msg.taskId) {
                         try {
                             const res = await fetch(`${API_URL}/users/${msg.senderPhone}`);
                             const user = await res.json();
@@ -465,6 +474,7 @@
            ========================================= */
         async function openChat(taskId, targetPhone) {
             currentChatTaskId = taskId;
+            currentChatTargetPhone = targetPhone; // <--- ADD THIS LINE
             document.getElementById('chat-header-title').innerText = `Loading...`;
             document.getElementById('chat-modal').classList.remove('hidden');
             
@@ -497,6 +507,7 @@
         function closeChat() {
             document.getElementById('chat-modal').classList.add('hidden');
             currentChatTaskId = null;
+            currentChatTargetPhone = null;
         }
 
         function sendChatMessage() {
@@ -504,7 +515,13 @@
             const text = input.value.trim();
             if (!text || !currentChatTaskId) return;
 
-            globalSocket.emit('sendMessage', { taskId: currentChatTaskId, senderPhone: myPhone, text: text });
+            // --- UPDATE THIS EMIT PAYLOAD ---
+            globalSocket.emit('sendMessage', { 
+                taskId: currentChatTaskId, 
+                senderPhone: myPhone, 
+                targetPhone: currentChatTargetPhone, // Includes the target!
+                text: text 
+            });
             input.value = ''; 
         }
 
