@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
     <title>Helpido | Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
@@ -10,179 +12,417 @@
         /* =========================================
            1. CORE LAYOUT & MOBILE FIXES
            ========================================= */
-        html, body { 
-            margin: 0; padding: 0; min-height: 100%; 
-            background-color: var(--bg-light); 
-            overflow-x: hidden; 
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
+            background-color: var(--bg-light);
+            overflow-x: hidden;
         }
-        
-        .app-container { 
-            min-height: 100dvh; 
-            display: flex; flex-direction: column; 
-            max-width: 500px; margin: 0 auto; position: relative; 
+
+        .app-container {
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
         }
-        
-        .feed-section { flex: 1; padding-bottom: 110px; }
+
+        .feed-section {
+            flex: 1;
+            padding-bottom: 110px;
+        }
 
         /* =========================================
            2. BOTTOM NAVIGATION BAR
            ========================================= */
+        /* --- BOTTOM NAVIGATION BAR --- */
         .bottom-nav {
-            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); 
-            width: 100%; max-width: 500px; z-index: 1000;
+            position: fixed !important; 
+            bottom: 0 !important; 
+            left: 50% !important; 
+            transform: translateX(-50%) !important; 
+            width: 100%; 
+            max-width: 500px; 
+            z-index: 9000 !important; /* Extremely high z-index */
             padding-bottom: env(safe-area-inset-bottom); 
-            background-color: #ffffff; border-top: 1px solid #eee; 
-            height: 65px; display: flex; align-items: center;
+            background-color: #ffffff; 
+            border-top: 1px solid #eee; 
+            height: 65px; 
+            display: flex; 
+            align-items: center;
         }
 
-        .nav-item { 
-            flex: 1; height: 100%; display: flex; flex-direction: column; 
-            justify-content: center; align-items: center; cursor: pointer; 
-            -webkit-tap-highlight-color: transparent; 
+        .nav-item {
+            flex: 1;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
         }
 
         /* =========================================
            3. TOAST & IN-APP NOTIFICATIONS
            ========================================= */
         .toast {
-            visibility: hidden; opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s; 
-            position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); 
-            z-index: 2000; background: #333; color: white; padding: 12px 24px; border-radius: 25px; 
-            font-size: 0.9rem; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: max-content; max-width: 80%;
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s, transform 0.3s;
+            position: fixed;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            z-index: 2000;
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            width: max-content;
+            max-width: 80%;
         }
-        .toast.show { visibility: visible; opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
 
         .app-notification {
-            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(50px);
-            opacity: 0; visibility: hidden; background: #ffffff; border: 1px solid #eee;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12); border-radius: 16px; padding: 12px 16px;
-            width: 85%; max-width: 400px; z-index: 2500; display: flex; align-items: center; gap: 12px;
-            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); cursor: pointer;
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(50px);
+            opacity: 0;
+            visibility: hidden;
+            background: #ffffff;
+            border: 1px solid #eee;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            border-radius: 16px;
+            padding: 12px 16px;
+            width: 85%;
+            max-width: 400px;
+            z-index: 2500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            cursor: pointer;
         }
-        .app-notification.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
-        .app-notif-icon { font-size: 1.5rem; }
-        .app-notif-text { flex: 1; overflow: hidden; }
-        .app-notif-text h4 { margin: 0 0 2px 0; font-size: 0.95rem; color: #333; }
-        .app-notif-text p { margin: 0; font-size: 0.85rem; color: #757575; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .app-notification.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .app-notif-icon {
+            font-size: 1.5rem;
+        }
+
+        .app-notif-text {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .app-notif-text h4 {
+            margin: 0 0 2px 0;
+            font-size: 0.95rem;
+            color: #333;
+        }
+
+        .app-notif-text p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: #757575;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
         /* =========================================
            4. SKELETON LOADERS
            ========================================= */
-        .skeleton-card { border-left: none !important; box-shadow: 0 2px 8px rgba(0,0,0,0.03); pointer-events: none; }
-        .skeleton-element { 
-            background: #e0e0e0; background: linear-gradient(90deg, #e0e0e0 25%, #f5f5f5 50%, #e0e0e0 75%); 
-            background-size: 200% 100%; animation: shimmer 1.5s infinite linear; border-radius: 4px; 
+        .skeleton-card {
+            border-left: none !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+            pointer-events: none;
         }
-        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+        .skeleton-element {
+            background: #e0e0e0;
+            background: linear-gradient(90deg, #e0e0e0 25%, #f5f5f5 50%, #e0e0e0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite linear;
+            border-radius: 4px;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+
+            100% {
+                background-position: 200% 0;
+            }
+        }
 
         /* =========================================
            5. IN-APP CHAT UI & ANIMATIONS
            ========================================= */
-       /* --- FIXED CHAT UI (Using dvh for mobile safety) --- */
+        /* --- FIXED CHAT UI (Using dvh for mobile safety) --- */
         .chat-overlay {
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100dvh; /* KEY FIX: Adjusts to browser bars so input isn't hidden */
-            background: rgba(0,0,0,0.4); 
-            z-index: 9999; /* Higher than everything else */
-            display: flex; 
-            flex-direction: column; 
-            justify-content: flex-end; 
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100dvh;
+            /* KEY FIX: Adjusts to browser bars so input isn't hidden */
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 9999;
+            /* Higher than everything else */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
             transition: opacity 0.3s;
         }
-        .chat-overlay.hidden { opacity: 0; pointer-events: none; }
-        
-       .chat-drawer {
-            background: #fff; 
-            width: 100%; 
-            max-width: 500px; 
-            margin: 0 auto; 
-            height: 65dvh; /* Lowered to 65% to match "second card" height */
-            border-radius: 20px 20px 0 0; 
-            display: flex; 
-            flex-direction: column; 
-            transform: translateY(0); 
-            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-            overflow: hidden; 
+
+        .chat-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
         }
-        .chat-overlay.hidden .chat-drawer { transform: translateY(100%); }
-        
-        .chat-header { padding: 16px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; background: #f9f9f9; }
-        
-        @keyframes popIn { 0% { opacity: 0; transform: translateY(15px) scale(0.9); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
-        
+
+        .chat-drawer {
+            background: #fff;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            height: 65dvh;
+            /* Lowered to 65% to match "second card" height */
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(0);
+            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            overflow: hidden;
+        }
+
+        .chat-overlay.hidden .chat-drawer {
+            transform: translateY(100%);
+        }
+
+        .chat-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: #f9f9f9;
+        }
+
+        @keyframes popIn {
+            0% {
+                opacity: 0;
+                transform: translateY(15px) scale(0.9);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
         body.no-scroll {
-            overflow: hidden !important; /* Freezes the background */
+            overflow: hidden !important;
+            /* Freezes the background */
             position: fixed;
             width: 100%;
         }
-        .msg-bubble { 
-            max-width: 75%; padding: 10px 14px; border-radius: 18px; font-size: 0.95rem; line-height: 1.4; 
-            word-wrap: break-word; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; transform-origin: bottom;
+
+        .msg-bubble {
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: 18px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            word-wrap: break-word;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            transform-origin: bottom;
         }
-        .msg-sent { background: #FF5722; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; transform-origin: bottom right; }
-        .msg-received { background: #e0e0e0; color: #333; align-self: flex-start; border-bottom-left-radius: 4px; transform-origin: bottom left; }
-        
-        .chat-input-area { padding: 12px 16px; border-top: 1px solid #eee; display: flex; gap: 10px; background: #fff; padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
-        .chat-input-area input { flex: 1; padding: 12px 16px; border: 1px solid #ddd; border-radius: 24px; outline: none; font-size: 0.95rem; }
-        .chat-input-area button { background: #FF5722; color: #fff; border: none; border-radius: 24px; padding: 0 20px; font-weight: 600; cursor: pointer; }
+
+        .msg-sent {
+            background: #FF5722;
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+            transform-origin: bottom right;
+        }
+
+        .msg-received {
+            background: #e0e0e0;
+            color: #333;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            transform-origin: bottom left;
+        }
+
+        .chat-input-area {
+            padding: 12px 16px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+            background: #fff;
+            padding-bottom: calc(12px + env(safe-area-inset-bottom));
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 24px;
+            outline: none;
+            font-size: 0.95rem;
+        }
+
+        .chat-input-area button {
+            background: #FF5722;
+            color: #fff;
+            border: none;
+            border-radius: 24px;
+            padding: 0 20px;
+            font-weight: 600;
+            cursor: pointer;
+        }
 
         /* Typing Indicator Styles */
         .typing-wrapper {
-            display: flex; gap: 4px; padding: 12px 16px; background: #e0e0e0; border-radius: 18px; border-bottom-left-radius: 4px; 
-            align-self: flex-start; width: fit-content; animation: popIn 0.3s forwards; transform-origin: bottom left;
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+            background: #e0e0e0;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            align-self: flex-start;
+            width: fit-content;
+            animation: popIn 0.3s forwards;
+            transform-origin: bottom left;
         }
-        .typing-dot { width: 6px; height: 6px; background: #888; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
-        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
-        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: #888;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing-dot:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0);
+            }
+
+            40% {
+                transform: scale(1);
+            }
+        }
 
         /* --- 1. FLOATING ACTION BUTTON (Fixed above Nav) --- */
-        /* --- FLOATING ACTION BUTTON --- */
+      
         .fab-btn {
-            position: fixed;
-            bottom: 85px; /* Hovers safely above the bottom nav */
-            right: 20px;
+            position: fixed !important; 
+            bottom: 85px !important; /* Sits just above the nav bar */
+            right: 20px !important;
             width: 56px; height: 56px; border-radius: 50%;
             background-color: #FF5722; color: white; font-size: 28px; 
             border: none; box-shadow: 0 4px 12px rgba(255, 87, 34, 0.4);
             cursor: pointer; display: flex; justify-content: center; align-items: center;
-            z-index: 1500; -webkit-tap-highlight-color: transparent;
-            transition: transform 0.2s, opacity 0.2s; /* Smooth hide/show */
+            z-index: 9500 !important; /* Sits above the nav bar */
+            -webkit-tap-highlight-color: transparent;
+            transition: transform 0.2s, opacity 0.2s; 
         }
-        
+
         /* New class to hide it on the profile tab */
         .fab-btn.hide-fab {
-            opacity: 0;
-            pointer-events: none;
-            transform: scale(0);
+            opacity: 0 !important;
+            pointer-events: none !important;
+            transform: scale(0) !important;
         }
-
         /* --- 2. ADD REQUEST MODAL (Centered perfectly) --- */
         .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100dvh;
-            background: rgba(0,0,0,0.5); z-index: 4000;
-            display: flex; justify-content: center; align-items: center; /* This centers it! */
-            opacity: 1; visibility: visible; transition: opacity 0.3s;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100dvh;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 4000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* This centers it! */
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.3s;
         }
-        .modal-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+        .modal-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
 
         .modal-content {
-            background: #fff; width: 90%; max-width: 400px;
-            border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            transform: translateY(0); transition: transform 0.3s;
+            background: #fff;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transform: translateY(0);
+            transition: transform 0.3s;
         }
-        .modal-overlay.hidden .modal-content { transform: translateY(20px); }
+
+        .modal-overlay.hidden .modal-content {
+            transform: translateY(20px);
+        }
     </style>
 </head>
+
 <body>
-    <div id="splash-screen" class="splash-screen"><h2 id="splash-greeting" class="splash-greeting">Loading...</h2></div>
+    <div id="splash-screen" class="splash-screen">
+        <h2 id="splash-greeting" class="splash-greeting">Loading...</h2>
+    </div>
 
     <main id="main-dash" class="app-container dashboard-layout blur-start">
-        
+
         <section id="home-view" class="feed-section">
             <header class="dash-header">
                 <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
@@ -190,7 +430,8 @@
                         <h2 id="greeting-name">Hi, Neighbor 👋</h2>
                         <p id="home-address">📍 Local Area</p>
                     </div>
-                    <button id="availability-btn" class="status-btn free" onclick="toggleAvailability()" style="margin-top: 0; white-space: nowrap;">🟢 Free</button>
+                    <button id="availability-btn" class="status-btn free" onclick="toggleAvailability()"
+                        style="margin-top: 0; white-space: nowrap;">🟢 Free</button>
                 </div>
             </header>
             <h3 class="section-title">Help Needed Nearby</h3>
@@ -199,7 +440,10 @@
 
         <section id="tasks-view" class="feed-section hidden">
             <header class="dash-header">
-                <div class="user-greeting"><h2>My Activity 📋</h2><p>Track requests and tasks you accepted.</p></div>
+                <div class="user-greeting">
+                    <h2>My Activity 📋</h2>
+                    <p>Track requests and tasks you accepted.</p>
+                </div>
             </header>
             <h3 class="section-title">My Uploaded Requests</h3>
             <div id="my-requests-feed" style="margin-bottom: 30px;"></div>
@@ -209,20 +453,26 @@
 
         <section id="profile-view" class="feed-section hidden">
             <header class="dash-header">
-                <div class="user-greeting"><h2>Account 👤</h2><p>Manage your profile and settings.</p></div>
+                <div class="user-greeting">
+                    <h2>Account 👤</h2>
+                    <p>Manage your profile and settings.</p>
+                </div>
             </header>
-            <div class="task-card" style="text-align: center; padding: 30px 20px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <div class="task-card"
+                style="text-align: center; padding: 30px 20px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
                 <h2 id="profile-name" style="margin-bottom: 5px; color: var(--text-dark);">Loading...</h2>
                 <p id="profile-phone" style="color: var(--text-muted); margin-bottom: 20px;">...</p>
-                <div style="background-color: var(--bg-light); padding: 16px; border-radius: 12px; text-align: left; margin-bottom: 24px;">
-                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">Home Address</p>
+                <div
+                    style="background-color: var(--bg-light); padding: 16px; border-radius: 12px; text-align: left; margin-bottom: 24px;">
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">Home
+                        Address</p>
                     <p id="profile-address" style="color: var(--text-dark); line-height: 1.4; font-weight: 500;">...</p>
                 </div>
                 <button class="logout-btn" onclick="logout()">Log Out</button>
             </div>
         </section>
 
-        <button class="fab-btn" onclick="openModal()">+</button>
+
 
         <div id="create-modal" class="modal-overlay hidden">
             <div class="modal-content">
@@ -232,7 +482,8 @@
                 <input type="number" id="task-reward" placeholder="Reward amount (₹)" required>
                 <div class="modal-actions" style="display: flex; justify-content: space-between; margin-top: 10px;">
                     <button class="text-btn" onclick="closeModal()" style="color: #757575;">Cancel</button>
-                    <button class="btn" onclick="postHelpRequest()" style="width: auto; padding: 10px 20px;">Post Request</button>
+                    <button class="btn" onclick="postHelpRequest()" style="width: auto; padding: 10px 20px;">Post
+                        Request</button>
                 </div>
             </div>
         </div>
@@ -241,7 +492,8 @@
             <div class="chat-drawer">
                 <div class="chat-header">
                     <h3 id="chat-header-title" style="margin: 0; font-size: 1.2rem; color: #333;">Task Chat</h3>
-                    <button onclick="closeChat()" style="background: none; border: none; font-size: 1.5rem; color: #999; cursor: pointer;">&times;</button>
+                    <button onclick="closeChat()"
+                        style="background: none; border: none; font-size: 1.5rem; color: #999; cursor: pointer;">&times;</button>
                 </div>
                 <div id="chat-messages" class="chat-messages"></div>
                 <div class="chat-input-area">
@@ -250,15 +502,19 @@
                 </div>
             </div>
         </div>
-        
+
         <div id="confirm-modal" class="modal-overlay hidden">
             <div class="modal-content" style="text-align: center; max-width: 320px;">
                 <div style="font-size: 2.5rem; margin-bottom: 10px;">⚠️</div>
                 <h3 id="confirm-title" style="margin-bottom: 10px; color: var(--text-dark);">Are you sure?</h3>
-                <p id="confirm-message" style="color: var(--text-muted); margin-bottom: 24px; font-size: 0.95rem; line-height: 1.4;">This action cannot be undone.</p>
+                <p id="confirm-message"
+                    style="color: var(--text-muted); margin-bottom: 24px; font-size: 0.95rem; line-height: 1.4;">This
+                    action cannot be undone.</p>
                 <div style="display: flex; gap: 12px;">
-                    <button class="btn" onclick="closeConfirm()" style="flex: 1; background-color: #F5F5F5; color: #757575; margin-top: 0; box-shadow: none;">Cancel</button>
-                    <button id="confirm-action-btn" class="btn" style="flex: 1; background-color: #D32F2F; margin-top: 0; box-shadow: none;">Yes</button>
+                    <button class="btn" onclick="closeConfirm()"
+                        style="flex: 1; background-color: #F5F5F5; color: #757575; margin-top: 0; box-shadow: none;">Cancel</button>
+                    <button id="confirm-action-btn" class="btn"
+                        style="flex: 1; background-color: #D32F2F; margin-top: 0; box-shadow: none;">Yes</button>
                 </div>
             </div>
         </div>
@@ -271,19 +527,26 @@
             </div>
         </div>
 
-        <nav class="bottom-nav">
-            <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><span>🏠</span><p>Home</p></div>
-            <div class="nav-item" id="nav-tasks" onclick="switchTab('tasks')"><span>📋</span><p>Tasks</p></div>
-            <div class="nav-item" id="nav-profile" onclick="switchTab('profile')"><span>👤</span><p>Profile</p></div>
-        </nav>
-    </main>
 
+    </main>
+    <button class="fab-btn" onclick="openModal()">+</button>
+    <nav class="bottom-nav">
+        <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><span>🏠</span>
+            <p>Home</p>
+        </div>
+        <div class="nav-item" id="nav-tasks" onclick="switchTab('tasks')"><span>📋</span>
+            <p>Tasks</p>
+        </div>
+        <div class="nav-item" id="nav-profile" onclick="switchTab('profile')"><span>👤</span>
+            <p>Profile</p>
+        </div>
+    </nav>
     <div id="toast" class="toast"></div>
 
     <script>
         const API_URL = 'https://helpido.onrender.com/api';
         const myPhone = localStorage.getItem('helpido_phone');
-        
+
         let currentStatus = 'free';
         let isInitialHomeLoad = true;
         let isInitialTasksLoad = true;
@@ -303,20 +566,20 @@
            1. INITIALIZATION & SOCKET EVENTS
            ========================================= */
         window.onload = () => {
-            if(myPhone) {
+            if (myPhone) {
                 loadProfile();
                 loadTasks();
-                
-                globalSocket = io('https://helpido.onrender.com', { transports: ['websocket', 'polling'] }); 
-                
+
+                globalSocket = io('https://helpido.onrender.com', { transports: ['websocket', 'polling'] });
+
                 // --- UPDATE 1: Add registerPhone to connect ---
-                globalSocket.on('connect', () => { 
-                    console.log("🟢 Live feed connected!"); 
-                    globalSocket.emit('registerPhone', myPhone); 
+                globalSocket.on('connect', () => {
+                    console.log("🟢 Live feed connected!");
+                    globalSocket.emit('registerPhone', myPhone);
                 });
 
                 globalSocket.on('refreshFeed', () => { loadTasks(); loadMyTasks(); loadProfile(); });
-                
+
                 globalSocket.on('newTask', (task) => {
                     if (task.postedBy !== myPhone && activeTab !== 'home') {
                         showAppNotification('👋', 'New Help Request', task.title);
@@ -327,18 +590,18 @@
                     const feedCard = document.getElementById(`feed-card-${taskId}`);
                     const jobCard = document.getElementById(`job-card-${taskId}`);
                     let isAnimating = false;
-                    
+
                     if (feedCard) { feedCard.classList.add('slide-out-left'); isAnimating = true; }
                     if (jobCard) { jobCard.classList.add('slide-out-left'); isAnimating = true; }
-                    
-                    if (isAnimating) { 
-                        setTimeout(() => { loadTasks(); loadMyTasks(); }, 350); 
-                    } else { 
-                        loadTasks(); loadMyTasks(); 
+
+                    if (isAnimating) {
+                        setTimeout(() => { loadTasks(); loadMyTasks(); }, 350);
+                    } else {
+                        loadTasks(); loadMyTasks();
                     }
                 });
 
-               globalSocket.on('receiveMessage', (msg) => {
+                globalSocket.on('receiveMessage', (msg) => {
                     if (currentChatTaskId === msg.taskId) {
                         appendMessageUI(msg);
                     }
@@ -351,8 +614,8 @@
                             const user = await res.json();
                             const firstName = user.name.split(' ')[0];
                             showAppNotification('💬', `New message from ${firstName}`, msg.text);
-                        } catch(e) { 
-                            showAppNotification('💬', 'New message', msg.text); 
+                        } catch (e) {
+                            showAppNotification('💬', 'New message', msg.text);
                         }
                     }
                 });
@@ -392,16 +655,16 @@
                 if (res.ok) {
                     const user = await res.json();
                     const firstName = user.name.split(' ')[0];
-                    
+
                     document.getElementById('splash-greeting').innerText = `Hi, ${firstName} 👋`;
                     document.getElementById('profile-name').innerText = user.name;
                     document.getElementById('profile-phone').innerText = "+91 " + user.phone;
                     document.getElementById('profile-address').innerText = user.address;
                     document.getElementById('greeting-name').innerText = `Hi, ${firstName} 👋`;
                     document.getElementById('home-address').innerText = `📍 ${user.address}`;
-                    
-                    if(user.availability) { currentStatus = user.availability; updateStatusUI(); }
-                    
+
+                    if (user.availability) { currentStatus = user.availability; updateStatusUI(); }
+
                     setTimeout(() => {
                         document.getElementById('splash-screen').classList.add('hide');
                         document.getElementById('main-dash').classList.add('unblur');
@@ -412,34 +675,34 @@
 
         async function loadTasks() {
             const feed = document.getElementById('task-feed');
-            
+
             if (isInitialHomeLoad) feed.innerHTML = getSkeletonHTML(4);
-            
+
             try {
                 const res = await fetch(`${API_URL}/tasks`);
                 const allTasks = await res.json();
-                
+
                 // Exclude tasks created by user
                 let publicTasks = allTasks.filter(t => t.postedBy !== myPhone);
-                
+
                 // Exclude tasks the user has manually dropped
                 const droppedTasks = JSON.parse(localStorage.getItem('dropped_tasks') || "[]");
                 publicTasks = publicTasks.filter(t => !droppedTasks.includes(t._id));
 
-                if (isInitialHomeLoad) { 
-                    await new Promise(resolve => setTimeout(resolve, 1500)); 
-                    isInitialHomeLoad = false; 
+                if (isInitialHomeLoad) {
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    isInitialHomeLoad = false;
                 }
 
                 if (publicTasks.length === 0) {
                     feed.innerHTML = `<p style="text-align:center; color:#757575; padding-top:40px;">No tasks available right now.</p>`;
                 } else {
                     const existingCardIds = new Set(Array.from(feed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('feed-card-', '')));
-                    
+
                     feed.innerHTML = publicTasks.map((task, index) => {
                         const isNew = !existingCardIds.has(task._id.toString());
-                        const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`; 
-                        
+                        const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
+
                         return `
                         <div class="task-card" id="feed-card-${task._id}" style="${animStyle}">
                             <div class="task-top">
@@ -463,24 +726,24 @@
         async function loadMyTasks() {
             const reqFeed = document.getElementById('my-requests-feed');
             const jobsFeed = document.getElementById('my-jobs-feed');
-            
-            if (isInitialTasksLoad) { 
-                reqFeed.innerHTML = getSkeletonHTML(2); 
-                jobsFeed.innerHTML = getSkeletonHTML(3); 
+
+            if (isInitialTasksLoad) {
+                reqFeed.innerHTML = getSkeletonHTML(2);
+                jobsFeed.innerHTML = getSkeletonHTML(3);
             }
 
             try {
                 const res = await fetch(`${API_URL}/tasks/my-tasks?phone=${myPhone}`);
                 const data = await res.json();
-                
-                if (isInitialTasksLoad) { 
-                    await new Promise(resolve => setTimeout(resolve, 1500)); 
-                    isInitialTasksLoad = false; 
+
+                if (isInitialTasksLoad) {
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    isInitialTasksLoad = false;
                 }
 
                 // Render Uploaded Requests
                 const existingReqIds = new Set(Array.from(reqFeed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('req-card-', '')));
-                reqFeed.innerHTML = data.myRequests.length === 0 
+                reqFeed.innerHTML = data.myRequests.length === 0
                     ? `<p style="color:#757575; font-size: 0.9rem;">You haven't uploaded any tasks.</p>`
                     : data.myRequests.map((task, index) => {
                         const isNew = !existingReqIds.has(task._id.toString());
@@ -505,13 +768,13 @@
                 // Render Accepted Jobs
                 const existingJobIds = new Set(Array.from(jobsFeed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('job-card-', '')));
                 const sortedJobs = data.myJobs.sort((a, b) => (b.isPrioritized === true) - (a.isPrioritized === true));
-                
-                jobsFeed.innerHTML = sortedJobs.length === 0 
+
+                jobsFeed.innerHTML = sortedJobs.length === 0
                     ? `<p style="color:#757575; font-size: 0.9rem;">You haven't accepted any tasks.</p>`
                     : sortedJobs.map((task, index) => {
                         const isNew = !existingJobIds.has(task._id.toString());
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
-                        
+
                         return `
                         <div class="task-card" id="job-card-${task._id}" style="border-left: 4px solid #2E7D32; ${task.isPrioritized ? 'background-color: #FFFDE7;' : ''} ${animStyle}">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
@@ -539,7 +802,7 @@
             currentChatTargetPhone = targetPhone; // <--- ADD THIS LINE
             document.getElementById('chat-header-title').innerText = `Loading...`;
             document.getElementById('chat-modal').classList.remove('hidden');
-            
+
             // Fetch real name for header
             fetch(`${API_URL}/users/${targetPhone}`)
                 .then(res => res.json())
@@ -555,14 +818,14 @@
             try {
                 const res = await fetch(`${API_URL}/chat/${taskId}`);
                 const history = await res.json();
-                msgBox.innerHTML = ''; 
-                
+                msgBox.innerHTML = '';
+
                 if (history.length === 0) {
                     msgBox.innerHTML = '<p id="empty-chat-msg" style="text-align:center; color:#999; margin-top:20px;">No messages yet. Say hi!</p>';
                 } else {
                     history.forEach(msg => appendMessageUI(msg));
                 }
-                msgBox.scrollTop = msgBox.scrollHeight; 
+                msgBox.scrollTop = msgBox.scrollHeight;
             } catch (err) { msgBox.innerHTML = '<p style="color:red; text-align:center;">Failed to load chat.</p>'; }
         }
 
@@ -579,13 +842,13 @@
             if (!text || !currentChatTaskId) return;
 
             // --- UPDATE THIS EMIT PAYLOAD ---
-            globalSocket.emit('sendMessage', { 
-                taskId: currentChatTaskId, 
-                senderPhone: myPhone, 
+            globalSocket.emit('sendMessage', {
+                taskId: currentChatTaskId,
+                senderPhone: myPhone,
                 targetPhone: currentChatTargetPhone, // Includes the target!
-                text: text 
+                text: text
             });
-            input.value = ''; 
+            input.value = '';
         }
 
         function appendMessageUI(msg) {
@@ -598,9 +861,9 @@
             const bubble = document.createElement('div');
             bubble.className = `msg-bubble ${isMe ? 'msg-sent' : 'msg-received'}`;
             bubble.innerText = msg.text;
-            
+
             msgBox.appendChild(bubble);
-            msgBox.scrollTop = msgBox.scrollHeight; 
+            msgBox.scrollTop = msgBox.scrollHeight;
         }
 
         document.getElementById('chat-input').addEventListener('input', () => {
@@ -610,7 +873,7 @@
             typingTimeout = setTimeout(() => { globalSocket.emit('stopTyping', { taskId: currentChatTaskId, senderPhone: myPhone }); }, 1500);
         });
 
-        document.getElementById('chat-input').addEventListener('keypress', function(e) {
+        document.getElementById('chat-input').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') sendChatMessage();
         });
 
@@ -638,7 +901,7 @@
             document.getElementById('app-notif-icon').innerText = icon;
             document.getElementById('app-notif-title').innerText = title;
             document.getElementById('app-notif-desc').innerText = desc;
-            
+
             notif.classList.add('show');
             clearTimeout(notifTimeout);
             notifTimeout = setTimeout(() => { notif.classList.remove('show'); }, 4000);
@@ -652,20 +915,20 @@
 
         function switchTab(tabName) {
             activeTab = tabName;
-            
+
             // 1. Hide all views and remove active states
-            document.getElementById('home-view').classList.add('hidden'); 
-            document.getElementById('tasks-view').classList.add('hidden'); 
+            document.getElementById('home-view').classList.add('hidden');
+            document.getElementById('tasks-view').classList.add('hidden');
             document.getElementById('profile-view').classList.add('hidden');
-            
-            document.getElementById('nav-home').classList.remove('active'); 
-            document.getElementById('nav-tasks').classList.remove('active'); 
+
+            document.getElementById('nav-home').classList.remove('active');
+            document.getElementById('nav-tasks').classList.remove('active');
             document.getElementById('nav-profile').classList.remove('active');
-            
+
             // 2. Show the target view and set active state
-            document.getElementById(`${tabName}-view`).classList.remove('hidden'); 
+            document.getElementById(`${tabName}-view`).classList.remove('hidden');
             document.getElementById(`nav-${tabName}`).classList.add('active');
-            
+
             // --- NEW: Smart FAB Visibility ---
             // Hides the '+' button on the Profile tab, shows it on Home/Tasks
             const fab = document.querySelector('.fab-btn');
@@ -676,26 +939,26 @@
             }
 
             // 3. Trigger data loads if it's the first time
-            if (tabName === 'home') { if(isInitialHomeLoad) loadTasks(); }
-            if (tabName === 'tasks') { if(isInitialTasksLoad) loadMyTasks(); }
+            if (tabName === 'home') { if (isInitialHomeLoad) loadTasks(); }
+            if (tabName === 'tasks') { if (isInitialTasksLoad) loadMyTasks(); }
         }
 
         function toggleMenu(menuId, event) {
-            event.stopPropagation(); 
+            event.stopPropagation();
             // Fix: Keep opacity 1 so cards don't disappear when animation is removed
-            document.querySelectorAll('.task-card').forEach(card => { 
-                card.style.zIndex = '1'; 
-                card.style.animation = 'none'; 
-                card.style.transform = 'none'; 
-                card.style.overflow = 'visible'; 
-                card.style.opacity = '1'; 
+            document.querySelectorAll('.task-card').forEach(card => {
+                card.style.zIndex = '1';
+                card.style.animation = 'none';
+                card.style.transform = 'none';
+                card.style.overflow = 'visible';
+                card.style.opacity = '1';
             });
-            document.querySelectorAll('.dropdown-menu.show').forEach(menu => { if(menu.id !== menuId) menu.classList.remove('show'); });
-            
+            document.querySelectorAll('.dropdown-menu.show').forEach(menu => { if (menu.id !== menuId) menu.classList.remove('show'); });
+
             const menu = document.getElementById(menuId);
-            if (menu) { 
-                menu.classList.toggle('show'); 
-                if (menu.classList.contains('show')) menu.closest('.task-card').style.zIndex = '9999'; 
+            if (menu) {
+                menu.classList.toggle('show');
+                if (menu.classList.contains('show')) menu.closest('.task-card').style.zIndex = '9999';
             }
         }
 
@@ -703,7 +966,7 @@
             document.querySelectorAll('.dropdown-menu.show').forEach(menu => menu.classList.remove('show'));
             document.querySelectorAll('.task-card').forEach(card => {
                 card.style.zIndex = '1';
-                card.style.opacity = '1'; 
+                card.style.opacity = '1';
             });
         });
 
@@ -712,114 +975,114 @@
            ========================================= */
         async function toggleAvailability() {
             currentStatus = currentStatus === 'free' ? 'busy' : 'free'; updateStatusUI();
-            try { 
-                await fetch(`${API_URL}/users/status`, { 
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ phone: myPhone, availability: currentStatus }) 
-                }); 
-            } catch (err) { 
-                showToast("Failed to save status", "error"); 
-                currentStatus = currentStatus === 'free' ? 'busy' : 'free'; updateStatusUI(); 
+            try {
+                await fetch(`${API_URL}/users/status`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: myPhone, availability: currentStatus })
+                });
+            } catch (err) {
+                showToast("Failed to save status", "error");
+                currentStatus = currentStatus === 'free' ? 'busy' : 'free'; updateStatusUI();
             }
         }
 
         function updateStatusUI() {
             const btn = document.getElementById('availability-btn');
-            if(currentStatus === 'free') { btn.innerHTML = '🟢 Free'; btn.className = 'status-btn free'; } 
+            if (currentStatus === 'free') { btn.innerHTML = '🟢 Free'; btn.className = 'status-btn free'; }
             else { btn.innerHTML = '🔴 Busy'; btn.className = 'status-btn busy'; }
         }
 
         async function acceptTask(taskId) {
             const card = document.getElementById(`feed-card-${taskId}`);
             if (card) card.classList.add('slide-out-left');
-            
+
             setTimeout(async () => {
                 try {
-                    const res = await fetch(`${API_URL}/tasks/accept`, { 
-                        method: 'POST', headers: { 'Content-Type': 'application/json' }, 
-                        body: JSON.stringify({ taskId, helperPhone: myPhone }) 
+                    const res = await fetch(`${API_URL}/tasks/accept`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ taskId, helperPhone: myPhone })
                     });
                     const data = await res.json();
-                    
-                    if (res.ok) { 
-                        showToast("Task Accepted! Check 'Tasks' tab."); loadTasks(); loadMyTasks(); 
-                    } else { 
-                        showToast(data.message || "Could not accept", "error"); 
-                        if (card) card.classList.remove('slide-out-left'); 
+
+                    if (res.ok) {
+                        showToast("Task Accepted! Check 'Tasks' tab."); loadTasks(); loadMyTasks();
+                    } else {
+                        showToast(data.message || "Could not accept", "error");
+                        if (card) card.classList.remove('slide-out-left');
                     }
                 } catch (err) { showToast("Network Error", "error"); if (card) card.classList.remove('slide-out-left'); }
-            }, 350); 
+            }, 350);
         }
 
         function deleteMyTask(taskId) {
             showConfirm("Delete Request?", "Are you sure you want to permanently wipe this request from the database?", "Delete", () => {
-                const card = document.getElementById(`req-card-${taskId}`); 
+                const card = document.getElementById(`req-card-${taskId}`);
                 if (card) card.classList.add('slide-out-left');
-                
+
                 setTimeout(async () => {
                     try {
                         const res = await fetch(`${API_URL}/tasks/${taskId}`, { method: 'DELETE' });
-                        if (res.ok) showToast("Task wiped from database!"); 
-                        else if(card) card.classList.remove('slide-out-left'); 
-                    } catch (err) { showToast("Network error", "error"); if(card) card.classList.remove('slide-out-left'); }
+                        if (res.ok) showToast("Task wiped from database!");
+                        else if (card) card.classList.remove('slide-out-left');
+                    } catch (err) { showToast("Network error", "error"); if (card) card.classList.remove('slide-out-left'); }
                 }, 350);
             });
         }
 
         function removeJob(taskId) {
             showConfirm("Drop Task?", "Drop this task? It will be returned to the public Home tab for others to accept.", "Drop Task", () => {
-                const card = document.getElementById(`job-card-${taskId}`); 
+                const card = document.getElementById(`job-card-${taskId}`);
                 if (card) card.classList.add('slide-out-left');
-                
+
                 setTimeout(async () => {
                     try {
-                        const res = await fetch(`${API_URL}/tasks/cancel`, { 
-                            method: 'POST', headers: { 'Content-Type': 'application/json' }, 
-                            body: JSON.stringify({ taskId }) 
+                        const res = await fetch(`${API_URL}/tasks/cancel`, {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ taskId })
                         });
-                        
-                        if(res.ok) {
+
+                        if (res.ok) {
                             // Add to local blacklist so the user doesn't see it again
                             let droppedTasks = JSON.parse(localStorage.getItem('dropped_tasks') || "[]");
-                            if(!droppedTasks.includes(taskId)) {
+                            if (!droppedTasks.includes(taskId)) {
                                 droppedTasks.push(taskId);
                                 localStorage.setItem('dropped_tasks', JSON.stringify(droppedTasks));
                             }
-                            
-                            showToast("Task dropped and hidden."); 
-                            loadTasks(); 
+
+                            showToast("Task dropped and hidden.");
+                            loadTasks();
                             loadMyTasks();
                         } else {
-                            if(card) card.classList.remove('slide-out-left');
+                            if (card) card.classList.remove('slide-out-left');
                         }
-                    } catch (err) { showToast("Network error", "error"); if(card) card.classList.remove('slide-out-left'); }
+                    } catch (err) { showToast("Network error", "error"); if (card) card.classList.remove('slide-out-left'); }
                 }, 350);
             });
         }
 
-        async function prioritizeJob(taskId) { 
-            await fetch(`${API_URL}/tasks/prioritize`, { 
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ taskId }) 
-            }); 
-            loadMyTasks(); 
+        async function prioritizeJob(taskId) {
+            await fetch(`${API_URL}/tasks/prioritize`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ taskId })
+            });
+            loadMyTasks();
         }
 
         async function postHelpRequest() {
-            const title = document.getElementById('task-title').value; 
-            const description = document.getElementById('task-desc').value; 
+            const title = document.getElementById('task-title').value;
+            const description = document.getElementById('task-desc').value;
             const reward = parseInt(document.getElementById('task-reward').value) || 0;
-            
+
             if (!title || !description) return showToast("Please fill all fields!", "error");
-            
-            const res = await fetch(`${API_URL}/tasks`, { 
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ title, description, postedBy: myPhone, reward }) 
+
+            const res = await fetch(`${API_URL}/tasks`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, description, postedBy: myPhone, reward })
             });
-            
-            if (res.ok) { 
-                showToast("Task posted!"); closeModal(); loadTasks(); 
-                document.getElementById('task-title').value = ""; document.getElementById('task-desc').value = ""; document.getElementById('task-reward').value = ""; 
+
+            if (res.ok) {
+                showToast("Task posted!"); closeModal(); loadTasks();
+                document.getElementById('task-title').value = ""; document.getElementById('task-desc').value = ""; document.getElementById('task-reward').value = "";
             }
         }
 
@@ -835,15 +1098,16 @@
         function closeConfirm() { document.getElementById('confirm-modal').classList.add('hidden'); pendingConfirmAction = null; }
         document.getElementById('confirm-action-btn').addEventListener('click', () => { if (pendingConfirmAction) pendingConfirmAction(); closeConfirm(); });
 
-        function openModal() { 
+        function openModal() {
             document.body.classList.add('no-scroll'); // Freezes background
-            document.getElementById('create-modal').classList.remove('hidden'); 
+            document.getElementById('create-modal').classList.remove('hidden');
         }
-        function closeModal() { 
+        function closeModal() {
             document.body.classList.remove('no-scroll'); // Unfreezes background
-            document.getElementById('create-modal').classList.add('hidden'); 
+            document.getElementById('create-modal').classList.add('hidden');
         }
         function logout() { localStorage.removeItem('helpido_phone'); window.location.href = 'index.html'; }
     </script>
 </body>
+
 </html>
