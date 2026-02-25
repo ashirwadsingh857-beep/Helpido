@@ -45,6 +45,15 @@ io.on('connection', (socket) => {
             io.to(data.taskId).emit('receiveMessage', newMsg); 
         } catch(err) { console.error("Message save error", err); }
     });
+    // --- Add these inside io.on('connection', ...) ---
+    socket.on('typing', (data) => {
+        // Broadcasts to everyone in the room EXCEPT the person typing
+        socket.to(data.taskId).emit('userTyping', data);
+    });
+
+    socket.on('stopTyping', (data) => {
+        socket.to(data.taskId).emit('userStoppedTyping', data);
+    });
 });
 
 // --- NEW API ROUTE: Get Chat History ---
