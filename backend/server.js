@@ -137,6 +137,7 @@ app.post('/api/tasks', async (req, res) => {
         const newTask = new Task({ title, description, postedBy, reward });
         await newTask.save();
         io.emit('refreshFeed'); // Broadcast new task
+        io.emit('newTask', newTask);
         res.status(201).json(newTask);
     } catch (err) { res.status(500).json({ message: "Failed to post task" }); }
 });

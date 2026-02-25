@@ -120,6 +120,20 @@
         .chat-input-area { padding: 12px 16px; border-top: 1px solid #eee; display: flex; gap: 10px; background: #fff; padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
         .chat-input-area input { flex: 1; padding: 12px 16px; border: 1px solid #ddd; border-radius: 24px; outline: none; font-size: 0.95rem; }
         .chat-input-area button { background: #FF5722; color: #fff; border: none; border-radius: 24px; padding: 0 20px; font-weight: 600; cursor: pointer; }
+
+        /* --- IN-APP NOTIFICATIONS --- */
+        .app-notification {
+            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(50px);
+            opacity: 0; visibility: hidden; background: #ffffff; border: 1px solid #eee;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12); border-radius: 16px; padding: 12px 16px;
+            width: 85%; max-width: 400px; z-index: 2500; display: flex; align-items: center; gap: 12px;
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); cursor: pointer;
+        }
+        .app-notification.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+        .app-notif-icon { font-size: 1.5rem; }
+        .app-notif-text { flex: 1; overflow: hidden; }
+        .app-notif-text h4 { margin: 0 0 2px 0; font-size: 0.95rem; color: #333; }
+        .app-notif-text p { margin: 0; font-size: 0.85rem; color: #757575; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     </style>
 </head>
 <body>
@@ -206,6 +220,14 @@
             </div>
         </div>
 
+        <div id="app-notification" class="app-notification" onclick="this.classList.remove('show')">
+            <div class="app-notif-icon" id="app-notif-icon">🔔</div>
+            <div class="app-notif-text">
+                <h4 id="app-notif-title">Title</h4>
+                <p id="app-notif-desc">Message details...</p>
+            </div>
+        </div>
+
         <nav class="bottom-nav">
             <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><span>🏠</span><p>Home</p></div>
             <div class="nav-item" id="nav-tasks" onclick="switchTab('tasks')"><span>📋</span><p>Tasks</p></div>
@@ -216,6 +238,8 @@
     <div id="toast" class="toast"></div>
 
     <script>
+        let activeTab = 'home'; // Tracks where the user is looking
+        let notifTimeout = null;
         const API_URL = 'https://helpido.onrender.com/api';
         const myPhone = localStorage.getItem('helpido_phone');
         let currentStatus = 'free';
@@ -271,11 +295,39 @@
                     }
                 });
 
-                // Triggers when a chat message arrives from the server
-                globalSocket.on('receiveMessage', (msg) => {
-                    // Only draw it if we are currently looking at THIS specific task's chat
+                /* Notification for mesages an posts*/
+                function showAppNotification(icon, title, desc) {
+            const notif = document.getElementById('app-notification');
+            document.getElementById('app-notif-icon').innerText = icon;
+            document.getElementById('app-notif-title').innerText = title;
+            document.getElementById('app-notif-desc').innerText = desc;
+            
+            notif.classList.add('show');
+            clearTimeout(notifTimeout);
+            notifTimeout = setTimeout(() => { notif.classList.remove('show'); }, 4000);
+        }
+
+                // 1. Listen for new tasks (Only alert if not in Home tab)
+                globalSocket.on('newTask', (task) => {
+                    if (task.postedBy !== myPhone && activeTab !== 'home') {
+                        showAppNotification('👋', 'New Help Request', task.title);
+                    }
+                });
+
+                // 2. Listen for messages (Alert unless already in that specific chat)
+                globalSocket.on('receiveMessage', async (msg) => {
                     if (currentChatTaskId === msg.taskId) {
                         appendMessageUI(msg);
+                    } else if (msg.senderPhone !== myPhone) {
+                        // Fetch the sender's real name for the notification!
+                        try {
+                            const res = await fetch(`${API_URL}/users/${msg.senderPhone}`);
+                            const user = await res.json();
+                            const firstName = user.name.split(' ')[0];
+                            showAppNotification('💬', `New message from ${firstName}`, msg.text);
+                        } catch(e) {
+                            showAppNotification('💬', 'New message', msg.text);
+                        }
                     }
                 });
                 // --- Add inside window.onload ---
@@ -422,7 +474,7 @@
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
                         
                         // Creates Chat Button if accepted
-                        const chatBtn = task.status === 'accepted' ? `<button class="btn" style="width:100%; margin-top:12px; background-color:#2196F3;" onclick="openChat('${task._id}', 'Helper')">💬 Chat with Helper</button>` : '';
+                        const chatBtn = task.status === 'accepted' ? `<button class="btn" style="width:100%; margin-top:12px; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.helperPhone}')">💬 Chat with Helper</button>` : '';
 
                         return `
                         <div class="task-card" id="req-card-${task._id}" style="border-left: 4px solid #FF5722; ${animStyle}">
@@ -459,7 +511,7 @@
                                 </div>
                             </div>
                             <p class="task-desc" style="margin-bottom: 12px;">Contact: ${task.postedBy}</p>
-                            <button class="btn" style="width:100%; margin:0; background-color:#2196F3;" onclick="openChat('${task._id}', 'Poster')">💬 Chat with Poster</button>
+                            <button class="btn" style="width:100%; margin:0; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.postedBy}')">💬 Chat with Poster</button>
                         </div>
                         `;
                     }).join('');
@@ -469,15 +521,22 @@
         /* ----------------------------------------------------
            3. CHAT ENGINE
            ---------------------------------------------------- */
-        async function openChat(taskId, chatWith) {
+        async function openChat(taskId, targetPhone) {
             currentChatTaskId = taskId;
-            document.getElementById('chat-header-title').innerText = `Chat with ${chatWith}`;
+            document.getElementById('chat-header-title').innerText = `Loading...`;
             document.getElementById('chat-modal').classList.remove('hidden');
             
+            // Fetch real name for the header!
+            fetch(`${API_URL}/users/${targetPhone}`)
+                .then(res => res.json())
+                .then(user => {
+                    const firstName = user.name.split(' ')[0];
+                    document.getElementById('chat-header-title').innerText = `Chat with ${firstName}`;
+                }).catch(() => document.getElementById('chat-header-title').innerText = `Chat`);
+
             const msgBox = document.getElementById('chat-messages');
             msgBox.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">Loading messages...</p>';
             
-            // Connect specifically to this task's private chat room
             globalSocket.emit('joinChat', taskId);
 
             try {
@@ -682,6 +741,7 @@
         }
 
         function switchTab(tabName) {
+            activeTab = tabName; 
             document.getElementById('home-view').classList.add('hidden'); document.getElementById('tasks-view').classList.add('hidden'); document.getElementById('profile-view').classList.add('hidden');
             document.getElementById('nav-home').classList.remove('active'); document.getElementById('nav-tasks').classList.remove('active'); document.getElementById('nav-profile').classList.remove('active');
             document.getElementById(`${tabName}-view`).classList.remove('hidden'); document.getElementById(`nav-${tabName}`).classList.add('active');
