@@ -36,7 +36,7 @@ io.on('connection', (socket) => {
     });
 
     // 2. Save message, update active chat, and send private notification
- socket.on('sendMessage', async (data) => {
+    socket.on('sendMessage', async (data) => {
         try {
             const newMsg = new Message({
                 taskId: data.taskId,
@@ -45,20 +45,13 @@ io.on('connection', (socket) => {
             });
             await newMsg.save();
             
-            // --- NEW: Update the task's timestamp so it jumps to the top ---
-            await Task.findByIdAndUpdate(data.taskId, { lastActivity: Date.now() });
-
-            // Send message to screen
+            // Updates the screen for anyone actively looking at the chat
             io.to(data.taskId).emit('receiveMessage', newMsg); 
             
-            // Send notification
+            // Sends a private push notification ONLY to the person receiving the text
             if (data.targetPhone) {
                 io.to(data.targetPhone).emit('notifyMessage', newMsg);
             }
-            
-            // --- IMPORTANT: Tell everyone to refresh so the list re-sorts ---
-            io.emit('refreshFeed'); 
-            
         } catch(err) { console.error("Message save error", err); }
     });
 

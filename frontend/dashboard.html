@@ -78,34 +78,15 @@
         /* =========================================
            5. IN-APP CHAT UI & ANIMATIONS
            ========================================= */
-       .chat-overlay {
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100dvh; /* Forces it to stay within the visible screen */
-            background: rgba(0,0,0,0.4); 
-            z-index: 3000; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: flex-end; 
-            transition: opacity 0.3s;
-            overflow: hidden; /* Prevents the overlay itself from scrolling */
+        .chat-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); 
+            z-index: 3000; display: flex; flex-direction: column; justify-content: flex-end; transition: opacity 0.3s;
         }
         .chat-overlay.hidden { opacity: 0; pointer-events: none; }
         
         .chat-drawer {
-            background: #fff; 
-            width: 100%; 
-            max-width: 500px; 
-            margin: 0 auto; 
-            height: 85vh; 
-            max-height: 85dvh;
-            border-radius: 20px 20px 0 0; 
-            display: flex; 
-            flex-direction: column; 
-            transform: translateY(0); 
-            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            background: #fff; width: 100%; max-width: 500px; margin: 0 auto; height: 85vh; border-radius: 20px 20px 0 0; 
+            display: flex; flex-direction: column; transform: translateY(0); transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
         }
         .chat-overlay.hidden .chat-drawer { transform: translateY(100%); }
         
@@ -393,10 +374,7 @@
                     feed.innerHTML = `<p style="text-align:center; color:#757575; padding-top:40px;">No tasks available right now.</p>`;
                 } else {
                     const existingCardIds = new Set(Array.from(feed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('feed-card-', '')));
-                    if (existingCardIds.size !== publicTasks.length) {
-                        feed.innerHTML = ''; // Wipe screen to prevent duplicates/ghosts
-                        existingCardIds.clear();
-                    }
+                    
                     feed.innerHTML = publicTasks.map((task, index) => {
                         const isNew = !existingCardIds.has(task._id.toString());
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`; 
@@ -463,25 +441,10 @@
                         `;
                     }).join('');
 
-                
-               // 2. Render Accepted Jobs with Dual-Layer Sorting
+                // Render Accepted Jobs
                 const existingJobIds = new Set(Array.from(jobsFeed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('job-card-', '')));
+                const sortedJobs = data.myJobs.sort((a, b) => (b.isPrioritized === true) - (a.isPrioritized === true));
                 
-                // --- NEW SORTING LOGIC ---
-                c// --- FIXED SORTING LOGIC ---
-                const sortedJobs = data.myJobs.sort((a, b) => {
-                    // 1. Priority Cards (Stars) always win
-                    const pA = a.isPrioritized ? 1 : 0;
-                    const pB = b.isPrioritized ? 1 : 0;
-                    if (pA !== pB) return pB - pA;
-                    
-                    // 2. Activity Sorting (Latest Message OR Creation Time)
-                    // We use 'lastActivity' if it exists, otherwise fallback to 'createdAt'
-                    const timeA = new Date(a.lastActivity || a.createdAt).getTime();
-                    const timeB = new Date(b.lastActivity || b.createdAt).getTime();
-                    
-                    return timeB - timeA; // Newest first
-                });
                 jobsFeed.innerHTML = sortedJobs.length === 0 
                     ? `<p style="color:#757575; font-size: 0.9rem;">You haven't accepted any tasks.</p>`
                     : sortedJobs.map((task, index) => {
