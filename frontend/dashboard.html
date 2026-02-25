@@ -141,6 +141,7 @@
         @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
 
         /* --- 1. FLOATING ACTION BUTTON (Fixed above Nav) --- */
+        /* --- FLOATING ACTION BUTTON --- */
         .fab-btn {
             position: fixed;
             bottom: 85px; /* Hovers safely above the bottom nav */
@@ -150,6 +151,14 @@
             border: none; box-shadow: 0 4px 12px rgba(255, 87, 34, 0.4);
             cursor: pointer; display: flex; justify-content: center; align-items: center;
             z-index: 1500; -webkit-tap-highlight-color: transparent;
+            transition: transform 0.2s, opacity 0.2s; /* Smooth hide/show */
+        }
+        
+        /* New class to hide it on the profile tab */
+        .fab-btn.hide-fab {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0);
         }
 
         /* --- 2. ADD REQUEST MODAL (Centered perfectly) --- */
@@ -643,10 +652,30 @@
 
         function switchTab(tabName) {
             activeTab = tabName;
-            document.getElementById('home-view').classList.add('hidden'); document.getElementById('tasks-view').classList.add('hidden'); document.getElementById('profile-view').classList.add('hidden');
-            document.getElementById('nav-home').classList.remove('active'); document.getElementById('nav-tasks').classList.remove('active'); document.getElementById('nav-profile').classList.remove('active');
-            document.getElementById(`${tabName}-view`).classList.remove('hidden'); document.getElementById(`nav-${tabName}`).classList.add('active');
             
+            // 1. Hide all views and remove active states
+            document.getElementById('home-view').classList.add('hidden'); 
+            document.getElementById('tasks-view').classList.add('hidden'); 
+            document.getElementById('profile-view').classList.add('hidden');
+            
+            document.getElementById('nav-home').classList.remove('active'); 
+            document.getElementById('nav-tasks').classList.remove('active'); 
+            document.getElementById('nav-profile').classList.remove('active');
+            
+            // 2. Show the target view and set active state
+            document.getElementById(`${tabName}-view`).classList.remove('hidden'); 
+            document.getElementById(`nav-${tabName}`).classList.add('active');
+            
+            // --- NEW: Smart FAB Visibility ---
+            // Hides the '+' button on the Profile tab, shows it on Home/Tasks
+            const fab = document.querySelector('.fab-btn');
+            if (tabName === 'profile') {
+                fab.classList.add('hide-fab');
+            } else {
+                fab.classList.remove('hide-fab');
+            }
+
+            // 3. Trigger data loads if it's the first time
             if (tabName === 'home') { if(isInitialHomeLoad) loadTasks(); }
             if (tabName === 'tasks') { if(isInitialTasksLoad) loadMyTasks(); }
         }
