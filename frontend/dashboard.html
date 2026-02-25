@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -7,118 +7,96 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
-        /* --- THEME VARIABLES (Dashboard Only - Protects Index.html) --- */
-        :root {
-            --vh: 1vh;
-            /* Light Mode (Deepened the background grey so white cards stand out more) */
-            --bg-color: #e4e9f0; 
-            --card-bg: #ffffff;
-            --text-main: #1a1a1a;
-            --text-sub: #666666;
-            --nav-bg: #ffffff;
-            --nav-border: #d1d5db;
-            --toast-bg: #333333;
-            --toast-text: #ffffff;
-            --skeleton-base: #dcdcdc;
-            --skeleton-highlight: #f0f0f0;
-        }
-
-        /* Dark Mode Overrides (True AMOLED Black) */
-        [data-theme="dark"] {
-            --bg-color: #000000; /* Pitch black background */
-            --card-bg: #141414;  /* Deep dark grey cards */
-            --text-main: #f0f0f0;
-            --text-sub: #9ca3af;
-            --nav-bg: #0a0a0a;
-            --nav-border: #222222;
-            --toast-bg: #e5e7eb;
-            --toast-text: #000000;
-            --skeleton-base: #1f1f1f;
-            --skeleton-highlight: #2a2a2a;
-        }
-
-        /* --- GLOBAL STYLES --- */
+        /* --- NATIVE MOBILE SCROLL FIX --- */
         html, body { 
-            margin: 0; padding: 0; min-height: 100%;
-            background-color: var(--bg-color); 
-            color: var(--text-main);           
+            margin: 0; 
+            padding: 0; 
+            min-height: 100%;
+            background-color: var(--bg-light);
+            /* Important: Allows browser chrome to slide away */
             overflow-x: hidden; 
-            transition: background-color 0.3s ease, color 0.3s ease;
         }
         
         .app-container { 
-            min-height: 100dvh; display: flex; flex-direction: column; 
-            max-width: 500px; margin: 0 auto; position: relative;
+            min-height: 100dvh; 
+            display: flex; 
+            flex-direction: column; 
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
         }
         
-        .feed-section { flex: 1; padding-bottom: 110px; }
-
-        /* --- UPDATED CARD STYLES FOR DARK MODE --- */
-        .task-card {
-            background-color: var(--card-bg) !important; 
-            color: var(--text-main);
-            transition: background-color 0.3s ease;
+        .feed-section { 
+            flex: 1; 
+            /* Adds extra padding so the last card clears the nav bar */
+            padding-bottom: 110px; 
         }
-        
-        .task-desc { color: var(--text-sub) !important; }
-        h4, h2, h3 { color: var(--text-main) !important; }
-
-        /* --- DARK MODE TOGGLE BUTTON --- */
-        .theme-btn {
-            background: rgba(0,0,0,0.05);
-            border: none;
-            cursor: pointer;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s;
-        }
-        [data-theme="dark"] .theme-btn { background: rgba(255,255,255,0.1); }
-        .theme-btn:active { transform: scale(0.95); }
 
         /* --- NAVIGATION BAR FIXES --- */
         .bottom-nav {
-            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-            width: 100%; max-width: 500px; z-index: 1000;
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 500px;
+            z-index: 1000;
+            /* Lifts the bar up on phones with gesture bars (iPhone X / Android 10+) */
             padding-bottom: env(safe-area-inset-bottom);
-            background-color: var(--nav-bg); 
-            border-top: 1px solid var(--nav-border);
-            height: 65px; display: flex; align-items: center;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
+            background-color: #ffffff;
+            border-top: 1px solid #eee;
+            height: 65px; /* Taller click target */
+            display: flex;
+            align-items: center; /* Vertically center */
         }
 
         .nav-item {
-            flex: 1; height: 100%; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-            color: var(--text-sub); 
-            transition: color 0.3s ease;
+            flex: 1;
+            height: 100%; /* Fill the whole bar */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            /* Removes the blue highlight on tap for a native feel */
+            -webkit-tap-highlight-color: transparent; 
         }
-        .nav-item.active { color: #FF5722; } 
 
-        /* --- TOAST --- */
+        /* --- TOAST FIX (THE INVISIBLE SHIELD) --- */
         .toast {
-            visibility: hidden; opacity: 0; pointer-events: none;
+            /* Existing styles usually go here, ensuring it works with style.css */
+            visibility: hidden; /* Hide completely when not in use */
+            opacity: 0;
+            pointer-events: none; /* KEY FIX: Clicks pass through the invisible box */
             transition: opacity 0.3s, transform 0.3s;
-            position: fixed; bottom: 90px; left: 50%;
+            position: fixed;
+            bottom: 90px; /* Moved up slightly so it doesn't cover nav */
+            left: 50%;
             transform: translateX(-50%) translateY(20px);
             z-index: 2000;
-            background: var(--toast-bg); color: var(--toast-text);
-            padding: 12px 24px; border-radius: 25px;
-            font-size: 0.9rem; text-align: center;
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            text-align: center;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            width: max-content; max-width: 80%;
+            width: max-content;
+            max-width: 80%;
         }
-        .toast.show { visibility: visible; opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        /* --- SKELETON LOADERS --- */
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+            /* pointer-events: auto; <--- We keep this commented out so you can click THROUGH the toast too! */
+        }
+
+        /* --- SKELETON LOADER ANIMATIONS --- */
         .skeleton-card { border-left: none !important; box-shadow: 0 2px 8px rgba(0,0,0,0.03); pointer-events: none; }
         .skeleton-element {
-            background: var(--skeleton-base);
-            background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-highlight) 50%, var(--skeleton-base) 75%);
+            background: #e0e0e0;
+            background: linear-gradient(90deg, #e0e0e0 25%, #f5f5f5 50%, #e0e0e0 75%);
             background-size: 200% 100%;
             animation: shimmer 1.5s infinite linear;
             border-radius: 4px;
@@ -162,20 +140,17 @@
 
         <section id="profile-view" class="feed-section hidden">
             <header class="dash-header">
-                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                    <div class="user-greeting">
-                        <h2>Account 👤</h2>
-                        <p>Manage your profile.</p>
-                    </div>
-                    <button id="theme-toggle" class="theme-btn" onclick="toggleTheme()">🌙</button>
+                <div class="user-greeting">
+                    <h2>Account 👤</h2>
+                    <p>Manage your profile and settings.</p>
                 </div>
             </header>
             <div class="task-card" style="text-align: center; padding: 30px 20px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                <h2 id="profile-name" style="margin-bottom: 5px;">Loading...</h2>
-                <p id="profile-phone" style="margin-bottom: 20px;">...</p>
-                <div style="background-color: var(--bg-color); padding: 16px; border-radius: 12px; text-align: left; margin-bottom: 24px; transition: background-color 0.3s ease;">
-                    <p style="font-size: 0.85rem; color: var(--text-sub); margin-bottom: 6px; font-weight: 600;">Home Address</p>
-                    <p id="profile-address" style="line-height: 1.4; font-weight: 500;">...</p>
+                <h2 id="profile-name" style="margin-bottom: 5px; color: var(--text-dark);">Loading...</h2>
+                <p id="profile-phone" style="color: var(--text-muted); margin-bottom: 20px;">...</p>
+                <div style="background-color: var(--bg-light); padding: 16px; border-radius: 12px; text-align: left; margin-bottom: 24px;">
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">Home Address</p>
+                    <p id="profile-address" style="color: var(--text-dark); line-height: 1.4; font-weight: 500;">...</p>
                 </div>
                 <button class="logout-btn" onclick="logout()">Log Out</button>
             </div>
@@ -184,25 +159,25 @@
         <button class="fab-btn" onclick="openModal()">+</button>
 
         <div id="create-modal" class="modal-overlay hidden">
-            <div class="modal-content" style="background-color: var(--card-bg); transition: background-color 0.3s ease;">
-                <h3 style="margin-bottom: 16px; color: var(--text-main);">Ask for Help</h3>
-                <input type="text" id="task-title" placeholder="What do you need?" required style="background: var(--bg-color); color: var(--text-main); border-color: var(--nav-border);">
-                <textarea id="task-desc" rows="3" placeholder="Provide details..." required style="background: var(--bg-color); color: var(--text-main); border-color: var(--nav-border);"></textarea>
-                <input type="number" id="task-reward" placeholder="Reward (₹)" required style="background: var(--bg-color); color: var(--text-main); border-color: var(--nav-border);">
+            <div class="modal-content">
+                <h3 style="margin-bottom: 16px; color: var(--text-dark);">Ask for Help</h3>
+                <input type="text" id="task-title" placeholder="What do you need? (e.g. Move furniture)" required>
+                <textarea id="task-desc" rows="3" placeholder="Provide some details..." required></textarea>
+                <input type="number" id="task-reward" placeholder="Reward amount (₹)" required>
                 <div class="modal-actions" style="display: flex; justify-content: space-between; margin-top: 10px;">
-                    <button class="text-btn" onclick="closeModal()" style="color: var(--text-sub);">Cancel</button>
+                    <button class="text-btn" onclick="closeModal()" style="color: #757575;">Cancel</button>
                     <button class="btn" onclick="postHelpRequest()" style="width: auto; padding: 10px 20px;">Post Request</button>
                 </div>
             </div>
         </div>
         
         <div id="confirm-modal" class="modal-overlay hidden">
-            <div class="modal-content" style="text-align: center; max-width: 320px; background-color: var(--card-bg); transition: background-color 0.3s ease;">
+            <div class="modal-content" style="text-align: center; max-width: 320px;">
                 <div style="font-size: 2.5rem; margin-bottom: 10px;">⚠️</div>
-                <h3 id="confirm-title" style="margin-bottom: 10px; color: var(--text-main);">Are you sure?</h3>
-                <p id="confirm-message" style="color: var(--text-sub); margin-bottom: 24px; font-size: 0.95rem; line-height: 1.4;">This action cannot be undone.</p>
+                <h3 id="confirm-title" style="margin-bottom: 10px; color: var(--text-dark);">Are you sure?</h3>
+                <p id="confirm-message" style="color: var(--text-muted); margin-bottom: 24px; font-size: 0.95rem; line-height: 1.4;">This action cannot be undone.</p>
                 <div style="display: flex; gap: 12px;">
-                    <button class="btn" onclick="closeConfirm()" style="flex: 1; background-color: var(--bg-color); color: var(--text-sub); margin-top: 0; box-shadow: none;">Cancel</button>
+                    <button class="btn" onclick="closeConfirm()" style="flex: 1; background-color: #F5F5F5; color: #757575; margin-top: 0; box-shadow: none;">Cancel</button>
                     <button id="confirm-action-btn" class="btn" style="flex: 1; background-color: #D32F2F; margin-top: 0; box-shadow: none;">Yes</button>
                 </div>
             </div>
@@ -230,29 +205,6 @@
         
         let isInitialHomeLoad = true;
         let isInitialTasksLoad = true;
-
-        // --- DARK MODE LOGIC ---
-        function initTheme() {
-            const savedTheme = localStorage.getItem('helpido_theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            updateThemeIcon(savedTheme);
-        }
-
-        function toggleTheme() {
-            const current = document.documentElement.getAttribute('data-theme');
-            const target = current === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', target);
-            localStorage.setItem('helpido_theme', target);
-            updateThemeIcon(target);
-        }
-
-        function updateThemeIcon(theme) {
-            const btn = document.getElementById('theme-toggle');
-            if(btn) btn.innerHTML = theme === 'dark' ? '☀️' : '🌙';
-        }
-
-        // Run immediately
-        initTheme();
 
         if (!myPhone || myPhone === "undefined" || myPhone === "null") {
             window.location.replace('/index.html');
@@ -296,14 +248,6 @@
                 });
             }
         };
-
-        function resetHeight() {
-            let vh = window.innerHeight * 0.01;
-            document.documentElement.style.setProperty('--vh', `${vh}px`);
-        }
-        window.addEventListener('resize', resetHeight);
-        window.addEventListener('orientationchange', resetHeight);
-        resetHeight();
 
         function getSkeletonHTML(count) {
             return Array(count).fill(`
@@ -366,7 +310,7 @@
                 }
 
                 if (publicTasks.length === 0) {
-                    feed.innerHTML = `<p style="text-align:center; color:var(--text-sub); padding-top:40px;">No tasks available right now.</p>`;
+                    feed.innerHTML = `<p style="text-align:center; color:#757575; padding-top:40px;">No tasks available right now.</p>`;
                 } else {
                     const existingCardIds = new Set(Array.from(feed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('feed-card-', '')));
 
@@ -417,7 +361,7 @@
                 const existingReqIds = new Set(Array.from(reqFeed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('req-card-', '')));
 
                 reqFeed.innerHTML = data.myRequests.length === 0 
-                    ? `<p style="color:var(--text-sub); font-size: 0.9rem;">You haven't uploaded any tasks.</p>`
+                    ? `<p style="color:#757575; font-size: 0.9rem;">You haven't uploaded any tasks.</p>`
                     : data.myRequests.map((task, index) => {
                         const isNew = !existingReqIds.has(task._id.toString());
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
@@ -440,7 +384,7 @@
                 const sortedJobs = data.myJobs.sort((a, b) => (b.isPrioritized === true) - (a.isPrioritized === true));
                 
                 jobsFeed.innerHTML = sortedJobs.length === 0 
-                    ? `<p style="color:var(--text-sub); font-size: 0.9rem;">You haven't accepted any tasks.</p>`
+                    ? `<p style="color:#757575; font-size: 0.9rem;">You haven't accepted any tasks.</p>`
                     : sortedJobs.map((task, index) => {
                         const isNew = !existingJobIds.has(task._id.toString());
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
