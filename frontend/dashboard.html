@@ -597,7 +597,8 @@
 
                 globalSocket.on('newTask', (task) => {
                     if (task.postedBy !== myPhone && activeTab !== 'home') {
-                        showAppNotification('👋', 'New Help Request', task.title);
+                        // Updated text format for new tasks
+                        showAppNotification('👋', `New task posted: ${task.title}`, 'Check the Home feed!');
                     }
                 });
 
@@ -622,15 +623,26 @@
                     }
                 });
 
-                globalSocket.on('notifyMessage', async (msg) => {
+               globalSocket.on('notifyMessage', async (msg) => {
                     if (currentChatTaskId !== msg.taskId) {
                         try {
                             const res = await fetch(`${API_URL}/users/${msg.senderPhone}`);
                             const user = await res.json();
                             const firstName = user.name.split(' ')[0];
-                            showAppNotification('💬', `New message from ${firstName}`, msg.text);
-                        } catch (e) {
-                            showAppNotification('💬', 'New message', msg.text);
+                            
+                            // 1. Safely grab the task title from the cards on the screen
+                            let taskTitle = "task";
+                            const cardEl = document.getElementById(`job-card-${msg.taskId}`) || document.getElementById(`req-card-${msg.taskId}`) || document.getElementById(`feed-card-${msg.taskId}`);
+                            if (cardEl) {
+                                const titleEl = cardEl.querySelector('h4');
+                                // Grabs just the text, ignoring the inner span tags (like the reward or priority star)
+                                if (titleEl) taskTitle = titleEl.childNodes[0].nodeValue.trim(); 
+                            }
+
+                            // 2. Format exactly as requested: "New message from [Name] for [Title]"
+                            showAppNotification('💬', `New message from ${firstName} for ${taskTitle}`, msg.text);
+                        } catch(e) { 
+                            showAppNotification('💬', 'New message', msg.text); 
                         }
                     }
                 });
