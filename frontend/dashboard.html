@@ -7,41 +7,41 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
-        /* --- THEME VARIABLES (Dark Mode Engine) --- */
+        /* --- THEME VARIABLES (Dashboard Only - Protects Index.html) --- */
         :root {
             --vh: 1vh;
-            /* Light Mode (Default) */
-            --bg-color: #f4f6f8;
+            /* Light Mode (Deepened the background grey so white cards stand out more) */
+            --bg-color: #e4e9f0; 
             --card-bg: #ffffff;
             --text-main: #1a1a1a;
-            --text-sub: #757575;
+            --text-sub: #666666;
             --nav-bg: #ffffff;
-            --nav-border: #eeeeee;
+            --nav-border: #d1d5db;
             --toast-bg: #333333;
             --toast-text: #ffffff;
-            --skeleton-base: #e0e0e0;
-            --skeleton-highlight: #f5f5f5;
+            --skeleton-base: #dcdcdc;
+            --skeleton-highlight: #f0f0f0;
         }
 
-        /* Dark Mode Overrides */
+        /* Dark Mode Overrides (True AMOLED Black) */
         [data-theme="dark"] {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --text-main: #ffffff;
-            --text-sub: #b0b0b0;
-            --nav-bg: #1e1e1e;
-            --nav-border: #333333;
-            --toast-bg: #ffffff;
+            --bg-color: #000000; /* Pitch black background */
+            --card-bg: #141414;  /* Deep dark grey cards */
+            --text-main: #f0f0f0;
+            --text-sub: #9ca3af;
+            --nav-bg: #0a0a0a;
+            --nav-border: #222222;
+            --toast-bg: #e5e7eb;
             --toast-text: #000000;
-            --skeleton-base: #2a2a2a;
-            --skeleton-highlight: #3a3a3a;
+            --skeleton-base: #1f1f1f;
+            --skeleton-highlight: #2a2a2a;
         }
 
         /* --- GLOBAL STYLES --- */
         html, body { 
             margin: 0; padding: 0; min-height: 100%;
-            background-color: var(--bg-color); /* Uses variable! */
-            color: var(--text-main);           /* Uses variable! */
+            background-color: var(--bg-color); 
+            color: var(--text-main);           
             overflow-x: hidden; 
             transition: background-color 0.3s ease, color 0.3s ease;
         }
@@ -55,7 +55,7 @@
 
         /* --- UPDATED CARD STYLES FOR DARK MODE --- */
         .task-card {
-            background-color: var(--card-bg) !important; /* Force variable usage */
+            background-color: var(--card-bg) !important; 
             color: var(--text-main);
             transition: background-color 0.3s ease;
         }
@@ -84,19 +84,20 @@
             position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
             width: 100%; max-width: 500px; z-index: 1000;
             padding-bottom: env(safe-area-inset-bottom);
-            background-color: var(--nav-bg); /* Uses variable! */
+            background-color: var(--nav-bg); 
             border-top: 1px solid var(--nav-border);
             height: 65px; display: flex; align-items: center;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         .nav-item {
             flex: 1; height: 100%; display: flex; flex-direction: column;
             justify-content: center; align-items: center; cursor: pointer;
             -webkit-tap-highlight-color: transparent;
-            color: var(--text-sub); /* Icons adapt to mode */
+            color: var(--text-sub); 
+            transition: color 0.3s ease;
         }
-        .nav-item.active { color: #FF5722; } /* Brand color stays same */
+        .nav-item.active { color: #FF5722; } 
 
         /* --- TOAST --- */
         .toast {
@@ -113,7 +114,7 @@
         }
         .toast.show { visibility: visible; opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        /* --- SKELETON LOADERS (Now Dark Mode Ready!) --- */
+        /* --- SKELETON LOADERS --- */
         .skeleton-card { border-left: none !important; box-shadow: 0 2px 8px rgba(0,0,0,0.03); pointer-events: none; }
         .skeleton-element {
             background: var(--skeleton-base);
@@ -166,16 +167,13 @@
                         <h2>Account 👤</h2>
                         <p>Manage your profile.</p>
                     </div>
-                    <button id="theme-toggle" class="theme-btn" onclick="toggleTheme()">
-                        🌙 
-                    </button>
+                    <button id="theme-toggle" class="theme-btn" onclick="toggleTheme()">🌙</button>
                 </div>
             </header>
-            
             <div class="task-card" style="text-align: center; padding: 30px 20px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
                 <h2 id="profile-name" style="margin-bottom: 5px;">Loading...</h2>
                 <p id="profile-phone" style="margin-bottom: 20px;">...</p>
-                <div style="background-color: var(--bg-color); padding: 16px; border-radius: 12px; text-align: left; margin-bottom: 24px;">
+                <div style="background-color: var(--bg-color); padding: 16px; border-radius: 12px; text-align: left; margin-bottom: 24px; transition: background-color 0.3s ease;">
                     <p style="font-size: 0.85rem; color: var(--text-sub); margin-bottom: 6px; font-weight: 600;">Home Address</p>
                     <p id="profile-address" style="line-height: 1.4; font-weight: 500;">...</p>
                 </div>
@@ -186,7 +184,7 @@
         <button class="fab-btn" onclick="openModal()">+</button>
 
         <div id="create-modal" class="modal-overlay hidden">
-            <div class="modal-content" style="background-color: var(--card-bg);">
+            <div class="modal-content" style="background-color: var(--card-bg); transition: background-color 0.3s ease;">
                 <h3 style="margin-bottom: 16px; color: var(--text-main);">Ask for Help</h3>
                 <input type="text" id="task-title" placeholder="What do you need?" required style="background: var(--bg-color); color: var(--text-main); border-color: var(--nav-border);">
                 <textarea id="task-desc" rows="3" placeholder="Provide details..." required style="background: var(--bg-color); color: var(--text-main); border-color: var(--nav-border);"></textarea>
@@ -199,7 +197,7 @@
         </div>
         
         <div id="confirm-modal" class="modal-overlay hidden">
-            <div class="modal-content" style="text-align: center; max-width: 320px; background-color: var(--card-bg);">
+            <div class="modal-content" style="text-align: center; max-width: 320px; background-color: var(--card-bg); transition: background-color 0.3s ease;">
                 <div style="font-size: 2.5rem; margin-bottom: 10px;">⚠️</div>
                 <h3 id="confirm-title" style="margin-bottom: 10px; color: var(--text-main);">Are you sure?</h3>
                 <p id="confirm-message" style="color: var(--text-sub); margin-bottom: 24px; font-size: 0.95rem; line-height: 1.4;">This action cannot be undone.</p>
@@ -299,7 +297,6 @@
             }
         };
 
-        // --- MOBILE HEIGHT CALCULATION ---
         function resetHeight() {
             let vh = window.innerHeight * 0.01;
             document.documentElement.style.setProperty('--vh', `${vh}px`);
