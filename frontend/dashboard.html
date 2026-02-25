@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
     <title>Helpido | Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
@@ -94,18 +94,18 @@
         }
         .chat-overlay.hidden { opacity: 0; pointer-events: none; }
         
-        .chat-drawer {
+       .chat-drawer {
             background: #fff; 
             width: 100%; 
             max-width: 500px; 
             margin: 0 auto; 
-            height: 80dvh; /* Lowered slightly to start at "2nd card" height */
+            height: 65dvh; /* Lowered to 65% to match "second card" height */
             border-radius: 20px 20px 0 0; 
             display: flex; 
             flex-direction: column; 
             transform: translateY(0); 
             transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-            overflow: hidden; /* Prevents double scrollbars */
+            overflow: hidden; 
         }
         .chat-overlay.hidden .chat-drawer { transform: translateY(100%); }
         
@@ -114,6 +114,11 @@
         
         @keyframes popIn { 0% { opacity: 0; transform: translateY(15px) scale(0.9); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
         
+        body.no-scroll {
+            overflow: hidden !important; /* Freezes the background */
+            position: fixed;
+            width: 100%;
+        }
         .msg-bubble { 
             max-width: 75%; padding: 10px 14px; border-radius: 18px; font-size: 0.95rem; line-height: 1.4; 
             word-wrap: break-word; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; transform-origin: bottom;
@@ -492,6 +497,7 @@
            3. CHAT ENGINE
            ========================================= */
         async function openChat(taskId, targetPhone) {
+            document.body.classList.add('no-scroll');
             currentChatTaskId = taskId;
             currentChatTargetPhone = targetPhone; // <--- ADD THIS LINE
             document.getElementById('chat-header-title').innerText = `Loading...`;
@@ -524,6 +530,7 @@
         }
 
         function closeChat() {
+            document.body.classList.remove('no-scroll');
             document.getElementById('chat-modal').classList.add('hidden');
             currentChatTaskId = null;
             currentChatTargetPhone = null;
