@@ -13,23 +13,26 @@
             padding: 0; 
             min-height: 100%;
             background-color: var(--bg-light);
-            /* Removed overflow: hidden so the browser toolbar can slide away! */
+            /* Important: Allows browser chrome to slide away */
+            overflow-x: hidden; 
         }
         
         .app-container { 
-            min-height: 100dvh; /* Dynamic Viewport adjusts automatically to browser toolbars */
+            min-height: 100dvh; 
             display: flex; 
             flex-direction: column; 
             max-width: 500px;
             margin: 0 auto;
+            position: relative;
         }
         
         .feed-section { 
             flex: 1; 
-            padding-bottom: 100px; /* Extra space so cards don't hide behind the nav bar */
+            /* Adds extra padding so the last card clears the nav bar */
+            padding-bottom: 110px; 
         }
 
-        /* Forces the nav bar to permanently stick to the bottom of the glass */
+        /* --- NAVIGATION BAR FIXES --- */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -38,6 +41,55 @@
             width: 100%;
             max-width: 500px;
             z-index: 1000;
+            /* Lifts the bar up on phones with gesture bars (iPhone X / Android 10+) */
+            padding-bottom: env(safe-area-inset-bottom);
+            background-color: #ffffff;
+            border-top: 1px solid #eee;
+            height: 65px; /* Taller click target */
+            display: flex;
+            align-items: center; /* Vertically center */
+        }
+
+        .nav-item {
+            flex: 1;
+            height: 100%; /* Fill the whole bar */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            /* Removes the blue highlight on tap for a native feel */
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        /* --- TOAST FIX (THE INVISIBLE SHIELD) --- */
+        .toast {
+            /* Existing styles usually go here, ensuring it works with style.css */
+            visibility: hidden; /* Hide completely when not in use */
+            opacity: 0;
+            pointer-events: none; /* KEY FIX: Clicks pass through the invisible box */
+            transition: opacity 0.3s, transform 0.3s;
+            position: fixed;
+            bottom: 90px; /* Moved up slightly so it doesn't cover nav */
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            z-index: 2000;
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            width: max-content;
+            max-width: 80%;
+        }
+
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+            /* pointer-events: auto; <--- We keep this commented out so you can click THROUGH the toast too! */
         }
 
         /* --- SKELETON LOADER ANIMATIONS --- */
