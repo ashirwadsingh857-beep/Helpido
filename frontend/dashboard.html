@@ -1197,10 +1197,10 @@
 
         // --- DYNAMIC SCROLL ANIMATION (Safe Zone Mode) ---
         // --- DYNAMIC SCROLL ANIMATION (Bulletproof Safe Zone Mode) ---
+// --- DYNAMIC SCROLL ANIMATION (PWA Optimized) ---
         function initScrollAnimation() {
             let isScrolling = false;
 
-            // 1. The Trigger: Requests an animation frame
             function requestUpdate() {
                 if (!isScrolling) {
                     window.requestAnimationFrame(applyScrollEffects);
@@ -1208,24 +1208,29 @@
                 }
             }
 
-            // 2. The Listener: deeply optimized for mobile scrolling
+            // 1. PWA Fix: Listen to document AND window to guarantee we catch the scroll
+            document.addEventListener('scroll', requestUpdate, { passive: true });
             window.addEventListener('scroll', requestUpdate, { passive: true });
             window.addEventListener('touchmove', requestUpdate, { passive: true });
+            
+            // 2. Catch screen resizing (like when the Android keyboard pops up)
+            window.addEventListener('resize', requestUpdate, { passive: true }); 
 
-            // 3. The Backup: Runs every second to catch new cards loaded via AJAX
-            setInterval(requestUpdate, 1000);
+            // 3. Run slightly faster to catch AJAX loads
+            setInterval(requestUpdate, 800); 
 
-            // 4. The Math: Calculates size based on position
             function applyScrollEffects() {
                 const H = window.innerHeight;
                 const C = H / 2; 
-                const safeRadius = H * 0.35; // The Blue Safe Zone
+                
+                // 4. PWA Fix: Widen the Safe Zone to 40% so cards stay flat longer in full-screen
+                const safeRadius = H * 0.40; 
 
                 document.querySelectorAll('.task-card').forEach(card => {
                     const rect = card.getBoundingClientRect();
                     
-                    // Optimization: Skip math if card is way off screen
-                    if (rect.top > H + 100 || rect.bottom < -100) return;
+                    // Optimization: Skip math if card is off screen
+                    if (rect.top > H + 50 || rect.bottom < -50) return;
 
                     const Y = rect.top + (rect.height / 2); 
                     const dist = Math.abs(Y - C);
@@ -1236,8 +1241,10 @@
                         const excess = dist - safeRadius;
                         const redZoneSize = (H / 2) - safeRadius; 
                         const factor = Math.min(1, Math.max(0, excess / redZoneSize)); 
-                        scale = 1 - (factor * 0.15); 
-                        opacity = 1 - (factor * 0.5); 
+                        
+                        // 5. Gentler shrink effect (12% instead of 15%) for smoother PWA feel
+                        scale = 1 - (factor * 0.12); 
+                        opacity = 1 - (factor * 0.4); 
                     }
                     card.style.transform = `scale(${scale})`;
                     card.style.opacity = `${opacity}`;
@@ -1246,7 +1253,6 @@
                 isScrolling = false;
             }
         }
-
        // --- SIMPLE PULL TO REFRESH (Fixed for Mobile UI) ---
         let touchStart = 0;
         const ptrThreshold = 150; 
