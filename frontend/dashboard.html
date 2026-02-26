@@ -5,9 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-       <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#FF5722">
-    
+
     <link rel="apple-touch-icon" href="192.png">
 
     <script>
@@ -52,7 +52,7 @@
         /* =========================================
            2. BOTTOM NAVIGATION BAR
            ========================================= */
-        /* --- BOTTOM NAVIGATION BAR --- */
+        /* --- BOTTOM NAVIGATION BAR (Glassmorphism) --- */
         .bottom-nav {
             position: fixed !important;
             bottom: 0 !important;
@@ -61,13 +61,18 @@
             width: 100%;
             max-width: 500px;
             z-index: 9000 !important;
-            /* Extremely high z-index */
-            padding-bottom: env(safe-area-inset-bottom);
-            background-color: #ffffff;
-            border-top: 1px solid #eee;
-            height: 65px;
+            height: 70px;
             display: flex;
             align-items: center;
+            justify-content: space-around;
+            padding-bottom: env(safe-area-inset-bottom);
+
+            /* The Glass Effect */
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.03);
         }
 
         .nav-item {
@@ -164,8 +169,21 @@
         }
 
         /* =========================================
-           4. SKELETON LOADERS
+           4. SKELETON LOADERS & TASK CARDS
            ========================================= */
+        /* --- NEW SCROLL ANIMATION SUPPORT --- */
+        .task-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            /* Smooth transitions for scroll effects */
+            transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+            transform-origin: center center; 
+            will-change: transform, opacity;
+        }
+
         .skeleton-card {
             border-left: none !important;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
@@ -181,30 +199,42 @@
         }
 
         @keyframes shimmer {
-            0% {
-                background-position: -200% 0;
-            }
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
 
-            100% {
-                background-position: 200% 0;
-            }
+        /* --- STATUS BADGES --- */
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+
+        .status-open {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-accepted {
+            background: #e8f5e9;
+            color: #2e7d32;
         }
 
         /* =========================================
            5. IN-APP CHAT UI & ANIMATIONS
            ========================================= */
-        /* --- FIXED CHAT OVERLAY --- */
         .chat-overlay {
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
             right: 0 !important;
             bottom: 0 !important;
-            /* Locks it exactly to the screen edges */
             height: auto !important;
             background: rgba(0, 0, 0, 0.4);
             z-index: 10000 !important;
-            /* Forces it to sit ABOVE the bottom nav bar */
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
@@ -222,7 +252,6 @@
             max-width: 500px;
             margin: 0 auto;
             height: 65dvh;
-            /* Lowered to 65% to match "second card" height */
             border-radius: 20px 20px 0 0;
             display: flex;
             flex-direction: column;
@@ -254,20 +283,12 @@
         }
 
         @keyframes popIn {
-            0% {
-                opacity: 0;
-                transform: translateY(15px) scale(0.9);
-            }
-
-            100% {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
+            0% { opacity: 0; transform: translateY(15px) scale(0.9); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         body.no-scroll {
             overflow: hidden !important;
-            /* Freezes the background */
             position: fixed;
             width: 100%;
         }
@@ -348,34 +369,18 @@
             border-radius: 50%;
             animation: bounce 1.4s infinite ease-in-out both;
         }
-
-        .typing-dot:nth-child(1) {
-            animation-delay: -0.32s;
-        }
-
-        .typing-dot:nth-child(2) {
-            animation-delay: -0.16s;
-        }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
 
         @keyframes bounce {
-
-            0%,
-            80%,
-            100% {
-                transform: scale(0);
-            }
-
-            40% {
-                transform: scale(1);
-            }
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
         }
 
-        /* --- 1. FLOATING ACTION BUTTON (Fixed above Nav) --- */
-
+        /* --- 6. FLOATING ACTION BUTTON (Fixed above Nav) --- */
         .fab-btn {
             position: fixed !important;
             bottom: 85px !important;
-            /* Sits just above the nav bar */
             right: 20px !important;
             width: 56px;
             height: 56px;
@@ -390,19 +395,17 @@
             justify-content: center;
             align-items: center;
             z-index: 9500 !important;
-            /* Sits above the nav bar */
             -webkit-tap-highlight-color: transparent;
             transition: transform 0.2s, opacity 0.2s;
         }
 
-        /* New class to hide it on the profile tab */
         .fab-btn.hide-fab {
             opacity: 0 !important;
             pointer-events: none !important;
             transform: scale(0) !important;
         }
 
-        /* --- 2. ADD REQUEST MODAL (Centered perfectly) --- */
+        /* --- 7. MODALS --- */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -414,7 +417,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            /* This centers it! */
             opacity: 1;
             visibility: visible;
             transition: opacity 0.3s;
@@ -485,33 +487,27 @@
                     <p>Manage your profile and settings.</p>
                 </div>
             </header>
-            <div class="task-card"
-                style="text-align: center; padding: 30px 20px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <div class="task-card" style="text-align: center; padding: 30px 20px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
                 <h2 id="profile-name" style="margin-bottom: 5px; color: var(--text-dark);">Loading...</h2>
                 <p id="profile-phone" style="color: var(--text-muted); margin-bottom: 20px;">...</p>
-                <div
-                    style="background-color: var(--bg-light); padding: 16px; border-radius: 12px; text-align: left; margin-bottom: 24px;">
-                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">Home
-                        Address</p>
+                <div style="background-color: var(--bg-light); padding: 16px; border-radius: 12px; text-align: left; margin-bottom: 24px;">
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">Home Address</p>
                     <p id="profile-address" style="color: var(--text-dark); line-height: 1.4; font-weight: 500;">...</p>
                 </div>
                 <button class="logout-btn" onclick="logout()">Log Out</button>
             </div>
         </section>
 
-
-
-
-        <div id="app-notification" class="app-notification" onclick="this.classList.remove('show')">
-            <div class="app-notif-icon" id="app-notif-icon">🔔</div>
-            <div class="app-notif-text">
-                <h4 id="app-notif-title">Title</h4>
-                <p id="app-notif-desc">Message details...</p>
-            </div>
-        </div>
-
-
     </main>
+
+    <div id="app-notification" class="app-notification" onclick="this.classList.remove('show')">
+        <div class="app-notif-icon" id="app-notif-icon">🔔</div>
+        <div class="app-notif-text">
+            <h4 id="app-notif-title">Title</h4>
+            <p id="app-notif-desc">Message details...</p>
+        </div>
+    </div>
+
     <div id="create-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <h3 style="margin-bottom: 16px; color: var(--text-dark);">Ask for Help</h3>
@@ -520,8 +516,7 @@
             <input type="number" id="task-reward" placeholder="Reward amount (₹)" required>
             <div class="modal-actions" style="display: flex; justify-content: space-between; margin-top: 10px;">
                 <button class="text-btn" onclick="closeModal()" style="color: #757575;">Cancel</button>
-                <button class="btn" onclick="postHelpRequest()" style="width: auto; padding: 10px 20px;">Post
-                    Request</button>
+                <button class="btn" onclick="postHelpRequest()" style="width: auto; padding: 10px 20px;">Post Request</button>
             </div>
         </div>
     </div>
@@ -545,30 +540,19 @@
         <div class="modal-content" style="text-align: center; max-width: 320px;">
             <div style="font-size: 2.5rem; margin-bottom: 10px;">⚠️</div>
             <h3 id="confirm-title" style="margin-bottom: 10px; color: var(--text-dark);">Are you sure?</h3>
-            <p id="confirm-message"
-                style="color: var(--text-muted); margin-bottom: 24px; font-size: 0.95rem; line-height: 1.4;">This
-                action cannot be undone.</p>
+            <p id="confirm-message" style="color: var(--text-muted); margin-bottom: 24px; font-size: 0.95rem; line-height: 1.4;">This action cannot be undone.</p>
             <div style="display: flex; gap: 12px;">
-                <button class="btn" onclick="closeConfirm()"
-                    style="flex: 1; background-color: #F5F5F5; color: #757575; margin-top: 0; box-shadow: none;">Cancel</button>
-                <button id="confirm-action-btn" class="btn"
-                    style="flex: 1; background-color: #D32F2F; margin-top: 0; box-shadow: none;">Yes</button>
+                <button class="btn" onclick="closeConfirm()" style="flex: 1; background-color: #F5F5F5; color: #757575; margin-top: 0; box-shadow: none;">Cancel</button>
+                <button id="confirm-action-btn" class="btn" style="flex: 1; background-color: #D32F2F; margin-top: 0; box-shadow: none;">Yes</button>
             </div>
         </div>
     </div>
 
-
     <button class="fab-btn" onclick="openModal()">+</button>
     <nav class="bottom-nav">
-        <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><span>🏠</span>
-            <p>Home</p>
-        </div>
-        <div class="nav-item" id="nav-tasks" onclick="switchTab('tasks')"><span>📋</span>
-            <p>Tasks</p>
-        </div>
-        <div class="nav-item" id="nav-profile" onclick="switchTab('profile')"><span>👤</span>
-            <p>Profile</p>
-        </div>
+        <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><span>🏠</span><p>Home</p></div>
+        <div class="nav-item" id="nav-tasks" onclick="switchTab('tasks')"><span>📋</span><p>Tasks</p></div>
+        <div class="nav-item" id="nav-profile" onclick="switchTab('profile')"><span>👤</span><p>Profile</p></div>
     </nav>
     <div id="toast" class="toast"></div>
 
@@ -585,7 +569,7 @@
         let globalSocket = null;
         let currentChatTaskId = null;
         let typingTimeout = null;
-        let currentChatTargetPhone = null; // Add this line
+        let currentChatTargetPhone = null; 
 
         if (!myPhone || myPhone === "undefined" || myPhone === "null") {
             window.location.replace('/index.html');
@@ -599,9 +583,11 @@
                 loadProfile();
                 loadTasks();
 
+                // Start the scroll listener on load
+                initScrollAnimation();
+
                 globalSocket = io('https://helpido.onrender.com', { transports: ['websocket', 'polling'] });
 
-                // --- UPDATE 1: Add registerPhone to connect ---
                 globalSocket.on('connect', () => {
                     console.log("🟢 Live feed connected!");
                     globalSocket.emit('registerPhone', myPhone);
@@ -611,8 +597,7 @@
 
                 globalSocket.on('newTask', (task) => {
                     if (task.postedBy !== myPhone && activeTab !== 'home') {
-                        // Updated text format for new tasks
-                        showAppNotification('👋', `New task posted: ${task.title} for ${taskTitle}`);
+                        showAppNotification('👋', `New task posted: ${task.title}`, 'Check the Home feed!');
                     }
                 });
 
@@ -637,26 +622,23 @@
                     }
                 });
 
-               globalSocket.on('notifyMessage', async (msg) => {
+                globalSocket.on('notifyMessage', async (msg) => {
                     if (currentChatTaskId !== msg.taskId) {
                         try {
                             const res = await fetch(`${API_URL}/users/${msg.senderPhone}`);
                             const user = await res.json();
                             const firstName = user.name.split(' ')[0];
-                            
-                            // 1. Safely grab the task title from the cards on the screen
+
                             let taskTitle = "task";
                             const cardEl = document.getElementById(`job-card-${msg.taskId}`) || document.getElementById(`req-card-${msg.taskId}`) || document.getElementById(`feed-card-${msg.taskId}`);
                             if (cardEl) {
                                 const titleEl = cardEl.querySelector('h4');
-                                // Grabs just the text, ignoring the inner span tags (like the reward or priority star)
-                                if (titleEl) taskTitle = titleEl.childNodes[0].nodeValue.trim(); 
+                                if (titleEl) taskTitle = titleEl.childNodes[0].nodeValue.trim();
                             }
 
-                            // 2. Format exactly as requested: "New message from [Name] for [Title]"
                             showAppNotification('💬', `New message from ${firstName} for ${taskTitle}`, msg.text);
-                        } catch(e) { 
-                            showAppNotification('💬', 'New message', msg.text); 
+                        } catch (e) {
+                            showAppNotification('💬', 'New message', msg.text);
                         }
                     }
                 });
@@ -723,10 +705,7 @@
                 const res = await fetch(`${API_URL}/tasks`);
                 const allTasks = await res.json();
 
-                // Exclude tasks created by user
                 let publicTasks = allTasks.filter(t => t.postedBy !== myPhone);
-
-                // Exclude tasks the user has manually dropped
                 const droppedTasks = JSON.parse(localStorage.getItem('dropped_tasks') || "[]");
                 publicTasks = publicTasks.filter(t => !droppedTasks.includes(t._id));
 
@@ -743,7 +722,8 @@
                     feed.innerHTML = publicTasks.map((task, index) => {
                         const isNew = !existingCardIds.has(task._id.toString());
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
-
+                        
+                        // FIX: Badge properly integrated inside the return literal
                         return `
                         <div class="task-card" id="feed-card-${task._id}" style="${animStyle}">
                             <div class="task-top">
@@ -754,6 +734,9 @@
                                 <span class="reward-tag">₹${task.reward}</span>
                             </div>
                             <p class="task-desc">${task.description}</p>
+                            <p class="task-desc" style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                                Reward: ₹${task.reward} | <span class="status-badge status-${task.status}">${task.status}</span>
+                            </p>
                             <div class="task-bottom" style="justify-content: flex-end;">
                                 <button class="accept-btn" onclick="acceptTask('${task._id}')" style="width: 100%;">I can do it</button>
                             </div>
@@ -800,7 +783,9 @@
                                     <button class="dropdown-item danger" onclick="deleteMyTask('${task._id}')">Delete Request</button>
                                 </div>
                             </div>
-                            <p class="task-desc" style="margin-bottom: 8px;">Status: <strong>${task.status.toUpperCase()}</strong></p>
+                            <div style="margin-bottom: 8px;">
+                                <span class="status-badge status-${task.status}">${task.status}</span>
+                            </div>
                             ${chatBtn}
                         </div>
                         `;
@@ -840,11 +825,10 @@
         async function openChat(taskId, targetPhone) {
             document.body.classList.add('no-scroll');
             currentChatTaskId = taskId;
-            currentChatTargetPhone = targetPhone; // <--- ADD THIS LINE
+            currentChatTargetPhone = targetPhone; 
             document.getElementById('chat-header-title').innerText = `Loading...`;
             document.getElementById('chat-modal').classList.remove('hidden');
 
-            // Fetch real name for header
             fetch(`${API_URL}/users/${targetPhone}`)
                 .then(res => res.json())
                 .then(user => {
@@ -882,11 +866,10 @@
             const text = input.value.trim();
             if (!text || !currentChatTaskId) return;
 
-            // --- UPDATE THIS EMIT PAYLOAD ---
             globalSocket.emit('sendMessage', {
                 taskId: currentChatTaskId,
                 senderPhone: myPhone,
-                targetPhone: currentChatTargetPhone, // Includes the target!
+                targetPhone: currentChatTargetPhone, 
                 text: text
             });
             input.value = '';
@@ -957,7 +940,6 @@
         function switchTab(tabName) {
             activeTab = tabName;
 
-            // 1. Hide all views and remove active states
             document.getElementById('home-view').classList.add('hidden');
             document.getElementById('tasks-view').classList.add('hidden');
             document.getElementById('profile-view').classList.add('hidden');
@@ -966,12 +948,9 @@
             document.getElementById('nav-tasks').classList.remove('active');
             document.getElementById('nav-profile').classList.remove('active');
 
-            // 2. Show the target view and set active state
             document.getElementById(`${tabName}-view`).classList.remove('hidden');
             document.getElementById(`nav-${tabName}`).classList.add('active');
 
-            // --- NEW: Smart FAB Visibility ---
-            // Hides the '+' button on the Profile tab, shows it on Home/Tasks
             const fab = document.querySelector('.fab-btn');
             if (tabName === 'profile') {
                 fab.classList.add('hide-fab');
@@ -979,14 +958,12 @@
                 fab.classList.remove('hide-fab');
             }
 
-            // 3. Trigger data loads if it's the first time
             if (tabName === 'home') { if (isInitialHomeLoad) loadTasks(); }
             if (tabName === 'tasks') { if (isInitialTasksLoad) loadMyTasks(); }
         }
 
         function toggleMenu(menuId, event) {
             event.stopPropagation();
-            // Fix: Keep opacity 1 so cards don't disappear when animation is removed
             document.querySelectorAll('.task-card').forEach(card => {
                 card.style.zIndex = '1';
                 card.style.animation = 'none';
@@ -1012,7 +989,7 @@
         });
 
         /* =========================================
-           5. TASK ACTIONS (Accept, Post, Drop, Delete)
+           5. TASK ACTIONS
            ========================================= */
         async function toggleAvailability() {
             currentStatus = currentStatus === 'free' ? 'busy' : 'free'; updateStatusUI();
@@ -1083,13 +1060,11 @@
                         });
 
                         if (res.ok) {
-                            // Add to local blacklist so the user doesn't see it again
                             let droppedTasks = JSON.parse(localStorage.getItem('dropped_tasks') || "[]");
                             if (!droppedTasks.includes(taskId)) {
                                 droppedTasks.push(taskId);
                                 localStorage.setItem('dropped_tasks', JSON.stringify(droppedTasks));
                             }
-
                             showToast("Task dropped and hidden.");
                             loadTasks();
                             loadMyTasks();
@@ -1140,14 +1115,111 @@
         document.getElementById('confirm-action-btn').addEventListener('click', () => { if (pendingConfirmAction) pendingConfirmAction(); closeConfirm(); });
 
         function openModal() {
-            document.body.classList.add('no-scroll'); // Freezes background
+            document.body.classList.add('no-scroll'); 
             document.getElementById('create-modal').classList.remove('hidden');
         }
         function closeModal() {
-            document.body.classList.remove('no-scroll'); // Unfreezes background
+            document.body.classList.remove('no-scroll'); 
             document.getElementById('create-modal').classList.add('hidden');
         }
         function logout() { localStorage.removeItem('helpido_phone'); window.location.href = 'index.html'; }
+
+        /* =========================================
+           7. GESTURES & ANIMATIONS
+           ========================================= */
+
+        // --- DYNAMIC SCROLL ANIMATION (Safe Zone Mode) ---
+        function initScrollAnimation() {
+            const visibleCards = new Set();
+            let isScrolling = false;
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        visibleCards.add(entry.target);
+                    } else {
+                        visibleCards.delete(entry.target);
+                        entry.target.style.transform = 'scale(0.85)';
+                        entry.target.style.opacity = '0.5';
+                    }
+                });
+                requestUpdate(); 
+            }, { threshold: 0.05 });
+
+            function observeCards() {
+                document.querySelectorAll('.task-card').forEach(card => {
+                    if (!card.dataset.observed) {
+                        observer.observe(card);
+                        card.dataset.observed = 'true';
+                    }
+                });
+            }
+            setInterval(observeCards, 1000); 
+
+            window.addEventListener('scroll', requestUpdate, { passive: true });
+
+            function requestUpdate() {
+                if (!isScrolling) {
+                    window.requestAnimationFrame(applyScrollEffects);
+                    isScrolling = true;
+                }
+            }
+
+            function applyScrollEffects() {
+                const H = window.innerHeight;
+                const C = H / 2; 
+                const safeRadius = H * 0.325; // The Blue Safe Zone
+
+                visibleCards.forEach(card => {
+                    const rect = card.getBoundingClientRect();
+                    const Y = rect.top + (rect.height / 2); 
+                    const dist = Math.abs(Y - C);
+                    let scale = 1; let opacity = 1;
+
+                    // The Red Shrink Zone
+                    if (dist > safeRadius) {
+                        const excess = dist - safeRadius;
+                        const redZoneSize = (H / 2) - safeRadius; 
+                        const factor = Math.min(1, Math.max(0, excess / redZoneSize)); 
+                        scale = 1 - (factor * 0.15); 
+                        opacity = 1 - (factor * 0.5); 
+                    }
+                    card.style.transform = `scale(${scale})`;
+                    card.style.opacity = `${opacity}`;
+                });
+                isScrolling = false;
+            }
+        }
+
+        // --- SIMPLE PULL TO REFRESH ---
+        let touchStart = 0;
+        const ptrThreshold = 150; 
+
+        window.addEventListener('touchstart', e => {
+            if (window.scrollY === 0) touchStart = e.touches[0].clientY;
+        }, { passive: true });
+
+        window.addEventListener('touchmove', e => {
+            const touchY = e.touches[0].clientY;
+            const pullDistance = touchY - touchStart;
+
+            if (window.scrollY === 0 && pullDistance > 0) {
+                document.body.style.transform = `translateY(${Math.min(pullDistance / 3, 80)}px)`;
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchend', e => {
+            document.body.style.transform = 'translateY(0)'; 
+            document.body.style.transition = 'transform 0.3s ease';
+
+            const touchEnd = e.changedTouches[0].clientY;
+            if (window.scrollY === 0 && (touchEnd - touchStart) > ptrThreshold) {
+                showAppNotification('↻', 'Refreshing...', 'Fetching latest tasks');
+                if (activeTab === 'home') loadTasks();
+                if (activeTab === 'tasks') loadMyTasks();
+                setTimeout(() => document.body.style.transition = '', 300);
+            }
+        });
     </script>
 </body>
 

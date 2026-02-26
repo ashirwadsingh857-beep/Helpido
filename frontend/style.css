@@ -1,6 +1,7 @@
 /* Base Resets and Variables */
 :root {
-    --primary-color: #FF5722; /* A warm, active color */
+    --primary-color: #FF5722;
+    /* A warm, active color */
     --primary-hover: #E64A19;
     --text-dark: #212121;
     --text-muted: #757575;
@@ -28,12 +29,14 @@ body {
 .app-container {
     background-color: var(--white);
     width: 100%;
-    max-width: 480px; /* Limits width on desktop, acts as mobile container */
-    min-height: 100vh; /* Takes full height on mobile */
+    max-width: 480px;
+    /* Limits width on desktop, acts as mobile container */
+    min-height: 100vh;
+    /* Takes full height on mobile */
     padding: 40px 24px;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 @media (min-width: 481px) {
@@ -153,7 +156,8 @@ body {
 
 /* Toggle Footer */
 .toggle-container {
-    margin-top: auto; /* Pushes toggle to the bottom */
+    margin-top: auto;
+    /* Pushes toggle to the bottom */
     padding-top: 40px;
     text-align: center;
     display: flex;
@@ -186,10 +190,12 @@ body {
    ========================================= */
 
 .dashboard-layout {
-    padding: 0; /* Override previous padding */
+    padding: 0;
+    /* Override previous padding */
     background-color: var(--bg-light);
     position: relative;
-    padding-bottom: 80px; /* Space for bottom nav */
+    padding-bottom: 80px;
+    /* Space for bottom nav */
 }
 
 /* Header */
@@ -212,10 +218,12 @@ body {
 
 .user-greeting p {
     font-size: 0.95rem;
-    color: #FFF3E0; /* A crisp, bright soft-white/orange that pops beautifully */
+    color: #FFF3E0;
+    /* A crisp, bright soft-white/orange that pops beautifully */
     font-weight: 500;
     margin-top: 4px;
-    opacity: 1; /* Removes any dullness */
+    opacity: 1;
+    /* Removes any dullness */
 }
 
 /* Let's also make the Map Pin stand out */
@@ -236,7 +244,8 @@ body {
 /* Feed & Task Cards */
 .feed-section {
     padding: 0 24px;
-    padding-bottom: 120px; /* Ensures the last card isn't hidden by the nav */
+    padding-bottom: 120px;
+    /* Ensures the last card isn't hidden by the nav */
 }
 
 .section-title {
@@ -245,13 +254,13 @@ body {
     margin-bottom: 16px;
 }
 
+/* Ensure cards animate smoothly from the center */
 .task-card {
-    background-color: var(--white);
-    padding: 20px;
-    border-radius: var(--border-radius);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    margin-bottom: 16px;
-    border: 1px solid #EEEEEE;
+    /* ... your existing border/padding styles ... */
+    transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+    transform-origin: center center;
+    will-change: transform, opacity;
+    /* Hardware acceleration for mobile */
 }
 
 .task-top {
@@ -323,18 +332,20 @@ body {
     color: var(--white);
     border: none;
     border-radius: 50%;
-    font-size: 2.2rem; /* Slightly larger for a modern look */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    font-size: 2.2rem;
+    /* Slightly larger for a modern look */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     cursor: pointer;
-    
+
     /* The Flexbox centering magic (no padding hacks needed) */
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 0; 
+    padding: 0;
     margin: 0;
-    line-height: 0; /* Forces the text to center purely based on flexbox */
-    z-index: 100; 
+    line-height: 0;
+    /* Forces the text to center purely based on flexbox */
+    z-index: 100;
 }
 
 @media (min-width: 481px) {
@@ -390,14 +401,18 @@ body {
 /* Fix for the + button centering */
 .fab-btn {
     line-height: 1;
-    padding-bottom: 4px; /* Adjusts the visual center of the + sign */
+    padding-bottom: 4px;
+    /* Adjusts the visual center of the + sign */
 }
 
 /* Modal Styling */
 .modal-overlay {
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-color: rgba(0,0,0,0.5);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -410,7 +425,7 @@ body {
     max-width: 400px;
     padding: 24px;
     border-radius: var(--border-radius);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
 .modal-content h3 {
@@ -418,7 +433,8 @@ body {
     color: var(--text-dark);
 }
 
-.modal-content input, .modal-content textarea {
+.modal-content input,
+.modal-content textarea {
     margin-bottom: 12px;
 }
 
@@ -441,7 +457,8 @@ body {
 
 /* 3-Dot Menu Styles */
 .task-card {
-    position: relative; /* Ensures the dropdown stays inside the card */
+    position: relative;
+    /* Ensures the dropdown stays inside the card */
 }
 
 .menu-btn {
@@ -456,12 +473,13 @@ body {
 }
 
 .dropdown-menu {
-    display: none; /* Hidden by default */
+    display: none;
+    /* Hidden by default */
     position: absolute;
     top: 35px;
     right: 15px;
     background-color: var(--white);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     border-radius: 8px;
     overflow: hidden;
     z-index: 50;
@@ -494,7 +512,8 @@ body {
 }
 
 .dropdown-item.danger {
-    color: #D32F2F; /* Red color for destructive actions */
+    color: #D32F2F;
+    /* Red color for destructive actions */
 }
 
 .priority-badge {
@@ -513,14 +532,16 @@ body {
    ========================================= */
 #toast-container {
     position: fixed;
-    bottom: 100px; /* Sits just above your bottom nav */
+    bottom: 100px;
+    /* Sits just above your bottom nav */
     left: 50%;
     transform: translateX(-50%);
     z-index: 9999;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    pointer-events: none; /* Ensures you can click through the invisible container */
+    pointer-events: none;
+    /* Ensures you can click through the invisible container */
     width: 90%;
     max-width: 400px;
 }
@@ -532,7 +553,7 @@ body {
     border-radius: 8px;
     font-size: 0.95rem;
     font-weight: 500;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     text-align: center;
     opacity: 0;
     transform: translateY(20px);
@@ -551,12 +572,15 @@ body {
 }
 
 .toast.success {
-    background-color: #2E7D32; /* Green for success */
+    background-color: #2E7D32;
+    /* Green for success */
 }
 
 .toast.error {
-    background-color: #D32F2F; /* Red for errors */
+    background-color: #D32F2F;
+    /* Red for errors */
 }
+
 /* --- Remove Number Arrows (Spinners) --- */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
@@ -565,9 +589,12 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 input[type="number"] {
-    -moz-appearance: textfield; /* Fallback for older Firefox */
-    appearance: textfield; /* Standard modern syntax (Fixes the editor error) */
+    -moz-appearance: textfield;
+    /* Fallback for older Firefox */
+    appearance: textfield;
+    /* Standard modern syntax (Fixes the editor error) */
 }
+
 /* --- Professional Logout Button --- */
 .logout-btn {
     background-color: #FFF0F0;
@@ -587,7 +614,8 @@ input[type="number"] {
 }
 
 /* --- Polish Modal Inputs --- */
-.modal-content input, .modal-content textarea {
+.modal-content input,
+.modal-content textarea {
     width: 100%;
     padding: 14px 16px;
     border: 1px solid #E0E0E0;
@@ -597,16 +625,21 @@ input[type="number"] {
     margin-bottom: 12px;
     outline: none;
 }
-.modal-content input:focus, .modal-content textarea:focus {
+
+.modal-content input:focus,
+.modal-content textarea:focus {
     border-color: var(--primary-color);
 }
+
 .modal-content textarea {
-    resize: none; /* Stops users from dragging the text box out of shape */
+    resize: none;
+    /* Stops users from dragging the text box out of shape */
 }
 
 /* Dashboard Layout */
 .dashboard-layout {
-    padding-bottom: 80px; /* Space for bottom nav */
+    padding-bottom: 80px;
+    /* Space for bottom nav */
 }
 
 .feed-section {
@@ -774,7 +807,7 @@ input[type="number"] {
     background-color: var(--white);
     padding: 20px;
     border-radius: var(--border-radius);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     margin-bottom: 16px;
     border: 1px solid #EEEEEE;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -791,15 +824,17 @@ input[type="number"] {
     transition: color 0.2s ease;
 }
 
-.menu-btn:active { color: var(--text-dark); }
+.menu-btn:active {
+    color: var(--text-dark);
+}
 
 .dropdown-menu {
-    display: none; 
+    display: none;
     position: absolute;
     top: 35px;
     right: 15px;
     background-color: var(--white);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
     border-radius: 8px;
     overflow: hidden;
     z-index: 50;
@@ -813,8 +848,15 @@ input[type="number"] {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-5px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .dropdown-item {
@@ -830,13 +872,22 @@ input[type="number"] {
     cursor: pointer;
 }
 
-.dropdown-item:last-child { border-bottom: none; }
-.dropdown-item:active { background-color: var(--bg-light); }
-.dropdown-item.danger { color: #D32F2F; }
+.dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.dropdown-item:active {
+    background-color: var(--bg-light);
+}
+
+.dropdown-item.danger {
+    color: #D32F2F;
+}
 
 /* Profile Address Pop */
 #profile-address {
-    color: var(--primary-color); /* Matches the Helpido Orange */
+    color: var(--primary-color);
+    /* Matches the Helpido Orange */
     font-weight: 700 !important;
     font-size: 1.05rem;
 }
@@ -852,7 +903,7 @@ input[type="number"] {
     border: none;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
     display: flex;
     align-items: center;
     gap: 6px;
@@ -913,13 +964,17 @@ input[type="number"] {
 /* 2. Dashboard Splash & Unblur Sequence */
 .splash-screen {
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background-color: var(--bg-light);
     z-index: 9999;
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: opacity 0.6s ease 0.6s; /* Fades out after the text moves */
+    transition: opacity 0.6s ease 0.6s;
+    /* Fades out after the text moves */
     pointer-events: none;
 }
 
@@ -938,7 +993,8 @@ input[type="number"] {
 }
 
 .splash-screen.hide .splash-greeting {
-    transform: translateY(-40vh) scale(0.5); /* Creates the illusion of moving into the header */
+    transform: translateY(-40vh) scale(0.5);
+    /* Creates the illusion of moving into the header */
     opacity: 0;
 }
 
@@ -963,16 +1019,36 @@ input[type="number"] {
 
 /* 1. Task Card Slide In (From Right) */
 @keyframes slideInRight {
-    0% { transform: translateX(100%); opacity: 0; }
-    70% { transform: translateX(-5%); opacity: 1; } /* Slight bounce effect */
-    100% { transform: translateX(0); opacity: 1; }
+    0% {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    70% {
+        transform: translateX(-5%);
+        opacity: 1;
+    }
+
+    /* Slight bounce effect */
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
 }
 
 /* 2. Task Card Slide Out (To Left) */
 @keyframes slideOutLeft {
-    0% { transform: translateX(0); opacity: 1; }
-    100% { transform: translateX(-120%); opacity: 0; }
+    0% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateX(-120%);
+        opacity: 0;
+    }
 }
+
 .slide-out-left {
     /* We use !important so it overrides the slideIn animation when triggered */
     animation: slideOutLeft 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
@@ -980,18 +1056,34 @@ input[type="number"] {
 
 /* 3. Tab Switching (Soft Fade Up) */
 @keyframes fadeInTab {
-    0% { opacity: 0; transform: translateY(15px); }
-    100% { opacity: 1; transform: translateY(0); }
+    0% {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
+
 .feed-section:not(.hidden) {
     animation: fadeInTab 0.4s ease-out forwards;
 }
 
 /* 4. Modal Pop In */
 @keyframes popIn {
-    0% { transform: scale(0.85); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
+    0% {
+        transform: scale(0.85);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
+
 .modal-overlay:not(.hidden) .modal-content {
     animation: popIn 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
@@ -1000,9 +1092,11 @@ input[type="number"] {
    SKELETON LOADERS
    ========================================= */
 .skeleton-card {
-    border-left: none !important; /* Removes colored borders during load */
-    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-    pointer-events: none; /* Prevents clicking while loading */
+    border-left: none !important;
+    /* Removes colored borders during load */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    pointer-events: none;
+    /* Prevents clicking while loading */
 }
 
 .skeleton-element {
@@ -1015,6 +1109,11 @@ input[type="number"] {
 }
 
 @keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
 }
