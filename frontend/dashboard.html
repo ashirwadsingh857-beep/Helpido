@@ -1180,9 +1180,10 @@
             }
         }
 
-        // --- SIMPLE PULL TO REFRESH ---
+       // --- SIMPLE PULL TO REFRESH (Fixed for Mobile UI) ---
         let touchStart = 0;
         const ptrThreshold = 150; 
+        const mainContainer = document.getElementById('main-dash'); // 🟢 Target MAIN, never BODY
 
         window.addEventListener('touchstart', e => {
             if (window.scrollY === 0) touchStart = e.touches[0].clientY;
@@ -1192,21 +1193,31 @@
             const touchY = e.touches[0].clientY;
             const pullDistance = touchY - touchStart;
 
-            if (window.scrollY === 0 && pullDistance > 0) {
-                document.body.style.transform = `translateY(${Math.min(pullDistance / 3, 80)}px)`;
+            // Apply pull effect ONLY to the main container
+            if (window.scrollY === 0 && pullDistance > 0 && mainContainer) {
+                mainContainer.style.transform = `translateY(${Math.min(pullDistance / 3, 80)}px)`;
             }
         }, { passive: true });
 
         window.addEventListener('touchend', e => {
-            document.body.style.transform = 'translateY(0)'; 
-            document.body.style.transition = 'transform 0.3s ease';
+            if (mainContainer) {
+                // Snap back
+                mainContainer.style.transform = 'translateY(0)'; 
+                mainContainer.style.transition = 'transform 0.3s ease';
+                
+                // 🛑 CRITICAL FIX: We MUST completely erase the transform property after 300ms. 
+                // Leaving 'translateY(0)' on the element permanently breaks position: fixed!
+                setTimeout(() => {
+                    mainContainer.style.transform = ''; 
+                    mainContainer.style.transition = '';
+                }, 300);
+            }
 
             const touchEnd = e.changedTouches[0].clientY;
             if (window.scrollY === 0 && (touchEnd - touchStart) > ptrThreshold) {
                 showAppNotification('↻', 'Refreshing...', 'Fetching latest tasks');
                 if (activeTab === 'home') loadTasks();
                 if (activeTab === 'tasks') loadMyTasks();
-                setTimeout(() => document.body.style.transition = '', 300);
             }
         });
     </script>
