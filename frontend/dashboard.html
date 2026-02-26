@@ -320,6 +320,38 @@
             transform-origin: bottom left;
         }
 
+        /* --- NEW: CHAT TIMESTAMPS --- */
+        .msg-time {
+            font-size: 0.7rem;
+            margin-top: 4px;
+            text-align: right;
+            display: block;
+        }
+        
+        .msg-sent .msg-time {
+            color: rgba(255, 255, 255, 0.75); /* Soft white for orange bubbles */
+        }
+        
+        .msg-received .msg-time {
+            color: #757575; /* Grey for incoming bubbles */
+        }
+
+        /* --- NEW: CHAT TIMESTAMPS --- */
+        .msg-time {
+            font-size: 0.7rem;
+            margin-top: 4px;
+            text-align: right;
+            display: block;
+        }
+        
+        .msg-sent .msg-time {
+            color: rgba(255, 255, 255, 0.75); /* Soft white for orange bubbles */
+        }
+        
+        .msg-received .msg-time {
+            color: #757575; /* Grey for incoming bubbles */
+        }
+
         .chat-input-area {
             padding: 12px 16px;
             border-top: 1px solid #eee;
@@ -597,7 +629,11 @@
 
                 globalSocket.on('newTask', (task) => {
                     if (task.postedBy !== myPhone && activeTab !== 'home') {
-                        showAppNotification('👋', `New task posted: ${task.title}`, 'Check the Home feed!');
+                        // NEW: Added callback to switch tabs!
+                        showAppNotification('👋', `New task posted: ${task.title}`, 'Tap to view the Home feed!', () => {
+                            switchTab('home');
+                            window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top to see it
+                        });
                     }
                 });
 
@@ -636,9 +672,14 @@
                                 if (titleEl) taskTitle = titleEl.childNodes[0].nodeValue.trim();
                             }
 
-                            showAppNotification('💬', `New message from ${firstName} for ${taskTitle}`, msg.text);
+                            // NEW: Added the callback to open the chat!
+                            showAppNotification('💬', `New message from ${firstName} for ${taskTitle}`, msg.text, () => {
+                                openChat(msg.taskId, msg.senderPhone);
+                            });
                         } catch (e) {
-                            showAppNotification('💬', 'New message', msg.text);
+                            showAppNotification('💬', 'New message', msg.text, () => {
+                                openChat(msg.taskId, msg.senderPhone);
+                            });
                         }
                     }
                 });
@@ -875,6 +916,12 @@
             input.value = '';
         }
 
+        // Helper to format database/socket dates into "10:45 AM"
+        function formatTime(dateString) {
+            const date = dateString ? new Date(dateString) : new Date();
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
         function appendMessageUI(msg) {
             removeTypingIndicator();
             const msgBox = document.getElementById('chat-messages');
@@ -882,9 +929,23 @@
             if (emptyTxt) emptyTxt.remove();
 
             const isMe = msg.senderPhone === myPhone;
+            const timeString = formatTime(msg.createdAt || msg.timestamp); // Pulls from DB or uses current time
+
             const bubble = document.createElement('div');
             bubble.className = `msg-bubble ${isMe ? 'msg-sent' : 'msg-received'}`;
-            bubble.innerText = msg.text;
+            
+            // Create text element safely (prevents users from sending malicious HTML code)
+            const textDiv = document.createElement('div');
+            textDiv.innerText = msg.text;
+            
+            // Create the tiny timestamp
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'msg-time';
+            timeDiv.innerText = timeString;
+
+            // Put them both inside the bubble
+            bubble.appendChild(textDiv);
+            bubble.appendChild(timeDiv);
 
             msgBox.appendChild(bubble);
             msgBox.scrollTop = msgBox.scrollHeight;
@@ -920,11 +981,17 @@
         /* =========================================
            4. SYSTEM & UI UTILITIES
            ========================================= */
-        function showAppNotification(icon, title, desc) {
+        function showAppNotification(icon, title, desc, onClickCallback = null) {
             const notif = document.getElementById('app-notification');
             document.getElementById('app-notif-icon').innerText = icon;
             document.getElementById('app-notif-title').innerText = title;
             document.getElementById('app-notif-desc').innerText = desc;
+
+            // NEW: Make it clickable! Overrides the default HTML onclick.
+            notif.onclick = () => {
+                notif.classList.remove('show'); // Hide it instantly when tapped
+                if (onClickCallback) onClickCallback(); // Run the action (like opening chat)
+            };
 
             notif.classList.add('show');
             clearTimeout(notifTimeout);
