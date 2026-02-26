@@ -1129,35 +1129,11 @@
            ========================================= */
 
         // --- DYNAMIC SCROLL ANIMATION (Safe Zone Mode) ---
+        // --- DYNAMIC SCROLL ANIMATION (Bulletproof Safe Zone Mode) ---
         function initScrollAnimation() {
-            const visibleCards = new Set();
             let isScrolling = false;
 
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        visibleCards.add(entry.target);
-                    } else {
-                        visibleCards.delete(entry.target);
-                        entry.target.style.transform = 'scale(0.85)';
-                        entry.target.style.opacity = '0.5';
-                    }
-                });
-                requestUpdate(); 
-            }, { threshold: 0.05 });
-
-            function observeCards() {
-                document.querySelectorAll('.task-card').forEach(card => {
-                    if (!card.dataset.observed) {
-                        observer.observe(card);
-                        card.dataset.observed = 'true';
-                    }
-                });
-            }
-            setInterval(observeCards, 1000); 
-
-            window.addEventListener('scroll', requestUpdate, { passive: true });
-
+            // 1. The Trigger: Requests an animation frame
             function requestUpdate() {
                 if (!isScrolling) {
                     window.requestAnimationFrame(applyScrollEffects);
@@ -1165,13 +1141,25 @@
                 }
             }
 
+            // 2. The Listener: deeply optimized for mobile scrolling
+            window.addEventListener('scroll', requestUpdate, { passive: true });
+            window.addEventListener('touchmove', requestUpdate, { passive: true });
+
+            // 3. The Backup: Runs every second to catch new cards loaded via AJAX
+            setInterval(requestUpdate, 1000);
+
+            // 4. The Math: Calculates size based on position
             function applyScrollEffects() {
                 const H = window.innerHeight;
                 const C = H / 2; 
-                const safeRadius = H * 0.325; // The Blue Safe Zone
+                const safeRadius = H * 0.35; // The Blue Safe Zone
 
-                visibleCards.forEach(card => {
+                document.querySelectorAll('.task-card').forEach(card => {
                     const rect = card.getBoundingClientRect();
+                    
+                    // Optimization: Skip math if card is way off screen
+                    if (rect.top > H + 100 || rect.bottom < -100) return;
+
                     const Y = rect.top + (rect.height / 2); 
                     const dist = Math.abs(Y - C);
                     let scale = 1; let opacity = 1;
@@ -1187,6 +1175,7 @@
                     card.style.transform = `scale(${scale})`;
                     card.style.opacity = `${opacity}`;
                 });
+                
                 isScrolling = false;
             }
         }
