@@ -177,10 +177,10 @@
             border-radius: 12px;
             padding: 16px;
             margin-bottom: 16px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             /* Smooth transitions for scroll effects */
             transition: transform 0.1s ease-out, opacity 0.1s ease-out;
-            transform-origin: center center; 
+            transform-origin: center center;
             will-change: transform, opacity;
         }
 
@@ -199,8 +199,13 @@
         }
 
         @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
+            0% {
+                background-position: -200% 0;
+            }
+
+            100% {
+                background-position: 200% 0;
+            }
         }
 
         /* --- STATUS BADGES --- */
@@ -283,8 +288,15 @@
         }
 
         @keyframes popIn {
-            0% { opacity: 0; transform: translateY(15px) scale(0.9); }
-            100% { opacity: 1; transform: translateY(0) scale(1); }
+            0% {
+                opacity: 0;
+                transform: translateY(15px) scale(0.9);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
 
         body.no-scroll {
@@ -327,13 +339,15 @@
             text-align: right;
             display: block;
         }
-        
+
         .msg-sent .msg-time {
-            color: rgba(255, 255, 255, 0.75); /* Soft white for orange bubbles */
+            color: rgba(255, 255, 255, 0.75);
+            /* Soft white for orange bubbles */
         }
-        
+
         .msg-received .msg-time {
-            color: #757575; /* Grey for incoming bubbles */
+            color: #757575;
+            /* Grey for incoming bubbles */
         }
 
         /* --- NEW: CHAT TIMESTAMPS --- */
@@ -343,13 +357,15 @@
             text-align: right;
             display: block;
         }
-        
+
         .msg-sent .msg-time {
-            color: rgba(255, 255, 255, 0.75); /* Soft white for orange bubbles */
+            color: rgba(255, 255, 255, 0.75);
+            /* Soft white for orange bubbles */
         }
-        
+
         .msg-received .msg-time {
-            color: #757575; /* Grey for incoming bubbles */
+            color: #757575;
+            /* Grey for incoming bubbles */
         }
 
         .chat-input-area {
@@ -401,12 +417,26 @@
             border-radius: 50%;
             animation: bounce 1.4s infinite ease-in-out both;
         }
-        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
-        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        .typing-dot:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: -0.16s;
+        }
 
         @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0);
+            }
+
+            40% {
+                transform: scale(1);
+            }
         }
 
         /* --- 6. FLOATING ACTION BUTTON (Fixed above Nav) --- */
@@ -512,24 +542,38 @@
             <div id="my-jobs-feed" style="margin-bottom: 40px;"></div>
         </section>
 
-        <section id="profile-view" class="feed-section hidden">
-            <header class="dash-header">
-                <div class="user-greeting">
-                    <h2>Account 👤</h2>
-                    <p>Manage your profile and settings.</p>
+        <section id="profile-view" class="feed-section hidden"
+            style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <header class="dash-header">
+                    <div class="user-greeting">
+                        <h2>Account 👤</h2>
+                        <p>Manage your profile and settings.</p>
+                    </div>
+                </header>
+                <div class="task-card"
+                    style="text-align: center; padding: 30px 20px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                    <h2 id="profile-name" style="margin-bottom: 5px; color: var(--text-dark);">Loading...</h2>
+                    <p id="profile-phone" style="color: var(--text-muted); margin-bottom: 20px;">...</p>
+                    <div
+                        style="background-color: var(--bg-light); padding: 16px; border-radius: 12px; text-align: left; margin-bottom: 24px;">
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">
+                            Home Address</p>
+                        <p id="profile-address" style="color: var(--text-dark); line-height: 1.4; font-weight: 500;">...
+                        </p>
+                    </div>
+                    <button class="logout-btn" onclick="logout()">Log Out</button>
                 </div>
-            </header>
-            <div class="task-card" style="text-align: center; padding: 30px 20px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                <h2 id="profile-name" style="margin-bottom: 5px; color: var(--text-dark);">Loading...</h2>
-                <p id="profile-phone" style="color: var(--text-muted); margin-bottom: 20px;">...</p>
-                <div style="background-color: var(--bg-light); padding: 16px; border-radius: 12px; text-align: left; margin-bottom: 24px;">
-                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">Home Address</p>
-                    <p id="profile-address" style="color: var(--text-dark); line-height: 1.4; font-weight: 500;">...</p>
-                </div>
-                <button class="logout-btn" onclick="logout()">Log Out</button>
+            </div>
+
+            <div style="padding: 0 20px 20px 20px;">
+                <button class="btn"
+                    style="background-color: #e0e0e0; color: #333; width: 100%; padding: 16px; border-radius: 16px; font-weight: bold; box-shadow: none; display: flex; justify-content: center; gap: 10px;"
+                    onclick="openHistory()">
+                    <span>🕒</span> View Task History
+                </button>
             </div>
         </section>
-
     </main>
 
     <div id="app-notification" class="app-notification" onclick="this.classList.remove('show')">
@@ -548,7 +592,8 @@
             <input type="number" id="task-reward" placeholder="Reward amount (₹)" required>
             <div class="modal-actions" style="display: flex; justify-content: space-between; margin-top: 10px;">
                 <button class="text-btn" onclick="closeModal()" style="color: #757575;">Cancel</button>
-                <button class="btn" onclick="postHelpRequest()" style="width: auto; padding: 10px 20px;">Post Request</button>
+                <button class="btn" onclick="postHelpRequest()" style="width: auto; padding: 10px 20px;">Post
+                    Request</button>
             </div>
         </div>
     </div>
@@ -568,23 +613,60 @@
         </div>
     </div>
 
+    <div id="history-modal" class="chat-overlay hidden" style="z-index: 9999;"
+        onclick="if(event.target === this) closeHistory()">
+        <div class="chat-drawer" style="height: 85dvh; display: flex; flex-direction: column; background: #f9f9f9;">
+            <div class="chat-header" style="background: #fff; border-radius: 20px 20px 0 0;">
+                <h3 style="margin: 0; font-size: 1.2rem; color: #333;">Task History</h3>
+                <button onclick="closeHistory()"
+                    style="background: none; border: none; font-size: 1.5rem; color: #999; cursor: pointer;">&times;</button>
+            </div>
+            <div style="padding: 20px; overflow-y: auto; flex: 1;">
+
+                <h3 class="section-title" style="margin-top: 0; font-size: 1rem; color: #D32F2F;">Tasks I Deleted</h3>
+                <div id="history-deleted-feed"
+                    style="margin-bottom: 30px; display: flex; flex-direction: column; gap: 10px;">
+                </div>
+
+                <h3 class="section-title" style="font-size: 1rem; color: #F57C00;">Tasks I Dropped</h3>
+                <div id="history-dropped-feed" style="margin-bottom: 30px; display: flex; flex-direction: column; gap: 10px;">
+                    </div>
+
+                <button onclick="clearHistory()" style="width: 100%; padding: 12px; background: transparent; border: 1px solid #ffcdd2; color: #D32F2F; border-radius: 12px; font-weight: 600; cursor: pointer; margin-top: 10px;">
+                    🗑️ Clear All History
+                </button>
+
+            </div>
+        </div>
+    </div>
+
     <div id="confirm-modal" class="modal-overlay hidden">
         <div class="modal-content" style="text-align: center; max-width: 320px;">
             <div style="font-size: 2.5rem; margin-bottom: 10px;">⚠️</div>
             <h3 id="confirm-title" style="margin-bottom: 10px; color: var(--text-dark);">Are you sure?</h3>
-            <p id="confirm-message" style="color: var(--text-muted); margin-bottom: 24px; font-size: 0.95rem; line-height: 1.4;">This action cannot be undone.</p>
+            <p id="confirm-message"
+                style="color: var(--text-muted); margin-bottom: 24px; font-size: 0.95rem; line-height: 1.4;">This action
+                cannot be undone.</p>
             <div style="display: flex; gap: 12px;">
-                <button class="btn" onclick="closeConfirm()" style="flex: 1; background-color: #F5F5F5; color: #757575; margin-top: 0; box-shadow: none;">Cancel</button>
-                <button id="confirm-action-btn" class="btn" style="flex: 1; background-color: #D32F2F; margin-top: 0; box-shadow: none;">Yes</button>
+                <button class="btn" onclick="closeConfirm()"
+                    style="flex: 1; background-color: #F5F5F5; color: #757575; margin-top: 0; box-shadow: none;">Cancel</button>
+                <button id="confirm-action-btn" class="btn"
+                    style="flex: 1; background-color: #D32F2F; margin-top: 0; box-shadow: none;">Yes</button>
             </div>
         </div>
     </div>
 
     <button class="fab-btn" onclick="openModal()">+</button>
     <nav class="bottom-nav">
-        <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><span>🏠</span><p>Home</p></div>
-        <div class="nav-item" id="nav-tasks" onclick="switchTab('tasks')"><span>📋</span><p>Tasks</p></div>
-        <div class="nav-item" id="nav-profile" onclick="switchTab('profile')"><span>👤</span><p>Profile</p></div>
+        <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><span>🏠</span>
+            <p>Home</p>
+        </div>
+        <div class="nav-item" id="nav-tasks" onclick="switchTab('tasks')"><span>📋</span>
+            <p>Tasks</p>
+        </div>
+        <div class="nav-item" id="nav-profile" onclick="switchTab('profile')"><span>👤</span>
+            <p>Profile</p>
+        </div>
     </nav>
     <div id="toast" class="toast"></div>
 
@@ -601,7 +683,7 @@
         let globalSocket = null;
         let currentChatTaskId = null;
         let typingTimeout = null;
-        let currentChatTargetPhone = null; 
+        let currentChatTargetPhone = null;
 
         if (!myPhone || myPhone === "undefined" || myPhone === "null") {
             window.location.replace('/index.html');
@@ -763,7 +845,7 @@
                     feed.innerHTML = publicTasks.map((task, index) => {
                         const isNew = !existingCardIds.has(task._id.toString());
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
-                        
+
                         // FIX: Badge properly integrated inside the return literal
                         return `
                         <div class="task-card" id="feed-card-${task._id}" style="${animStyle}">
@@ -866,7 +948,7 @@
         async function openChat(taskId, targetPhone) {
             document.body.classList.add('no-scroll');
             currentChatTaskId = taskId;
-            currentChatTargetPhone = targetPhone; 
+            currentChatTargetPhone = targetPhone;
             document.getElementById('chat-header-title').innerText = `Loading...`;
             document.getElementById('chat-modal').classList.remove('hidden');
 
@@ -910,7 +992,7 @@
             globalSocket.emit('sendMessage', {
                 taskId: currentChatTaskId,
                 senderPhone: myPhone,
-                targetPhone: currentChatTargetPhone, 
+                targetPhone: currentChatTargetPhone,
                 text: text
             });
             input.value = '';
@@ -933,11 +1015,11 @@
 
             const bubble = document.createElement('div');
             bubble.className = `msg-bubble ${isMe ? 'msg-sent' : 'msg-received'}`;
-            
+
             // Create text element safely (prevents users from sending malicious HTML code)
             const textDiv = document.createElement('div');
             textDiv.innerText = msg.text;
-            
+
             // Create the tiny timestamp
             const timeDiv = document.createElement('div');
             timeDiv.className = 'msg-time';
@@ -1102,6 +1184,15 @@
         function deleteMyTask(taskId) {
             showConfirm("Delete Request?", "Are you sure you want to permanently wipe this request from the database?", "Delete", () => {
                 const card = document.getElementById(`req-card-${taskId}`);
+
+                // NEW: Grab the title before deleting and save the receipt
+                let taskTitle = "Unknown Task";
+                if (card) {
+                    const titleEl = card.querySelector('h4');
+                    if (titleEl) taskTitle = titleEl.childNodes[0].nodeValue.trim();
+                }
+                saveToHistory(taskId, taskTitle, 'deleted');
+
                 if (card) card.classList.add('slide-out-left');
 
                 setTimeout(async () => {
@@ -1113,10 +1204,18 @@
                 }, 350);
             });
         }
-
         function removeJob(taskId) {
             showConfirm("Drop Task?", "Drop this task? It will be returned to the public Home tab for others to accept.", "Drop Task", () => {
                 const card = document.getElementById(`job-card-${taskId}`);
+
+                // NEW: Grab the title before dropping and save the receipt
+                let taskTitle = "Unknown Task";
+                if (card) {
+                    const titleEl = card.querySelector('h4');
+                    if (titleEl) taskTitle = titleEl.childNodes[0].nodeValue.trim();
+                }
+                saveToHistory(taskId, taskTitle, 'dropped');
+
                 if (card) card.classList.add('slide-out-left');
 
                 setTimeout(async () => {
@@ -1142,7 +1241,6 @@
                 }, 350);
             });
         }
-
         async function prioritizeJob(taskId) {
             await fetch(`${API_URL}/tasks/prioritize`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1182,11 +1280,11 @@
         document.getElementById('confirm-action-btn').addEventListener('click', () => { if (pendingConfirmAction) pendingConfirmAction(); closeConfirm(); });
 
         function openModal() {
-            document.body.classList.add('no-scroll'); 
+            document.body.classList.add('no-scroll');
             document.getElementById('create-modal').classList.remove('hidden');
         }
         function closeModal() {
-            document.body.classList.remove('no-scroll'); 
+            document.body.classList.remove('no-scroll');
             document.getElementById('create-modal').classList.add('hidden');
         }
         function logout() { localStorage.removeItem('helpido_phone'); window.location.href = 'index.html'; }
@@ -1218,38 +1316,38 @@
             // 4. The Math: Calculates size based on position
             function applyScrollEffects() {
                 const H = window.innerHeight;
-                const C = H / 2; 
+                const C = H / 2;
                 const safeRadius = H * 0.35; // The Blue Safe Zone
 
                 document.querySelectorAll('.task-card').forEach(card => {
                     const rect = card.getBoundingClientRect();
-                    
+
                     // Optimization: Skip math if card is way off screen
                     if (rect.top > H + 100 || rect.bottom < -100) return;
 
-                    const Y = rect.top + (rect.height / 2); 
+                    const Y = rect.top + (rect.height / 2);
                     const dist = Math.abs(Y - C);
                     let scale = 1; let opacity = 1;
 
                     // The Red Shrink Zone
                     if (dist > safeRadius) {
                         const excess = dist - safeRadius;
-                        const redZoneSize = (H / 2) - safeRadius; 
-                        const factor = Math.min(1, Math.max(0, excess / redZoneSize)); 
-                        scale = 1 - (factor * 0.15); 
-                        opacity = 1 - (factor * 0.5); 
+                        const redZoneSize = (H / 2) - safeRadius;
+                        const factor = Math.min(1, Math.max(0, excess / redZoneSize));
+                        scale = 1 - (factor * 0.15);
+                        opacity = 1 - (factor * 0.5);
                     }
                     card.style.transform = `scale(${scale})`;
                     card.style.opacity = `${opacity}`;
                 });
-                
+
                 isScrolling = false;
             }
         }
 
-       // --- SIMPLE PULL TO REFRESH (Fixed for Mobile UI) ---
+        // --- SIMPLE PULL TO REFRESH (Fixed for Mobile UI) ---
         let touchStart = 0;
-        const ptrThreshold = 150; 
+        const ptrThreshold = 150;
         const mainContainer = document.getElementById('main-dash'); // 🟢 Target MAIN, never BODY
 
         window.addEventListener('touchstart', e => {
@@ -1269,13 +1367,13 @@
         window.addEventListener('touchend', e => {
             if (mainContainer) {
                 // Snap back
-                mainContainer.style.transform = 'translateY(0)'; 
+                mainContainer.style.transform = 'translateY(0)';
                 mainContainer.style.transition = 'transform 0.3s ease';
-                
+
                 // 🛑 CRITICAL FIX: We MUST completely erase the transform property after 300ms. 
                 // Leaving 'translateY(0)' on the element permanently breaks position: fixed!
                 setTimeout(() => {
-                    mainContainer.style.transform = ''; 
+                    mainContainer.style.transform = '';
                     mainContainer.style.transition = '';
                 }, 300);
             }
@@ -1287,6 +1385,61 @@
                 if (activeTab === 'tasks') loadMyTasks();
             }
         });
+
+        /* =========================================
+                   8. TASK HISTORY LOGIC
+                   ========================================= */
+        function saveToHistory(taskId, title, type) {
+            let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
+            // Add to the beginning of the array so newest is at the top
+            history.unshift({ id: taskId, title: title, type: type, date: new Date().toLocaleDateString() });
+            localStorage.setItem('helpido_history', JSON.stringify(history));
+        }
+
+        function openHistory() {
+            document.body.classList.add('no-scroll');
+            document.getElementById('history-modal').classList.remove('hidden');
+
+            const deletedFeed = document.getElementById('history-deleted-feed');
+            const droppedFeed = document.getElementById('history-dropped-feed');
+
+            let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
+
+            const deletedTasks = history.filter(t => t.type === 'deleted');
+            const droppedTasks = history.filter(t => t.type === 'dropped');
+
+            // Render Deleted
+            deletedFeed.innerHTML = deletedTasks.length === 0
+                ? `<p style="color:#999; font-size: 0.85rem; text-align: center;">No deleted tasks.</p>`
+                : deletedTasks.map(t => `<div style="background: #fff; padding: 12px 16px; border-radius: 8px; border-left: 3px solid #D32F2F; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; justify-content: space-between;"><span style="font-weight: 500; color: #333;">${t.title}</span><span style="color: #999; font-size: 0.8rem;">${t.date}</span></div>`).join('');
+
+            // Render Dropped
+            droppedFeed.innerHTML = droppedTasks.length === 0
+                ? `<p style="color:#999; font-size: 0.85rem; text-align: center;">No dropped tasks.</p>`
+                : droppedTasks.map(t => `<div style="background: #fff; padding: 12px 16px; border-radius: 8px; border-left: 3px solid #F57C00; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; justify-content: space-between;"><span style="font-weight: 500; color: #333;">${t.title}</span><span style="color: #999; font-size: 0.8rem;">${t.date}</span></div>`).join('');
+        }
+
+        function closeHistory() {
+            document.body.classList.remove('no-scroll');
+            document.getElementById('history-modal').classList.add('hidden');
+        }
+
+        function clearHistory() {
+            // Trigger the confirmation modal we built earlier
+            showConfirm("Clear History?", "Are you sure you want to wipe your local task log? This cannot be undone.", "Clear", () => {
+                
+                // 1. Wipe the local storage
+                localStorage.removeItem('helpido_history');
+                
+                // 2. Instantly update the UI to show empty states
+                document.getElementById('history-deleted-feed').innerHTML = `<p style="color:#999; font-size: 0.85rem; text-align: center;">No deleted tasks.</p>`;
+                document.getElementById('history-dropped-feed').innerHTML = `<p style="color:#999; font-size: 0.85rem; text-align: center;">No dropped tasks.</p>`;
+                
+                // 3. Notify the user
+                showToast("Task history cleared!");
+            });
+        }
+
     </script>
 </body>
 
