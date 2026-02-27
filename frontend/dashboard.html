@@ -26,8 +26,7 @@
         /* =========================================
            1. CORE LAYOUT & MOBILE FIXES
            ========================================= */
-        html,
-        body {
+        html, body {
             margin: 0;
             padding: 0;
             min-height: 100%;
@@ -52,7 +51,6 @@
         /* =========================================
            2. BOTTOM NAVIGATION BAR
            ========================================= */
-        /* --- BOTTOM NAVIGATION BAR (Glassmorphism) --- */
         .bottom-nav {
             position: fixed !important;
             bottom: 0 !important;
@@ -66,8 +64,6 @@
             align-items: center;
             justify-content: space-around;
             padding-bottom: env(safe-area-inset-bottom);
-
-            /* The Glass Effect */
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
@@ -144,41 +140,22 @@
             transform: translateX(-50%) translateY(0);
         }
 
-        .app-notif-icon {
-            font-size: 1.5rem;
-        }
-
-        .app-notif-text {
-            flex: 1;
-            overflow: hidden;
-        }
-
-        .app-notif-text h4 {
-            margin: 0 0 2px 0;
-            font-size: 0.95rem;
-            color: #333;
-        }
-
+        .app-notif-icon { font-size: 1.5rem; }
+        .app-notif-text { flex: 1; overflow: hidden; }
+        .app-notif-text h4 { margin: 0 0 2px 0; font-size: 0.95rem; color: #333; }
         .app-notif-text p {
-            margin: 0;
-            font-size: 0.85rem;
-            color: #757575;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            margin: 0; font-size: 0.85rem; color: #757575; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
         /* =========================================
            4. SKELETON LOADERS & TASK CARDS
            ========================================= */
-        /* --- NEW SCROLL ANIMATION SUPPORT --- */
         .task-card {
             background: #fff;
             border-radius: 12px;
             padding: 16px;
             margin-bottom: 16px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            /* Smooth transitions for scroll effects */
             transition: transform 0.1s ease-out, opacity 0.1s ease-out;
             transform-origin: center center;
             will-change: transform, opacity;
@@ -199,16 +176,10 @@
         }
 
         @keyframes shimmer {
-            0% {
-                background-position: -200% 0;
-            }
-
-            100% {
-                background-position: 200% 0;
-            }
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
         }
 
-        /* --- STATUS BADGES --- */
         .status-badge {
             padding: 4px 12px;
             border-radius: 12px;
@@ -218,311 +189,105 @@
             display: inline-block;
         }
 
-        .status-open {
-            background: #e3f2fd;
-            color: #1976d2;
-        }
-
-        .status-accepted {
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
+        .status-open { background: #e3f2fd; color: #1976d2; }
+        .status-accepted { background: #e8f5e9; color: #2e7d32; }
 
         /* =========================================
            5. IN-APP CHAT UI & ANIMATIONS
            ========================================= */
         .chat-overlay {
             position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
+            top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
             height: auto !important;
             background: rgba(0, 0, 0, 0.4);
             z-index: 10000 !important;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
+            display: flex; flex-direction: column; justify-content: flex-end;
             transition: opacity 0.3s;
         }
 
-        .chat-overlay.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
+        .chat-overlay.hidden { opacity: 0; pointer-events: none; }
 
         .chat-drawer {
-            background: #fff;
-            width: 100%;
-            max-width: 500px;
-            margin: 0 auto;
-            height: 65dvh;
-            border-radius: 20px 20px 0 0;
-            display: flex;
-            flex-direction: column;
-            transform: translateY(0);
-            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            background: #fff; width: 100%; max-width: 500px; margin: 0 auto;
+            height: 65dvh; border-radius: 20px 20px 0 0;
+            display: flex; flex-direction: column;
+            transform: translateY(0); transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
             overflow: hidden;
         }
 
-        .chat-overlay.hidden .chat-drawer {
-            transform: translateY(100%);
-        }
+        .chat-overlay.hidden .chat-drawer { transform: translateY(100%); }
 
         .chat-header {
-            padding: 16px 20px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 16px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;
         }
 
         .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            background: #f9f9f9;
+            flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; background: #f9f9f9;
         }
 
         @keyframes popIn {
-            0% {
-                opacity: 0;
-                transform: translateY(15px) scale(0.9);
-            }
-
-            100% {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
+            0% { opacity: 0; transform: translateY(15px) scale(0.9); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        body.no-scroll {
-            overflow: hidden !important;
-            position: fixed;
-            width: 100%;
-        }
+        body.no-scroll { overflow: hidden !important; position: fixed; width: 100%; }
 
         .msg-bubble {
-            max-width: 75%;
-            padding: 10px 14px;
-            border-radius: 18px;
-            font-size: 0.95rem;
-            line-height: 1.4;
-            word-wrap: break-word;
-            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-            transform-origin: bottom;
+            max-width: 75%; padding: 10px 14px; border-radius: 18px; font-size: 0.95rem; line-height: 1.4;
+            word-wrap: break-word; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; transform-origin: bottom;
         }
 
-        .msg-sent {
-            background: #FF5722;
-            color: #fff;
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
-            transform-origin: bottom right;
-        }
+        .msg-sent { background: #FF5722; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; transform-origin: bottom right; }
+        .msg-received { background: #e0e0e0; color: #333; align-self: flex-start; border-bottom-left-radius: 4px; transform-origin: bottom left; }
 
-        .msg-received {
-            background: #e0e0e0;
-            color: #333;
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
-            transform-origin: bottom left;
-        }
-
-        /* --- NEW: CHAT TIMESTAMPS --- */
-        .msg-time {
-            font-size: 0.7rem;
-            margin-top: 4px;
-            text-align: right;
-            display: block;
-        }
-
-        .msg-sent .msg-time {
-            color: rgba(255, 255, 255, 0.75);
-            /* Soft white for orange bubbles */
-        }
-
-        .msg-received .msg-time {
-            color: #757575;
-            /* Grey for incoming bubbles */
-        }
+        .msg-time { font-size: 0.7rem; margin-top: 4px; text-align: right; display: block; }
+        .msg-sent .msg-time { color: rgba(255, 255, 255, 0.75); }
+        .msg-received .msg-time { color: #757575; }
 
         .chat-input-area {
-            padding: 12px 16px;
-            border-top: 1px solid #eee;
-            display: flex;
-            gap: 10px;
-            background: #fff;
-            padding-bottom: calc(12px + env(safe-area-inset-bottom));
+            padding: 12px 16px; border-top: 1px solid #eee; display: flex; gap: 10px; background: #fff; padding-bottom: calc(12px + env(safe-area-inset-bottom));
         }
 
-        .chat-input-area input {
-            flex: 1;
-            padding: 12px 16px;
-            border: 1px solid #ddd;
-            border-radius: 24px;
-            outline: none;
-            font-size: 0.95rem;
-        }
+        .chat-input-area input { flex: 1; padding: 12px 16px; border: 1px solid #ddd; border-radius: 24px; outline: none; font-size: 0.95rem; }
+        .chat-input-area button { background: #FF5722; color: #fff; border: none; border-radius: 24px; padding: 0 20px; font-weight: 600; cursor: pointer; }
 
-        .chat-input-area button {
-            background: #FF5722;
-            color: #fff;
-            border: none;
-            border-radius: 24px;
-            padding: 0 20px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        /* Typing Indicator Styles */
         .typing-wrapper {
-            display: flex;
-            gap: 4px;
-            padding: 12px 16px;
-            background: #e0e0e0;
-            border-radius: 18px;
-            border-bottom-left-radius: 4px;
-            align-self: flex-start;
-            width: fit-content;
-            animation: popIn 0.3s forwards;
-            transform-origin: bottom left;
+            display: flex; gap: 4px; padding: 12px 16px; background: #e0e0e0; border-radius: 18px; border-bottom-left-radius: 4px; align-self: flex-start; width: fit-content; animation: popIn 0.3s forwards; transform-origin: bottom left;
         }
 
-        .typing-dot {
-            width: 6px;
-            height: 6px;
-            background: #888;
-            border-radius: 50%;
-            animation: bounce 1.4s infinite ease-in-out both;
-        }
+        .typing-dot { width: 6px; height: 6px; background: #888; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
 
-        .typing-dot:nth-child(1) {
-            animation-delay: -0.32s;
-        }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
 
-        .typing-dot:nth-child(2) {
-            animation-delay: -0.16s;
-        }
-
-        @keyframes bounce {
-
-            0%,
-            80%,
-            100% {
-                transform: scale(0);
-            }
-
-            40% {
-                transform: scale(1);
-            }
-        }
-
-        /* --- 6. FLOATING ACTION BUTTON (Fixed above Nav) --- */
+        /* --- 6. FLOATING ACTION BUTTON --- */
         .fab-btn {
-            position: fixed !important;
-            bottom: 85px !important;
-            right: 20px !important;
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background-color: #FF5722;
-            color: white;
-            font-size: 28px;
-            border: none;
-            box-shadow: 0 4px 12px rgba(255, 87, 34, 0.4);
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9500 !important;
-            -webkit-tap-highlight-color: transparent;
-            transition: transform 0.2s, opacity 0.2s;
+            position: fixed !important; bottom: 85px !important; right: 20px !important; width: 56px; height: 56px; border-radius: 50%; background-color: #FF5722; color: white; font-size: 28px; border: none; box-shadow: 0 4px 12px rgba(255, 87, 34, 0.4); cursor: pointer; display: flex; justify-content: center; align-items: center; z-index: 9500 !important; -webkit-tap-highlight-color: transparent; transition: transform 0.2s, opacity 0.2s;
         }
 
-        .fab-btn.hide-fab {
-            opacity: 0 !important;
-            pointer-events: none !important;
-            transform: scale(0) !important;
-        }
+        .fab-btn.hide-fab { opacity: 0 !important; pointer-events: none !important; transform: scale(0) !important; }
 
         /* --- 7. MODALS --- */
         .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100dvh;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 4000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            opacity: 1;
-            visibility: visible;
-            transition: opacity 0.3s;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; background: rgba(0, 0, 0, 0.5); z-index: 4000; display: flex; justify-content: center; align-items: center; opacity: 1; visibility: visible; transition: opacity 0.3s;
         }
-
-        .modal-overlay.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-
+        .modal-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
         .modal-content {
-            background: #fff;
-            width: 90%;
-            max-width: 400px;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            transform: translateY(0);
-            transition: transform 0.3s;
+            background: #fff; width: 90%; max-width: 400px; border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); transform: translateY(0); transition: transform 0.3s;
         }
-
-        .modal-overlay.hidden .modal-content {
-            transform: translateY(20px);
-        }
+        .modal-overlay.hidden .modal-content { transform: translateY(20px); }
 
         /* --- ABSOLUTE Z-INDEX LAYERING --- */
-        #history-btn-container {
-            z-index: 8500 !important;
-        }
-
-        .bottom-nav {
-            z-index: 9000 !important;
-        }
-
-        .fab-btn {
-            z-index: 9500 !important;
-        }
-
-        #history-modal {
-            z-index: 10000 !important;
-        }
-
-        #chat-modal {
-            z-index: 10500 !important;
-        }
-
-        #create-modal {
-            z-index: 11000 !important;
-        }
-
-        #confirm-modal {
-            z-index: 11500 !important;
-        }
-
-        #app-notification {
-            z-index: 12000 !important;
-        }
-
-        .toast {
-            z-index: 20000 !important;
-        }
+        #history-btn-container { z-index: 8500 !important; }
+        .bottom-nav { z-index: 9000 !important; }
+        .fab-btn { z-index: 9500 !important; }
+        #history-modal { z-index: 10000 !important; }
+        #chat-modal { z-index: 10500 !important; }
+        #create-modal { z-index: 11000 !important; }
+        #confirm-modal { z-index: 11500 !important; }
+        #app-notification { z-index: 12000 !important; }
+        .toast { z-index: 20000 !important; }
     </style>
 </head>
 
@@ -532,7 +297,6 @@
     </div>
 
     <main id="main-dash" class="app-container dashboard-layout blur-start">
-
         <section id="home-view" class="feed-section">
             <header class="dash-header">
                 <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
@@ -624,60 +388,52 @@
         </div>
     </div>
 
-<div id="history-modal" class="chat-overlay hidden" style="z-index: 10500 !important;" onclick="if(event.target === this) closeHistory()">
+    <div id="history-modal" class="chat-overlay hidden" onclick="if(event.target === this) closeHistory()">
         <div class="chat-drawer" style="height: 85dvh; display: flex; flex-direction: column; background: #f9f9f9;">
-            
-            <div class="chat-header" style="background: #fff; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center; padding: 16px 20px;">
+            <div class="chat-header">
                 <h3 style="margin: 0; font-size: 1.2rem; color: #333;">Task History</h3>
-                <button type="button" onclick="closeHistory()" style="background: transparent; border: none; font-size: 2rem; color: #999; cursor: pointer; padding: 10px; margin: -10px;">&times;</button>
+                <button onclick="closeHistory()"
+                    style="background: none; border: none; font-size: 1.5rem; color: #999; cursor: pointer;">&times;</button>
             </div>
-            
             <div style="padding: 20px; overflow-y: auto; flex: 1;">
+
                 <h3 class="section-title" style="margin-top: 0; font-size: 1rem; color: #D32F2F;">Tasks I Deleted</h3>
                 <div id="history-deleted-feed" style="margin-bottom: 30px; display: flex; flex-direction: column; gap: 10px;"></div>
 
                 <h3 class="section-title" style="font-size: 1rem; color: #F57C00;">Tasks I Dropped</h3>
                 <div id="history-dropped-feed" style="margin-bottom: 30px; display: flex; flex-direction: column; gap: 10px;"></div>
 
-                <button id="clear-history-btn" onclick="clearHistory()" style="width: 100%; padding: 12px; background: transparent; border: 1px solid #ffcdd2; color: #D32F2F; border-radius: 12px; font-weight: 600; cursor: pointer; margin-top: 10px; display: none;">
+                <button id="clear-history-btn" onclick="clearHistory()"
+                    style="width: 100%; padding: 12px; background: transparent; border: 1px solid #ffcdd2; color: #D32F2F; border-radius: 12px; font-weight: 600; cursor: pointer; margin-top: 10px; display: none;">
                     🗑️ Clear All History
                 </button>
             </div>
         </div>
-    </div>        <div class="modal-content" style="text-align: center; max-width: 320px;">
+    </div>
+
+    <div id="confirm-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="text-align: center; max-width: 320px;">
             <div style="font-size: 2.5rem; margin-bottom: 10px;">⚠️</div>
             <h3 id="confirm-title" style="margin-bottom: 10px; color: var(--text-dark);">Are you sure?</h3>
-            <p id="confirm-message"
-                style="color: var(--text-muted); margin-bottom: 24px; font-size: 0.95rem; line-height: 1.4;">This action
-                cannot be undone.</p>
+            <p id="confirm-message" style="color: var(--text-muted); margin-bottom: 24px; font-size: 0.95rem; line-height: 1.4;">This action cannot be undone.</p>
             <div style="display: flex; gap: 12px;">
-                <button class="btn" onclick="closeConfirm()"
-                    style="flex: 1; background-color: #F5F5F5; color: #757575; margin-top: 0; box-shadow: none;">Cancel</button>
-                <button id="confirm-action-btn" class="btn"
-                    style="flex: 1; background-color: #D32F2F; margin-top: 0; box-shadow: none;">Yes</button>
+                <button class="btn" onclick="closeConfirm()" style="flex: 1; background-color: #F5F5F5; color: #757575; margin-top: 0; box-shadow: none;">Cancel</button>
+                <button id="confirm-action-btn" class="btn" style="flex: 1; background-color: #D32F2F; margin-top: 0; box-shadow: none;">Yes</button>
             </div>
         </div>
     </div>
 
-    <div id="history-btn-container"
-        style="position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 450px; display: none;">
-        <button class="btn" onclick="openHistory()"
-            style="background-color: #E0E0E0; color: #333; width: 100%; padding: 14px; border-radius: 20px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: flex; justify-content: center; align-items: center; gap: 8px; margin: 0;">
+    <div id="history-btn-container" style="position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 450px; display: none;">
+        <button class="btn" onclick="openHistory()" style="background-color: #E0E0E0; color: #333; width: 100%; padding: 14px; border-radius: 20px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: flex; justify-content: center; align-items: center; gap: 8px; margin: 0;">
             <span style="font-size: 1.1rem;">🕒</span> View Task History
         </button>
     </div>
 
     <button class="fab-btn" onclick="openModal()">+</button>
     <nav class="bottom-nav">
-        <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><span>🏠</span>
-            <p>Home</p>
-        </div>
-        <div class="nav-item" id="nav-tasks" onclick="switchTab('tasks')"><span>📋</span>
-            <p>Tasks</p>
-        </div>
-        <div class="nav-item" id="nav-profile" onclick="switchTab('profile')"><span>👤</span>
-            <p>Profile</p>
-        </div>
+        <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><span>🏠</span><p>Home</p></div>
+        <div class="nav-item" id="nav-tasks" onclick="switchTab('tasks')"><span>📋</span><p>Tasks</p></div>
+        <div class="nav-item" id="nav-profile" onclick="switchTab('profile')"><span>👤</span><p>Profile</p></div>
     </nav>
     <div id="toast" class="toast"></div>
 
@@ -707,8 +463,6 @@
             if (myPhone) {
                 loadProfile();
                 loadTasks();
-
-                // Start the scroll listener on load
                 initScrollAnimation();
 
                 globalSocket = io('https://helpido.onrender.com', { transports: ['websocket', 'polling'] });
@@ -720,6 +474,7 @@
 
                 globalSocket.on('refreshFeed', () => { loadTasks(); loadMyTasks(); loadProfile(); });
 
+                // Routes to Home Tab
                 globalSocket.on('newTask', (task) => {
                     if (task.postedBy !== myPhone && activeTab !== 'home') {
                         showAppNotification('👋', `New task posted: ${task.title}`, 'Tap to view the Home feed!', () => {
@@ -729,7 +484,7 @@
                     }
                 });
 
-                // NEW: Listener for Task Accepted (Routes to Tasks tab and opens chat)
+                // Routes to Tasks Tab & Opens Chat
                 globalSocket.on('taskAccepted', (data) => {
                     if (data.posterPhone === myPhone) {
                         showAppNotification('🤝', 'Task Accepted!', `${data.title} accepted by ${data.acceptorName}`, () => {
@@ -776,7 +531,6 @@
                                 if (titleEl) taskTitle = titleEl.childNodes[0].nodeValue.trim();
                             }
 
-                            // NEW: Added the callback to open the chat!
                             showAppNotification('💬', `New message from ${firstName} for ${taskTitle}`, msg.text, () => {
                                 openChat(msg.taskId, msg.senderPhone);
                             });
@@ -894,8 +648,8 @@
         async function loadMyTasks() {
             const reqFeed = document.getElementById('my-requests-feed');
             const jobsFeed = document.getElementById('my-jobs-feed');
-            const reqHeader = reqFeed.previousElementSibling; // Grabs the <h3>
-            const jobsHeader = jobsFeed.previousElementSibling; // Grabs the <h3>
+            const reqHeader = reqFeed.previousElementSibling; 
+            const jobsHeader = jobsFeed.previousElementSibling; 
 
             if (isInitialTasksLoad) {
                 reqHeader.style.display = 'block';
@@ -913,7 +667,7 @@
                     isInitialTasksLoad = false;
                 }
 
-                // OVERALL EMPTY STATE: If you have no tasks at all
+                // OVERALL EMPTY STATE
                 if (data.myRequests.length === 0 && data.myJobs.length === 0) {
                     reqHeader.style.display = 'none';
                     jobsHeader.style.display = 'none';
@@ -922,7 +676,7 @@
                     return;
                 }
 
-                // Render Uploaded Requests (Hides Header if Empty)
+                // Render Uploaded Requests
                 if (data.myRequests.length === 0) {
                     reqHeader.style.display = 'none';
                     reqFeed.innerHTML = '';
@@ -952,7 +706,7 @@
                     }).join('');
                 }
 
-                // Render Accepted Jobs (Hides Header if Empty)
+                // Render Accepted Jobs
                 const sortedJobs = data.myJobs.sort((a, b) => (b.isPrioritized === true) - (a.isPrioritized === true));
                 if (sortedJobs.length === 0) {
                     jobsHeader.style.display = 'none';
@@ -982,6 +736,7 @@
                 }
             } catch (err) { reqFeed.innerHTML = `<p style="text-align:center; color:red;">Error loading tasks.</p>`; }
         }
+
         /* =========================================
            3. CHAT ENGINE
            ========================================= */
@@ -1018,7 +773,6 @@
         }
 
         function closeChat() {
-            // Keep no-scroll if history modal is still open underneath
             if (document.getElementById('history-modal').classList.contains('hidden')) {
                 document.body.classList.remove('no-scroll');
             }
@@ -1041,7 +795,6 @@
             input.value = '';
         }
 
-        // Helper to format database/socket dates into "10:45 AM"
         function formatTime(dateString) {
             const date = dateString ? new Date(dateString) : new Date();
             return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -1054,21 +807,18 @@
             if (emptyTxt) emptyTxt.remove();
 
             const isMe = msg.senderPhone === myPhone;
-            const timeString = formatTime(msg.createdAt || msg.timestamp); // Pulls from DB or uses current time
+            const timeString = formatTime(msg.createdAt || msg.timestamp); 
 
             const bubble = document.createElement('div');
             bubble.className = `msg-bubble ${isMe ? 'msg-sent' : 'msg-received'}`;
 
-            // Create text element safely (prevents users from sending malicious HTML code)
             const textDiv = document.createElement('div');
             textDiv.innerText = msg.text;
 
-            // Create the tiny timestamp
             const timeDiv = document.createElement('div');
             timeDiv.className = 'msg-time';
             timeDiv.innerText = timeString;
 
-            // Put them both inside the bubble
             bubble.appendChild(textDiv);
             bubble.appendChild(timeDiv);
 
@@ -1106,34 +856,29 @@
         /* =========================================
            4. SYSTEM & UI UTILITIES
            ========================================= */
-function showAppNotification(icon, title, desc, onClickCallback = null) {
+        function showAppNotification(icon, title, desc, onClickCallback = null) {
             const notif = document.getElementById('app-notification');
             document.getElementById('app-notif-icon').innerText = icon;
             document.getElementById('app-notif-title').innerText = title;
             document.getElementById('app-notif-desc').innerText = desc;
 
-            notif.onclick = null; // Reset previous clicks
-
             notif.onclick = () => {
                 notif.classList.remove('show');
                 
-                // Force close all open windows
-                try { closeChat(); } catch(e){}
-                try { closeHistory(); } catch(e){}
-                try { closeModal(); } catch(e){}
+                // Aggressively close all floating windows
+                closeChat();
+                closeHistory();
+                closeModal();
 
-                // Give the screen a tiny 100ms delay to clear before routing
-                if (onClickCallback && typeof onClickCallback === 'function') {
-                    setTimeout(() => {
-                        onClickCallback();
-                    }, 100); 
-                }
+                // Route user
+                if (onClickCallback) onClickCallback();
             };
 
             notif.classList.add('show');
             clearTimeout(notifTimeout);
             notifTimeout = setTimeout(() => { notif.classList.remove('show'); }, 4000);
         }
+
         function showToast(message, type = 'success') {
             const toast = document.getElementById("toast");
             toast.innerText = message; toast.className = `toast show ${type}`;
@@ -1154,7 +899,6 @@ function showAppNotification(icon, title, desc, onClickCallback = null) {
             document.getElementById(`${tabName}-view`).classList.remove('hidden');
             document.getElementById(`nav-${tabName}`).classList.add('active');
 
-            // --- UPDATE: Smart Button Visibility ---
             const fab = document.querySelector('.fab-btn');
             const historyBtn = document.getElementById('history-btn-container');
 
@@ -1244,7 +988,6 @@ function showAppNotification(icon, title, desc, onClickCallback = null) {
             showConfirm("Delete Request?", "Are you sure you want to permanently wipe this request from the database?", "Delete", () => {
                 const card = document.getElementById(`req-card-${taskId}`);
 
-                // NEW: Grab the title before deleting and save the receipt
                 let taskTitle = "Unknown Task";
                 if (card) {
                     const titleEl = card.querySelector('h4');
@@ -1263,11 +1006,11 @@ function showAppNotification(icon, title, desc, onClickCallback = null) {
                 }, 350);
             });
         }
+
         function removeJob(taskId) {
             showConfirm("Drop Task?", "Drop this task? It will be returned to the public Home tab for others to accept.", "Drop Task", () => {
                 const card = document.getElementById(`job-card-${taskId}`);
 
-                // NEW: Grab the title before dropping and save the receipt
                 let taskTitle = "Unknown Task";
                 if (card) {
                     const titleEl = card.querySelector('h4');
@@ -1300,6 +1043,7 @@ function showAppNotification(icon, title, desc, onClickCallback = null) {
                 }, 350);
             });
         }
+
         async function prioritizeJob(taskId) {
             await fetch(`${API_URL}/tasks/prioritize`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1351,43 +1095,31 @@ function showAppNotification(icon, title, desc, onClickCallback = null) {
         /* =========================================
            7. GESTURES & ANIMATIONS
            ========================================= */
-
-        // --- DYNAMIC SCROLL ANIMATION (Bulletproof Safe Zone Mode) ---
         function initScrollAnimation() {
             let isScrolling = false;
-
-            // 1. The Trigger: Requests an animation frame
             function requestUpdate() {
                 if (!isScrolling) {
                     window.requestAnimationFrame(applyScrollEffects);
                     isScrolling = true;
                 }
             }
-
-            // 2. The Listener: deeply optimized for mobile scrolling
             window.addEventListener('scroll', requestUpdate, { passive: true });
             window.addEventListener('touchmove', requestUpdate, { passive: true });
-
-            // 3. The Backup: Runs every second to catch new cards loaded via AJAX
             setInterval(requestUpdate, 1000);
 
-            // 4. The Math: Calculates size based on position
             function applyScrollEffects() {
                 const H = window.innerHeight;
                 const C = H / 2;
-                const safeRadius = H * 0.35; // The Blue Safe Zone
+                const safeRadius = H * 0.35; 
 
                 document.querySelectorAll('.task-card').forEach(card => {
                     const rect = card.getBoundingClientRect();
-
-                    // Optimization: Skip math if card is way off screen
                     if (rect.top > H + 100 || rect.bottom < -100) return;
 
                     const Y = rect.top + (rect.height / 2);
                     const dist = Math.abs(Y - C);
                     let scale = 1; let opacity = 1;
 
-                    // The Red Shrink Zone
                     if (dist > safeRadius) {
                         const excess = dist - safeRadius;
                         const redZoneSize = (H / 2) - safeRadius;
@@ -1398,15 +1130,13 @@ function showAppNotification(icon, title, desc, onClickCallback = null) {
                     card.style.transform = `scale(${scale})`;
                     card.style.opacity = `${opacity}`;
                 });
-
                 isScrolling = false;
             }
         }
 
-        // --- SIMPLE PULL TO REFRESH (Fixed for Mobile UI) ---
         let touchStart = 0;
         const ptrThreshold = 150;
-        const mainContainer = document.getElementById('main-dash'); // 🟢 Target MAIN, never BODY
+        const mainContainer = document.getElementById('main-dash'); 
 
         window.addEventListener('touchstart', e => {
             if (window.scrollY === 0) touchStart = e.touches[0].clientY;
@@ -1415,8 +1145,6 @@ function showAppNotification(icon, title, desc, onClickCallback = null) {
         window.addEventListener('touchmove', e => {
             const touchY = e.touches[0].clientY;
             const pullDistance = touchY - touchStart;
-
-            // Apply pull effect ONLY to the main container
             if (window.scrollY === 0 && pullDistance > 0 && mainContainer) {
                 mainContainer.style.transform = `translateY(${Math.min(pullDistance / 3, 80)}px)`;
             }
@@ -1424,18 +1152,13 @@ function showAppNotification(icon, title, desc, onClickCallback = null) {
 
         window.addEventListener('touchend', e => {
             if (mainContainer) {
-                // Snap back
                 mainContainer.style.transform = 'translateY(0)';
                 mainContainer.style.transition = 'transform 0.3s ease';
-
-                // 🛑 CRITICAL FIX: We MUST completely erase the transform property after 300ms. 
-                // Leaving 'translateY(0)' on the element permanently breaks position: fixed!
                 setTimeout(() => {
                     mainContainer.style.transform = '';
                     mainContainer.style.transition = '';
                 }, 300);
             }
-
             const touchEnd = e.changedTouches[0].clientY;
             if (window.scrollY === 0 && (touchEnd - touchStart) > ptrThreshold) {
                 showAppNotification('↻', 'Refreshing...', 'Fetching latest tasks');
@@ -1449,7 +1172,6 @@ function showAppNotification(icon, title, desc, onClickCallback = null) {
            ========================================= */
         function saveToHistory(taskId, title, type) {
             let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
-            // Add to the beginning of the array so newest is at the top
             history.unshift({ id: taskId, title: title, type: type, date: new Date().toLocaleDateString() });
             localStorage.setItem('helpido_history', JSON.stringify(history));
         }
@@ -1467,7 +1189,6 @@ function showAppNotification(icon, title, desc, onClickCallback = null) {
 
             let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
 
-            // OVERALL EMPTY STATE
             if (history.length === 0) {
                 clearBtn.style.display = 'none';
                 deletedHeader.style.display = 'none';
@@ -1482,7 +1203,6 @@ function showAppNotification(icon, title, desc, onClickCallback = null) {
             const deletedTasks = history.filter(t => t.type === 'deleted');
             const droppedTasks = history.filter(t => t.type === 'dropped');
 
-            // Render Deleted (Hides Header if empty)
             if (deletedTasks.length === 0) {
                 deletedHeader.style.display = 'none';
                 deletedFeed.innerHTML = '';
@@ -1498,7 +1218,6 @@ function showAppNotification(icon, title, desc, onClickCallback = null) {
                     </div>`).join('');
             }
 
-            // Render Dropped (Hides Header if empty)
             if (droppedTasks.length === 0) {
                 droppedHeader.style.display = 'none';
                 droppedFeed.innerHTML = '';
@@ -1514,6 +1233,12 @@ function showAppNotification(icon, title, desc, onClickCallback = null) {
                     </div>`).join('');
             }
         }
+
+        function closeHistory() {
+            document.body.classList.remove('no-scroll');
+            document.getElementById('history-modal').classList.add('hidden');
+        }
+
         function clearHistory() {
             showConfirm("Clear History?", "Are you sure you want to wipe your local task log? This cannot be undone.", "Clear", () => {
                 localStorage.removeItem('helpido_history');
@@ -1521,11 +1246,9 @@ function showAppNotification(icon, title, desc, onClickCallback = null) {
                 const deletedFeed = document.getElementById('history-deleted-feed');
                 const droppedFeed = document.getElementById('history-dropped-feed');
 
-                // Hide headers instantly
                 deletedFeed.previousElementSibling.style.display = 'none';
                 droppedFeed.previousElementSibling.style.display = 'none';
 
-                // Show the empty clock state
                 deletedFeed.innerHTML = `<div style="text-align: center; padding: 40px 20px; color: #999;"><div style="font-size: 3rem; margin-bottom: 10px;">🕰️</div><p style="font-size: 1rem; margin: 0; color: #333;">History is empty.</p></div>`;
                 droppedFeed.innerHTML = '';
 
@@ -1533,28 +1256,26 @@ function showAppNotification(icon, title, desc, onClickCallback = null) {
                 showToast("Task history cleared!");
             });
         }
-        // --- NEW: RE-UPLOAD AND RE-ACCEPT LOGIC ---
+
         function reuploadTask(taskId, title) {
             closeHistory();
 
-            // Wipe it from the local array using a strict String comparison
             let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
             history = history.filter(t => String(t.id) !== String(taskId));
             localStorage.setItem('helpido_history', JSON.stringify(history));
 
-            // Open modal to repost
             openModal();
             document.getElementById('task-title').value = title;
             showToast("Fill in the details to repost!", "success");
-        } async function reacceptTask(taskId) {
+        } 
+        
+        async function reacceptTask(taskId) {
             closeHistory();
 
-            // 1. Remove from the local "dropped" blacklist so it's visible again
             let droppedTasksList = JSON.parse(localStorage.getItem('dropped_tasks') || "[]");
             droppedTasksList = droppedTasksList.filter(id => id !== taskId);
             localStorage.setItem('dropped_tasks', JSON.stringify(droppedTasksList));
 
-            // 2. Remove from the local history list so it doesn't stay in the archive
             let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
             history = history.filter(t => t.id !== taskId);
             localStorage.setItem('helpido_history', JSON.stringify(history));
@@ -1562,7 +1283,6 @@ function showAppNotification(icon, title, desc, onClickCallback = null) {
             showToast("Re-accepting task...");
 
             try {
-                // 3. Ping the server to accept the task
                 const res = await fetch(`${API_URL}/tasks/accept`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ taskId, helperPhone: myPhone })
@@ -1572,7 +1292,7 @@ function showAppNotification(icon, title, desc, onClickCallback = null) {
                     showToast("Task Re-accepted! Check 'Tasks' tab.");
                     loadTasks();
                     loadMyTasks();
-                    switchTab('tasks'); // Auto-switch to Tasks tab to see it
+                    switchTab('tasks');
                 } else {
                     const data = await res.json();
                     showToast(data.message || "Task is no longer available", "error");
@@ -1581,8 +1301,6 @@ function showAppNotification(icon, title, desc, onClickCallback = null) {
                 showToast("Network Error", "error");
             }
         }
-
     </script>
 </body>
-
 </html>
