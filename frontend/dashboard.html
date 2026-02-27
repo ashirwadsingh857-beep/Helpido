@@ -1440,6 +1440,7 @@
             const deletedTasks = history.filter(t => t.type === 'deleted');
             const droppedTasks = history.filter(t => t.type === 'dropped');
 
+            // Render Deleted Tasks
             deletedFeed.innerHTML = deletedTasks.length === 0
                 ? `<p style="color:#999; font-size: 0.85rem; text-align: center;">No deleted tasks.</p>`
                 : deletedTasks.map(t => `
@@ -1448,8 +1449,10 @@
                             <span style="font-weight: 500; color: #333; display: block; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${t.title}</span>
                             <span style="color: #999; font-size: 0.8rem;">${t.date}</span>
                         </div>
-<button style="padding: 6px 12px; font-size: 0.75rem; background: #D32F2F; color: white; border: none; border-radius: 8px; cursor: pointer; white-space: nowrap; font-weight: bold;" onclick="reuploadTask('${t.id}', '${t.title.replace(/'/g, "\\'")}')">Upload Again</button>                    </div>`).join('');
+                        <button style="padding: 8px 12px; font-size: 0.75rem; background: #D32F2F; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; flex-shrink: 0;" onclick="reuploadTask('${t.id}', '${t.title.replace(/'/g, "\\'")}')">Upload Again</button>
+                    </div>`).join('');
 
+            // Render Dropped Tasks
             droppedFeed.innerHTML = droppedTasks.length === 0
                 ? `<p style="color:#999; font-size: 0.85rem; text-align: center;">No dropped tasks.</p>`
                 : droppedTasks.map(t => `
@@ -1461,7 +1464,6 @@
                         <button style="padding: 8px 12px; font-size: 0.75rem; background: #F57C00; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; flex-shrink: 0;" onclick="reacceptTask('${t.id}')">I can do it</button>
                     </div>`).join('');
         }
-
         function closeHistory() {
             document.body.classList.remove('no-scroll');
             document.getElementById('history-modal').classList.add('hidden');
@@ -1490,16 +1492,16 @@
         function reuploadTask(taskId, title) {
             closeHistory();
 
-            // NEW: Remove from the local history list so it disappears
+            // Wipe it from the local array using a strict String comparison
             let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
-            history = history.filter(t => t.id !== taskId);
+            history = history.filter(t => String(t.id) !== String(taskId));
             localStorage.setItem('helpido_history', JSON.stringify(history));
 
+            // Open modal to repost
             openModal();
             document.getElementById('task-title').value = title;
             showToast("Fill in the details to repost!", "success");
-        }
-        async function reacceptTask(taskId) {
+        } async function reacceptTask(taskId) {
             closeHistory();
 
             // 1. Remove from the local "dropped" blacklist so it's visible again
