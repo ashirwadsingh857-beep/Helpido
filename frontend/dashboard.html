@@ -893,8 +893,12 @@
         async function loadMyTasks() {
             const reqFeed = document.getElementById('my-requests-feed');
             const jobsFeed = document.getElementById('my-jobs-feed');
+            const reqHeader = reqFeed.previousElementSibling; // Grabs the <h3>
+            const jobsHeader = jobsFeed.previousElementSibling; // Grabs the <h3>
 
             if (isInitialTasksLoad) {
+                reqHeader.style.display = 'block';
+                jobsHeader.style.display = 'block';
                 reqFeed.innerHTML = getSkeletonHTML(2);
                 jobsFeed.innerHTML = getSkeletonHTML(3);
             }
@@ -908,11 +912,23 @@
                     isInitialTasksLoad = false;
                 }
 
-                // Render Uploaded Requests
-                const existingReqIds = new Set(Array.from(reqFeed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('req-card-', '')));
-                reqFeed.innerHTML = data.myRequests.length === 0
-                    ? `<p style="color:#757575; font-size: 0.9rem;">You haven't uploaded any tasks.</p>`
-                    : data.myRequests.map((task, index) => {
+                // OVERALL EMPTY STATE: If you have no tasks at all
+                if (data.myRequests.length === 0 && data.myJobs.length === 0) {
+                    reqHeader.style.display = 'none';
+                    jobsHeader.style.display = 'none';
+                    reqFeed.innerHTML = `<div style="text-align: center; padding: 40px 20px; color: #999;"><div style="font-size: 3rem; margin-bottom: 10px;">📭</div><p style="font-size: 1rem; margin: 0; color: #333;">No activity yet.</p><p style="font-size: 0.85rem; margin-top: 5px;">Tasks you post or accept will appear here.</p></div>`;
+                    jobsFeed.innerHTML = '';
+                    return;
+                }
+
+                // Render Uploaded Requests (Hides Header if Empty)
+                if (data.myRequests.length === 0) {
+                    reqHeader.style.display = 'none';
+                    reqFeed.innerHTML = '';
+                } else {
+                    reqHeader.style.display = 'block';
+                    const existingReqIds = new Set(Array.from(reqFeed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('req-card-', '')));
+                    reqFeed.innerHTML = data.myRequests.map((task, index) => {
                         const isNew = !existingReqIds.has(task._id.toString());
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
                         const chatBtn = task.status === 'accepted' ? `<button class="btn" style="width:100%; margin-top:12px; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.helperPhone}')">💬 Chat</button>` : '';
@@ -933,14 +949,17 @@
                         </div>
                         `;
                     }).join('');
+                }
 
-                // Render Accepted Jobs
-                const existingJobIds = new Set(Array.from(jobsFeed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('job-card-', '')));
+                // Render Accepted Jobs (Hides Header if Empty)
                 const sortedJobs = data.myJobs.sort((a, b) => (b.isPrioritized === true) - (a.isPrioritized === true));
-
-                jobsFeed.innerHTML = sortedJobs.length === 0
-                    ? `<p style="color:#757575; font-size: 0.9rem;">You haven't accepted any tasks.</p>`
-                    : sortedJobs.map((task, index) => {
+                if (sortedJobs.length === 0) {
+                    jobsHeader.style.display = 'none';
+                    jobsFeed.innerHTML = '';
+                } else {
+                    jobsHeader.style.display = 'block';
+                    const existingJobIds = new Set(Array.from(jobsFeed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('job-card-', '')));
+                    jobsFeed.innerHTML = sortedJobs.map((task, index) => {
                         const isNew = !existingJobIds.has(task._id.toString());
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
 
@@ -959,9 +978,9 @@
                         </div>
                         `;
                     }).join('');
+                }
             } catch (err) { reqFeed.innerHTML = `<p style="text-align:center; color:red;">Error loading tasks.</p>`; }
         }
-
         /* =========================================
            3. CHAT ENGINE
            ========================================= */
@@ -1431,19 +1450,33 @@
             const droppedFeed = document.getElementById('history-dropped-feed');
             const clearBtn = document.getElementById('clear-history-btn');
 
+            const deletedHeader = deletedFeed.previousElementSibling;
+            const droppedHeader = droppedFeed.previousElementSibling;
+
             let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
 
-            if (clearBtn) {
-                clearBtn.style.display = history.length === 0 ? 'none' : 'block';
+            // OVERALL EMPTY STATE
+            if (history.length === 0) {
+                clearBtn.style.display = 'none';
+                deletedHeader.style.display = 'none';
+                droppedHeader.style.display = 'none';
+                deletedFeed.innerHTML = `<div style="text-align: center; padding: 40px 20px; color: #999;"><div style="font-size: 3rem; margin-bottom: 10px;">🕰️</div><p style="font-size: 1rem; margin: 0; color: #333;">History is empty.</p></div>`;
+                droppedFeed.innerHTML = '';
+                return;
             }
+
+            clearBtn.style.display = 'block';
 
             const deletedTasks = history.filter(t => t.type === 'deleted');
             const droppedTasks = history.filter(t => t.type === 'dropped');
 
-            // Render Deleted Tasks
-            deletedFeed.innerHTML = deletedTasks.length === 0
-                ? `<p style="color:#999; font-size: 0.85rem; text-align: center;">No deleted tasks.</p>`
-                : deletedTasks.map(t => `
+            // Render Deleted (Hides Header if empty)
+            if (deletedTasks.length === 0) {
+                deletedHeader.style.display = 'none';
+                deletedFeed.innerHTML = '';
+            } else {
+                deletedHeader.style.display = 'block';
+                deletedFeed.innerHTML = deletedTasks.map(t => `
                     <div style="background: #fff; padding: 12px 16px; border-radius: 8px; border-left: 3px solid #D32F2F; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; justify-content: space-between; align-items: center; gap: 8px;">
                         <div style="flex: 1; min-width: 0;">
                             <span style="font-weight: 500; color: #333; display: block; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${t.title}</span>
@@ -1451,11 +1484,15 @@
                         </div>
                         <button style="padding: 8px 12px; font-size: 0.75rem; background: #D32F2F; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; flex-shrink: 0;" onclick="reuploadTask('${t.id}', '${t.title.replace(/'/g, "\\'")}')">Upload Again</button>
                     </div>`).join('');
+            }
 
-            // Render Dropped Tasks
-            droppedFeed.innerHTML = droppedTasks.length === 0
-                ? `<p style="color:#999; font-size: 0.85rem; text-align: center;">No dropped tasks.</p>`
-                : droppedTasks.map(t => `
+            // Render Dropped (Hides Header if empty)
+            if (droppedTasks.length === 0) {
+                droppedHeader.style.display = 'none';
+                droppedFeed.innerHTML = '';
+            } else {
+                droppedHeader.style.display = 'block';
+                droppedFeed.innerHTML = droppedTasks.map(t => `
                     <div style="background: #fff; padding: 12px 16px; border-radius: 8px; border-left: 3px solid #F57C00; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; justify-content: space-between; align-items: center; gap: 8px;">
                         <div style="flex: 1; min-width: 0;">
                             <span style="font-weight: 500; color: #333; display: block; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${t.title}</span>
@@ -1463,31 +1500,27 @@
                         </div>
                         <button style="padding: 8px 12px; font-size: 0.75rem; background: #F57C00; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; flex-shrink: 0;" onclick="reacceptTask('${t.id}')">I can do it</button>
                     </div>`).join('');
+            }
         }
-        function closeHistory() {
-            document.body.classList.remove('no-scroll');
-            document.getElementById('history-modal').classList.add('hidden');
-        }
-
         function clearHistory() {
-            // Trigger the confirmation modal we built earlier
             showConfirm("Clear History?", "Are you sure you want to wipe your local task log? This cannot be undone.", "Clear", () => {
-
-                // 1. Wipe the local storage
                 localStorage.removeItem('helpido_history');
 
-                // 2. Instantly update the UI to show empty states
-                document.getElementById('history-deleted-feed').innerHTML = `<p style="color:#999; font-size: 0.85rem; text-align: center;">No deleted tasks.</p>`;
-                document.getElementById('history-dropped-feed').innerHTML = `<p style="color:#999; font-size: 0.85rem; text-align: center;">No dropped tasks.</p>`;
+                const deletedFeed = document.getElementById('history-deleted-feed');
+                const droppedFeed = document.getElementById('history-dropped-feed');
 
-                // 3. Hide button immediately after clearing
+                // Hide headers instantly
+                deletedFeed.previousElementSibling.style.display = 'none';
+                droppedFeed.previousElementSibling.style.display = 'none';
+
+                // Show the empty clock state
+                deletedFeed.innerHTML = `<div style="text-align: center; padding: 40px 20px; color: #999;"><div style="font-size: 3rem; margin-bottom: 10px;">🕰️</div><p style="font-size: 1rem; margin: 0; color: #333;">History is empty.</p></div>`;
+                droppedFeed.innerHTML = '';
+
                 document.getElementById('clear-history-btn').style.display = 'none';
-
-                // 4. Notify the user
                 showToast("Task history cleared!");
             });
         }
-
         // --- NEW: RE-UPLOAD AND RE-ACCEPT LOGIC ---
         function reuploadTask(taskId, title) {
             closeHistory();
