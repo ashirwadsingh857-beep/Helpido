@@ -350,24 +350,6 @@
             /* Grey for incoming bubbles */
         }
 
-        /* --- NEW: CHAT TIMESTAMPS --- */
-        .msg-time {
-            font-size: 0.7rem;
-            margin-top: 4px;
-            text-align: right;
-            display: block;
-        }
-
-        .msg-sent .msg-time {
-            color: rgba(255, 255, 255, 0.75);
-            /* Soft white for orange bubbles */
-        }
-
-        .msg-received .msg-time {
-            color: #757575;
-            /* Grey for incoming bubbles */
-        }
-
         .chat-input-area {
             padding: 12px 16px;
             border-top: 1px solid #eee;
@@ -565,14 +547,6 @@
                     <button class="logout-btn" onclick="logout()">Log Out</button>
                 </div>
             </div>
-
-            <div style="padding: 0 20px 20px 20px;">
-                <button class="btn"
-                    style="background-color: #e0e0e0; color: #333; width: 100%; padding: 16px; border-radius: 16px; font-weight: bold; box-shadow: none; display: flex; justify-content: center; gap: 10px;"
-                    onclick="openHistory()">
-                    <span>🕒</span> View Task History
-                </button>
-            </div>
         </section>
     </main>
 
@@ -630,7 +604,7 @@
 
                 <h3 class="section-title" style="font-size: 1rem; color: #F57C00;">Tasks I Dropped</h3>
                 <div id="history-dropped-feed" style="margin-bottom: 30px; display: flex; flex-direction: column; gap: 10px;">
-                    </div>
+                </div>
 
                 <button onclick="clearHistory()" style="width: 100%; padding: 12px; background: transparent; border: 1px solid #ffcdd2; color: #D32F2F; border-radius: 12px; font-weight: 600; cursor: pointer; margin-top: 10px;">
                     🗑️ Clear All History
@@ -640,7 +614,7 @@
         </div>
     </div>
 
-    <div id="confirm-modal" class="modal-overlay hidden">
+    <div id="confirm-modal" class="modal-overlay hidden" style="z-index: 10005;">
         <div class="modal-content" style="text-align: center; max-width: 320px;">
             <div style="font-size: 2.5rem; margin-bottom: 10px;">⚠️</div>
             <h3 id="confirm-title" style="margin-bottom: 10px; color: var(--text-dark);">Are you sure?</h3>
@@ -654,6 +628,12 @@
                     style="flex: 1; background-color: #D32F2F; margin-top: 0; box-shadow: none;">Yes</button>
             </div>
         </div>
+    </div>
+
+    <div id="history-btn-container" style="position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 450px; z-index: 8500; display: none;">
+        <button class="btn" onclick="openHistory()" style="background-color: #E0E0E0; color: #333; width: 100%; padding: 14px; border-radius: 20px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: flex; justify-content: center; align-items: center; gap: 8px; margin: 0;">
+            <span style="font-size: 1.1rem;">🕒</span> View Task History
+        </button>
     </div>
 
     <button class="fab-btn" onclick="openModal()">+</button>
@@ -846,7 +826,6 @@
                         const isNew = !existingCardIds.has(task._id.toString());
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
 
-                        // FIX: Badge properly integrated inside the return literal
                         return `
                         <div class="task-card" id="feed-card-${task._id}" style="${animStyle}">
                             <div class="task-top">
@@ -1100,11 +1079,16 @@
             document.getElementById(`${tabName}-view`).classList.remove('hidden');
             document.getElementById(`nav-${tabName}`).classList.add('active');
 
+            // --- UPDATE: Smart Button Visibility ---
             const fab = document.querySelector('.fab-btn');
+            const historyBtn = document.getElementById('history-btn-container');
+
             if (tabName === 'profile') {
                 fab.classList.add('hide-fab');
+                if (historyBtn) historyBtn.style.display = 'block';
             } else {
                 fab.classList.remove('hide-fab');
+                if (historyBtn) historyBtn.style.display = 'none';
             }
 
             if (tabName === 'home') { if (isInitialHomeLoad) loadTasks(); }
@@ -1293,7 +1277,6 @@
            7. GESTURES & ANIMATIONS
            ========================================= */
 
-        // --- DYNAMIC SCROLL ANIMATION (Safe Zone Mode) ---
         // --- DYNAMIC SCROLL ANIMATION (Bulletproof Safe Zone Mode) ---
         function initScrollAnimation() {
             let isScrolling = false;
@@ -1387,8 +1370,8 @@
         });
 
         /* =========================================
-                   8. TASK HISTORY LOGIC
-                   ========================================= */
+           8. TASK HISTORY LOGIC
+           ========================================= */
         function saveToHistory(taskId, title, type) {
             let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
             // Add to the beginning of the array so newest is at the top
@@ -1408,15 +1391,29 @@
             const deletedTasks = history.filter(t => t.type === 'deleted');
             const droppedTasks = history.filter(t => t.type === 'dropped');
 
-            // Render Deleted
+            // Render Deleted with "Upload Again" Button
             deletedFeed.innerHTML = deletedTasks.length === 0
                 ? `<p style="color:#999; font-size: 0.85rem; text-align: center;">No deleted tasks.</p>`
-                : deletedTasks.map(t => `<div style="background: #fff; padding: 12px 16px; border-radius: 8px; border-left: 3px solid #D32F2F; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; justify-content: space-between;"><span style="font-weight: 500; color: #333;">${t.title}</span><span style="color: #999; font-size: 0.8rem;">${t.date}</span></div>`).join('');
+                : deletedTasks.map(t => `
+                    <div style="background: #fff; padding: 12px 16px; border-radius: 8px; border-left: 3px solid #D32F2F; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span style="font-weight: 500; color: #333; display: block; margin-bottom: 4px;">${t.title}</span>
+                            <span style="color: #999; font-size: 0.8rem;">${t.date}</span>
+                        </div>
+                        <button class="btn" style="padding: 6px 12px; font-size: 0.75rem; margin: 0; width: auto; background: #D32F2F;" onclick="reuploadTask('${t.title.replace(/'/g, "\\'")}')">Upload Again</button>
+                    </div>`).join('');
 
-            // Render Dropped
+            // Render Dropped with "I can do it" Button
             droppedFeed.innerHTML = droppedTasks.length === 0
                 ? `<p style="color:#999; font-size: 0.85rem; text-align: center;">No dropped tasks.</p>`
-                : droppedTasks.map(t => `<div style="background: #fff; padding: 12px 16px; border-radius: 8px; border-left: 3px solid #F57C00; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; justify-content: space-between;"><span style="font-weight: 500; color: #333;">${t.title}</span><span style="color: #999; font-size: 0.8rem;">${t.date}</span></div>`).join('');
+                : droppedTasks.map(t => `
+                    <div style="background: #fff; padding: 12px 16px; border-radius: 8px; border-left: 3px solid #F57C00; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span style="font-weight: 500; color: #333; display: block; margin-bottom: 4px;">${t.title}</span>
+                            <span style="color: #999; font-size: 0.8rem;">${t.date}</span>
+                        </div>
+                        <button class="btn" style="padding: 6px 12px; font-size: 0.75rem; margin: 0; width: auto; background: #F57C00;" onclick="reacceptTask('${t.id}')">I can do it</button>
+                    </div>`).join('');
         }
 
         function closeHistory() {
@@ -1438,6 +1435,50 @@
                 // 3. Notify the user
                 showToast("Task history cleared!");
             });
+        }
+
+        // --- NEW: RE-UPLOAD AND RE-ACCEPT LOGIC ---
+        function reuploadTask(title) {
+            closeHistory();
+            openModal(); // Opens the "Ask for Help" modal
+            document.getElementById('task-title').value = title; // Pre-fills the title
+            showToast("Fill in the details to repost!", "success");
+        }
+
+        async function reacceptTask(taskId) {
+            closeHistory();
+            
+            // 1. Remove from the local "dropped" blacklist so it's visible again
+            let droppedTasksList = JSON.parse(localStorage.getItem('dropped_tasks') || "[]");
+            droppedTasksList = droppedTasksList.filter(id => id !== taskId);
+            localStorage.setItem('dropped_tasks', JSON.stringify(droppedTasksList));
+
+            // 2. Remove from the local history list so it doesn't stay in the archive
+            let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
+            history = history.filter(t => t.id !== taskId);
+            localStorage.setItem('helpido_history', JSON.stringify(history));
+
+            showToast("Re-accepting task...");
+
+            try {
+                // 3. Ping the server to accept the task
+                const res = await fetch(`${API_URL}/tasks/accept`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ taskId, helperPhone: myPhone })
+                });
+                
+                if (res.ok) {
+                    showToast("Task Re-accepted! Check 'Tasks' tab."); 
+                    loadTasks(); 
+                    loadMyTasks();
+                    switchTab('tasks'); // Auto-switch to Tasks tab to see it
+                } else {
+                    const data = await res.json();
+                    showToast(data.message || "Task is no longer available", "error");
+                }
+            } catch (err) { 
+                showToast("Network Error", "error"); 
+            }
         }
 
     </script>
