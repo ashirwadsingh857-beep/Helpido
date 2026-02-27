@@ -488,15 +488,41 @@
         }
 
         /* --- ABSOLUTE Z-INDEX LAYERING --- */
-        #history-btn-container { z-index: 8500 !important; }
-        .bottom-nav { z-index: 9000 !important; }
-        .fab-btn { z-index: 9500 !important; }
-        #history-modal { z-index: 10000 !important; }
-        #chat-modal { z-index: 10500 !important; }
-        #create-modal { z-index: 11000 !important; }
-        #confirm-modal { z-index: 11500 !important; }
-        #app-notification { z-index: 12000 !important; }
-        .toast { z-index: 20000 !important; }
+        #history-btn-container {
+            z-index: 8500 !important;
+        }
+
+        .bottom-nav {
+            z-index: 9000 !important;
+        }
+
+        .fab-btn {
+            z-index: 9500 !important;
+        }
+
+        #history-modal {
+            z-index: 10000 !important;
+        }
+
+        #chat-modal {
+            z-index: 10500 !important;
+        }
+
+        #create-modal {
+            z-index: 11000 !important;
+        }
+
+        #confirm-modal {
+            z-index: 11500 !important;
+        }
+
+        #app-notification {
+            z-index: 12000 !important;
+        }
+
+        .toast {
+            z-index: 20000 !important;
+        }
     </style>
 </head>
 
@@ -614,10 +640,12 @@
                 </div>
 
                 <h3 class="section-title" style="font-size: 1rem; color: #F57C00;">Tasks I Dropped</h3>
-                <div id="history-dropped-feed" style="margin-bottom: 30px; display: flex; flex-direction: column; gap: 10px;">
+                <div id="history-dropped-feed"
+                    style="margin-bottom: 30px; display: flex; flex-direction: column; gap: 10px;">
                 </div>
 
-                <button id="clear-history-btn" onclick="clearHistory()" style="width: 100%; padding: 12px; background: transparent; border: 1px solid #ffcdd2; color: #D32F2F; border-radius: 12px; font-weight: 600; cursor: pointer; margin-top: 10px; display: none;">
+                <button id="clear-history-btn" onclick="clearHistory()"
+                    style="width: 100%; padding: 12px; background: transparent; border: 1px solid #ffcdd2; color: #D32F2F; border-radius: 12px; font-weight: 600; cursor: pointer; margin-top: 10px; display: none;">
                     🗑️ Clear All History
                 </button>
 
@@ -641,8 +669,10 @@
         </div>
     </div>
 
-    <div id="history-btn-container" style="position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 450px; display: none;">
-        <button class="btn" onclick="openHistory()" style="background-color: #E0E0E0; color: #333; width: 100%; padding: 14px; border-radius: 20px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: flex; justify-content: center; align-items: center; gap: 8px; margin: 0;">
+    <div id="history-btn-container"
+        style="position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 450px; display: none;">
+        <button class="btn" onclick="openHistory()"
+            style="background-color: #E0E0E0; color: #333; width: 100%; padding: 14px; border-radius: 20px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: flex; justify-content: center; align-items: center; gap: 8px; margin: 0;">
             <span style="font-size: 1.1rem;">🕒</span> View Task History
         </button>
     </div>
@@ -969,7 +999,7 @@
 
         function closeChat() {
             // Keep no-scroll if history modal is still open underneath
-            if(document.getElementById('history-modal').classList.contains('hidden')) {
+            if (document.getElementById('history-modal').classList.contains('hidden')) {
                 document.body.classList.remove('no-scroll');
             }
             document.getElementById('chat-modal').classList.add('hidden');
@@ -1418,8 +1448,7 @@
                             <span style="font-weight: 500; color: #333; display: block; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${t.title}</span>
                             <span style="color: #999; font-size: 0.8rem;">${t.date}</span>
                         </div>
-                        <button style="padding: 8px 12px; font-size: 0.75rem; background: #D32F2F; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; flex-shrink: 0;" onclick="reuploadTask('${t.title.replace(/'/g, "\\'")}')">Upload Again</button>
-                    </div>`).join('');
+<button style="padding: 6px 12px; font-size: 0.75rem; background: #D32F2F; color: white; border: none; border-radius: 8px; cursor: pointer; white-space: nowrap; font-weight: bold;" onclick="reuploadTask('${t.id}', '${t.title.replace(/'/g, "\\'")}')">Upload Again</button>                    </div>`).join('');
 
             droppedFeed.innerHTML = droppedTasks.length === 0
                 ? `<p style="color:#999; font-size: 0.85rem; text-align: center;">No dropped tasks.</p>`
@@ -1441,33 +1470,38 @@
         function clearHistory() {
             // Trigger the confirmation modal we built earlier
             showConfirm("Clear History?", "Are you sure you want to wipe your local task log? This cannot be undone.", "Clear", () => {
-                
+
                 // 1. Wipe the local storage
                 localStorage.removeItem('helpido_history');
-                
+
                 // 2. Instantly update the UI to show empty states
                 document.getElementById('history-deleted-feed').innerHTML = `<p style="color:#999; font-size: 0.85rem; text-align: center;">No deleted tasks.</p>`;
                 document.getElementById('history-dropped-feed').innerHTML = `<p style="color:#999; font-size: 0.85rem; text-align: center;">No dropped tasks.</p>`;
-                
+
                 // 3. Hide button immediately after clearing
                 document.getElementById('clear-history-btn').style.display = 'none';
-                
+
                 // 4. Notify the user
                 showToast("Task history cleared!");
             });
         }
 
         // --- NEW: RE-UPLOAD AND RE-ACCEPT LOGIC ---
-        function reuploadTask(title) {
+        function reuploadTask(taskId, title) {
             closeHistory();
-            openModal(); // Opens the "Ask for Help" modal
-            document.getElementById('task-title').value = title; // Pre-fills the title
+
+            // NEW: Remove from the local history list so it disappears
+            let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
+            history = history.filter(t => t.id !== taskId);
+            localStorage.setItem('helpido_history', JSON.stringify(history));
+
+            openModal();
+            document.getElementById('task-title').value = title;
             showToast("Fill in the details to repost!", "success");
         }
-
         async function reacceptTask(taskId) {
             closeHistory();
-            
+
             // 1. Remove from the local "dropped" blacklist so it's visible again
             let droppedTasksList = JSON.parse(localStorage.getItem('dropped_tasks') || "[]");
             droppedTasksList = droppedTasksList.filter(id => id !== taskId);
@@ -1486,18 +1520,18 @@
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ taskId, helperPhone: myPhone })
                 });
-                
+
                 if (res.ok) {
-                    showToast("Task Re-accepted! Check 'Tasks' tab."); 
-                    loadTasks(); 
+                    showToast("Task Re-accepted! Check 'Tasks' tab.");
+                    loadTasks();
                     loadMyTasks();
                     switchTab('tasks'); // Auto-switch to Tasks tab to see it
                 } else {
                     const data = await res.json();
                     showToast(data.message || "Task is no longer available", "error");
                 }
-            } catch (err) { 
-                showToast("Network Error", "error"); 
+            } catch (err) {
+                showToast("Network Error", "error");
             }
         }
 

@@ -207,29 +207,34 @@ app.delete('/api/tasks/:id', async (req, res) => {
 });
 
 // --- DROP A TASK (Helper cancels) ---
+// --- DROP / CANCEL A TASK ---
 app.post('/api/tasks/cancel', async (req, res) => {
-    const { taskId } = req.body;
     try {
+        const { taskId } = req.body;
         const task = await Task.findById(taskId);
-        if (!task) return res.status(404).json({ message: "Task not found" });
-        
-        // Reset task to open state
+
+        if (!task) return res.status(404).json({ message: 'Task not found' });
+
+        // Reset the task to open and wipe the helper data
         task.status = 'open';
         task.helperPhone = null;
-        task.isPrioritized = false;
+        task.isPrioritized = false; // Strip priority if it is dropped
         await task.save();
 
-        // --- NEW: Shred old chat history so the next helper starts with a clean slate ---
-        await Message.deleteMany({ taskId: taskId });
+        // SECURITY: Instantly wipe the chat history tied to this task
+        if (typeof Chat !== 'undefined') {
+            await Chat.deleteMany({ taskId: taskId });
+        }
 
+        // Tell all active users to refresh their feeds so the task reappears
         io.emit('refreshFeed'); 
-        res.json({ message: "Task returned to public feed and chat wiped" });
-    } catch (err) {
-        console.error("Drop error:", err);
-        res.status(500).json({ message: "Error dropping task" });
+
+        res.json({ message: 'Task dropped, chat wiped, and returned to public feed.' });
+    } catch (error) {
+        console.error("Drop Error:", error);
+        res.status(500).json({ message: 'Server error dropping task.' });
     }
 });
-
 app.post("/api/tasks/prioritize", async (req, res) => {
     const { taskId } = req.body;
     try {
