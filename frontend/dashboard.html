@@ -587,7 +587,7 @@
         </section>
     </main>
 
-    <div id="app-notification" class="app-notification" onclick="this.classList.remove('show')">
+    <div id="app-notification" class="app-notification">
         <div class="app-notif-icon" id="app-notif-icon">🔔</div>
         <div class="app-notif-text">
             <h4 id="app-notif-title">Title</h4>
@@ -624,13 +624,12 @@
         </div>
     </div>
 
-    <div id="history-modal" class="chat-overlay hidden" style="z-index: 9999;"
-        onclick="if(event.target === this) closeHistory()">
+    <div id="history-modal" class="chat-overlay hidden" style="z-index: 10000 !important;">
+        <div style="flex: 1; cursor: pointer; width: 100%;" onclick="closeHistory()"></div>
         <div class="chat-drawer" style="height: 85dvh; display: flex; flex-direction: column; background: #f9f9f9;">
-            <div class="chat-header" style="background: #fff; border-radius: 20px 20px 0 0;">
+            <div class="chat-header" style="background: #fff; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 10;">
                 <h3 style="margin: 0; font-size: 1.2rem; color: #333;">Task History</h3>
-                <button onclick="closeHistory()"
-                    style="background: none; border: none; font-size: 1.5rem; color: #999; cursor: pointer;">&times;</button>
+                <button type="button" onclick="closeHistory()" style="background: transparent; border: none; font-size: 2rem; color: #999; cursor: pointer; padding: 0 10px; margin-right: -10px; line-height: 1;">&times;</button>
             </div>
             <div style="padding: 20px; overflow-y: auto; flex: 1;">
 
@@ -732,11 +731,22 @@
 
                 globalSocket.on('newTask', (task) => {
                     if (task.postedBy !== myPhone && activeTab !== 'home') {
-                        // NEW: Added callback to switch tabs!
                         showAppNotification('👋', `New task posted: ${task.title}`, 'Tap to view the Home feed!', () => {
                             switchTab('home');
-                            window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top to see it
+                            window.scrollTo({ top: 0, behavior: 'smooth' }); 
                         });
+                    }
+                });
+
+                // NEW: Listener for Task Accepted (Routes to Tasks tab and opens chat)
+                globalSocket.on('taskAccepted', (data) => {
+                    if (data.posterPhone === myPhone) {
+                        showAppNotification('🤝', 'Task Accepted!', `${data.title} accepted by ${data.acceptorName}`, () => {
+                            switchTab('tasks'); 
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                            openChat(data.taskId, data.acceptorPhone);
+                        });
+                        loadMyTasks(); 
                     }
                 });
 
@@ -1105,23 +1115,34 @@
         /* =========================================
            4. SYSTEM & UI UTILITIES
            ========================================= */
-        function showAppNotification(icon, title, desc, onClickCallback = null) {
+function showAppNotification(icon, title, desc, onClickCallback = null) {
             const notif = document.getElementById('app-notification');
             document.getElementById('app-notif-icon').innerText = icon;
             document.getElementById('app-notif-title').innerText = title;
             document.getElementById('app-notif-desc').innerText = desc;
 
-            // NEW: Make it clickable! Overrides the default HTML onclick.
+            notif.onclick = null; // Reset previous clicks
+
             notif.onclick = () => {
-                notif.classList.remove('show'); // Hide it instantly when tapped
-                if (onClickCallback) onClickCallback(); // Run the action (like opening chat)
+                notif.classList.remove('show');
+                
+                // Force close all open windows
+                try { closeChat(); } catch(e){}
+                try { closeHistory(); } catch(e){}
+                try { closeModal(); } catch(e){}
+
+                // Give the screen a tiny 100ms delay to clear before routing
+                if (onClickCallback && typeof onClickCallback === 'function') {
+                    setTimeout(() => {
+                        onClickCallback();
+                    }, 100); 
+                }
             };
 
             notif.classList.add('show');
             clearTimeout(notifTimeout);
             notifTimeout = setTimeout(() => { notif.classList.remove('show'); }, 4000);
         }
-
         function showToast(message, type = 'success') {
             const toast = document.getElementById("toast");
             toast.innerText = message; toast.className = `toast show ${type}`;
