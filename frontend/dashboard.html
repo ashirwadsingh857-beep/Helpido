@@ -854,8 +854,9 @@
 
             if (isInitialHomeLoad) feed.innerHTML = getSkeletonHTML(4);
 
-            try {
-                const res = await fetch(`${API_URL}/tasks`);
+           try {
+                // CRITICAL FIX: Cache-busting timestamp added here as well
+                const res = await fetch(`${API_URL}/tasks?t=${Date.now()}`);
                 const allTasks = await res.json();
 
                 let publicTasks = allTasks.filter(t => t.postedBy !== myPhone);
@@ -954,7 +955,8 @@
             }
 
             try {
-                const res = await fetch(`${API_URL}/tasks/my-tasks?phone=${myPhone}`);
+                // CRITICAL FIX: The '&t=${Date.now()}' bypasses the browser cache!
+                const res = await fetch(`${API_URL}/tasks/my-tasks?phone=${myPhone}&t=${Date.now()}`);
                 const data = await res.json();
 
                 if (isInitialTasksLoad) {

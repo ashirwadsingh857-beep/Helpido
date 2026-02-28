@@ -258,6 +258,7 @@ server.listen(PORT, () => console.log(`Live Server running on port ${PORT}`));
 
 // --- MARK TASK AS DONE (Wipe from DB & Notify Helper) ---
 // --- MARK TASK AS DONE (Wipe from DB & Notify Helper) ---
+// --- MARK TASK AS DONE (Wipe from DB & Notify Helper) ---
 app.post('/api/tasks/complete', async (req, res) => {
     try {
         const { taskId, helperPhone } = req.body;
