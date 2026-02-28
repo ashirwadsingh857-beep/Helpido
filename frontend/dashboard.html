@@ -687,7 +687,7 @@
     <script>
        // --- NEW: PUSH NOTIFICATION SETUP ---
         // ⚠️ REPLACE THIS STRING WITH YOUR ACTUAL PUBLIC KEY FROM PHASE 1
-        const PUBLIC_VAPID_KEY = BAqAyK807QkmEHBVi6NFEONVZwuuErlZvSd0gX4Ah0xQMTkp4J1n9ZTV9FoqODgQgk9lDD99WG2Ah-VrK69LAk4; 
+        const PUBLIC_VAPID_KEY = 'BAqAyK807QkmEHBVi6NFEONVZwuuErlZvSd0gX4Ah0xQMTkp4J1n9ZTV9FoqODgQgk9lDD99WG2Ah-VrK69LAk4'; 
 
         // Required utility to convert the key for the browser
         function urlBase64ToUint8Array(base64String) {
@@ -836,7 +836,7 @@
             `).join('');
         }
 
-        async function loadProfile() {
+async function loadProfile() {
             try {
                 const res = await fetch(`${API_URL}/users/${myPhone}`);
                 if (res.ok) {
@@ -851,15 +851,19 @@
                     document.getElementById('home-address').innerText = `📍 ${user.address}`;
 
                     if (user.availability) { currentStatus = user.availability; updateStatusUI(); }
-
-                    setTimeout(() => {
-                        document.getElementById('splash-screen').classList.add('hide');
-                        document.getElementById('main-dash').classList.add('unblur');
-                    }, 800);
                 }
-            } catch (err) { console.error("Profile load failed"); }
+            } catch (err) { 
+                console.error("Profile load failed", err); 
+            } finally {
+                // CRITICAL FIX: This guarantees the loading screen ALWAYS vanishes!
+                setTimeout(() => {
+                    const splash = document.getElementById('splash-screen');
+                    const main = document.getElementById('main-dash');
+                    if (splash) splash.classList.add('hide');
+                    if (main) main.classList.add('unblur');
+                }, 800);
+            }
         }
-
         // NEW: Global cache to securely store names and prevent API spam
         const userCache = {};
 
