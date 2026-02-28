@@ -200,10 +200,40 @@ app.post('/api/tasks', async (req, res) => {
         await newTask.save();
         io.emit('refreshFeed'); // Broadcast new task
         io.emit('newTask', newTask);
+
+        // --- NEW: SEND PUSH NOTIFICATION TO ALL OTHER SUBSCRIBED USERS ---
+        try {
+            const posterUser = await User.findOne({ phone: postedBy });
+            const posterName = posterUser ? posterUser.name.split(' ')[0] : 'Someone';
+
+            // Find all users EXCEPT the poster who have a push subscription
+            const subscribedUsers = await User.find({ 
+                phone: { $ne: postedBy }, 
+                pushSubscription: { $ne: null } 
+            });
+
+            const payload = JSON.stringify({
+                title: `New Task Near You 📍`,
+                desc: `${posterName} needs help: "${title}" for ₹${reward}`
+            });
+
+            // Fire off notifications to everyone in the background
+            const pushPromises = subscribedUsers.map(user => {
+                return webpush.sendNotification(user.pushSubscription, payload).catch(e => {
+                    // Fail silently for individual expired subscriptions
+                });
+            });
+            
+            // We don't use 'await' here so the task posts instantly without waiting for Google's servers
+            Promise.all(pushPromises);
+
+        } catch (pushErr) {
+            console.error("New task broadcast failed:", pushErr);
+        }
+
         res.status(201).json(newTask);
     } catch (err) { res.status(500).json({ message: "Failed to post task" }); }
 });
-
 app.get("/api/tasks", async (req, res) => {
     try {
         const tasks = await Task.find({ status: 'open' }).sort({ createdAt: -1 }).lean();
@@ -231,10 +261,28 @@ app.post("/api/tasks/accept", async (req, res) => {
         
         // Tell all other phones exactly WHICH task to animate off screen
         io.emit('taskRemoved', taskId); 
+
+        // --- NEW: SEND PUSH NOTIFICATION TO POSTER ---
+        try {
+            const posterUser = await User.findOne({ phone: task.postedBy });
+            const helperUser = await User.findOne({ phone: helperPhone });
+            const helperName = helperUser ? helperUser.name.split(' ')[0] : 'Someone';
+
+            if (posterUser && posterUser.pushSubscription) {
+                const payload = JSON.stringify({
+                    title: 'Task Accepted! 🤝',
+                    desc: `${helperName} accepted your task: "${task.title}". Tap to chat!`
+                });
+                // Send it to Google's push servers!
+                await webpush.sendNotification(posterUser.pushSubscription, payload);
+            }
+        } catch (pushErr) {
+            console.error("Task accept push failed:", pushErr.statusCode);
+        }
+
         res.json({ message: "Task accepted!" });
     } catch (err) { res.status(500).json({ message: "Error accepting task" }); }
 });
-
 app.get("/api/tasks/my-tasks", async (req, res) => {
     const phone = req.query.phone;
     try {
