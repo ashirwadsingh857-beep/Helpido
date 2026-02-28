@@ -255,7 +255,34 @@ app.post('/api/tasks', async (req, res) => {
 });
 app.get("/api/tasks", async (req, res) => {
     try {
-        const tasks = await Task.find({ status: 'open' }).sort({ createdAt: -1 }).lean();
+        const { lat, lng, radius } = req.query;
+        let query = { status: 'open' };
+
+        // --- NEW: GEOSPATIAL MATH ---
+        // If the phone sent its GPS location, apply the Radius Filter
+        if (lat && lng && radius && lat !== 'null' && lng !== 'null') {
+            const radiusInMeters = parseFloat(radius) * 1000;
+            query.location = {
+                $near: {
+                    $geometry: {
+                        type: "Point",
+                        // CRITICAL: MongoDB always requires [Longitude, Latitude] order!
+                        coordinates: [parseFloat(lng), parseFloat(lat)] 
+                    },
+                    $maxDistance: radiusInMeters
+                }
+            };
+        }
+
+        // If using $near, MongoDB automatically sorts by closest distance. 
+        // Otherwise, we fallback to sorting by newest first.
+        let tasks;
+        if (query.location) {
+            tasks = await Task.find(query).lean(); 
+        } else {
+            tasks = await Task.find(query).sort({ createdAt: -1 }).lean();
+        }
+
         const phones = [...new Set(tasks.map(t => t.postedBy))];
         const users = await User.find({ phone: { $in: phones } }, 'phone availability');
         const userStatusMap = {};
@@ -266,9 +293,11 @@ app.get("/api/tasks", async (req, res) => {
             posterStatus: userStatusMap[task.postedBy] || 'free'
         }));
         res.json(tasksWithStatus);
-    } catch (err) { res.status(500).json({ message: "Failed to fetch tasks" }); }
+    } catch (err) { 
+        console.error("Geospatial fetch error:", err);
+        res.status(500).json({ message: "Failed to fetch tasks" }); 
+    }
 });
-
 app.post("/api/tasks/accept", async (req, res) => {
     const { taskId, helperPhone } = req.body;
     try {

@@ -784,13 +784,13 @@
 
                 // 2. Location Button Check
                 if ('permissions' in navigator) {
-                    navigator.permissions.query({ name: 'geolocation' }).then(function(result) {
+                    navigator.permissions.query({ name: 'geolocation' }).then(function (result) {
                         if (result.state !== 'granted') {
                             const locBtn = document.getElementById('location-btn');
                             if (locBtn) locBtn.style.display = 'inline-block';
                         } else {
                             // If they already granted it in the past, fetch it silently
-                            getUserLocationSilently(); 
+                            getUserLocationSilently();
                         }
                     });
                 }
@@ -994,8 +994,13 @@
             if (isInitialHomeLoad) feed.innerHTML = getSkeletonHTML(4);
 
             try {
-                const res = await fetch(`${API_URL}/tasks`);
-                const allTasks = await res.json();
+                // --- NEW: APPEND GPS DATA TO SERVER REQUEST ---
+                let fetchUrl = `${API_URL}/tasks`;
+                if (userLat !== null && userLng !== null) {
+                    fetchUrl += `?lat=${userLat}&lng=${userLng}&radius=${currentRadius}`;
+                }
+
+                const res = await fetch(fetchUrl); const allTasks = await res.json();
 
                 let publicTasks = allTasks.filter(t => t.postedBy !== myPhone);
                 const droppedTasks = JSON.parse(localStorage.getItem('dropped_tasks') || "[]");
@@ -1842,15 +1847,15 @@
                     (position) => {
                         userLat = position.coords.latitude;
                         userLng = position.coords.longitude;
-                        
+
                         showToast("Location access granted!", "success");
-                        
+
                         // Hide the button permanently
                         const locBtn = document.getElementById('location-btn');
                         if (locBtn) locBtn.style.display = 'none';
-                        
+
                         // If they are on the home tab, refresh tasks with the new location!
-                        if (activeTab === 'home') loadTasks(); 
+                        if (activeTab === 'home') loadTasks();
                     },
                     (error) => {
                         console.warn("Location denied or unavailable", error);
