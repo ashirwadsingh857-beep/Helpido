@@ -838,7 +838,7 @@
             } catch (err) { console.error("Profile load failed"); }
         }
 
-        async function loadTasks() {
+async function loadTasks() {
             const feed = document.getElementById('task-feed');
 
             if (isInitialHomeLoad) feed.innerHTML = getSkeletonHTML(4);
@@ -847,12 +847,10 @@
                 const res = await fetch(`${API_URL}/tasks`);
                 const allTasks = await res.json();
 
-                // Get local arrays of tasks to hide
                 let publicTasks = allTasks.filter(t => t.postedBy !== myPhone);
                 const droppedTasks = JSON.parse(localStorage.getItem('dropped_tasks') || "[]");
-                const dismissedTasks = JSON.parse(localStorage.getItem('dismissed_tasks') || "[]"); // NEW
-
-                // Filter out dropped AND dismissed tasks
+                const dismissedTasks = JSON.parse(localStorage.getItem('dismissed_tasks') || "[]");
+                
                 publicTasks = publicTasks.filter(t => !droppedTasks.includes(t._id) && !dismissedTasks.includes(t._id));
 
                 if (isInitialHomeLoad) {
@@ -868,6 +866,9 @@
                     feed.innerHTML = publicTasks.map((task, index) => {
                         const isNew = !existingCardIds.has(task._id.toString());
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
+
+                        // Fallback in case your database doesn't pass the name down with the task object
+                        const posterName = task.posterName || "Neighbor";
 
                         return `
                         <div class="task-card" id="feed-card-${task._id}" style="${animStyle}">
@@ -888,9 +889,15 @@
                                 </div>
                             </div>
                             
-                            <p class="task-desc" style="margin-top: 12px;">${task.description}</p>
+                            <p class="task-desc" style="margin-top: 12px; margin-bottom: 12px;">${task.description}</p>
+                            
+                            <div style="background: #f5f5f5; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; border-left: 3px solid #FF5722;">
+                                <p style="margin: 0; font-size: 0.9rem; font-weight: 600; color: #333;">👤 ${posterName}</p>
+                                <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #666;">📞 +91 ${task.postedBy}</p>
+                            </div>
+                            
                             <p class="task-desc" style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                                Reward: ₹${task.reward} | <span class="status-badge status-${task.status}">${task.status}</span>
+                                <span class="status-badge status-${task.status}">${task.status}</span>
                             </p>
                             <div class="task-bottom" style="justify-content: flex-end;">
                                 <button class="accept-btn" onclick="acceptTask('${task._id}')" style="width: 100%;">I can do it</button>
@@ -901,7 +908,6 @@
                 }
             } catch (err) { feed.innerHTML = `<p style="text-align:center; color:red;">Failed to load tasks.</p>`; }
         }
-
         async function loadMyTasks() {
             const reqFeed = document.getElementById('my-requests-feed');
             const jobsFeed = document.getElementById('my-jobs-feed');
