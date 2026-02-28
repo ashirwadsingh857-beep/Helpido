@@ -785,11 +785,12 @@
                     }
                 });
 
-                // NEW: Listen for the "Task Completed" notification from the poster
+               // NEW: Listen for the "Task Completed" notification from the poster
                 globalSocket.on('taskCompletedNotification', (data) => {
                     showAppNotification('🎉', data.title, data.desc, () => {
-                        switchTab('tasks');
+                        switchTab('profile'); // Switch to profile so they can see their new point
                     });
+                    loadProfile(); // Silently refresh their profile data to show the +1 Helps
                 });
 
                 globalSocket.on('userTyping', (data) => {
@@ -1291,8 +1292,8 @@
             }, 350);
         }
 
-        function completeTask(taskId, helperPhone) {
-            showConfirm("Mark as Done?", "Are you sure this task is completed? It will be permanently removed from the database.", "Confirm ✅", async () => {
+function completeTask(taskId, helperPhone) {
+            showConfirm("Mark as Done?", "Did the helper complete this task? It will be permanently removed from the database.", "Confirm ✅", async () => {
                 const card = document.getElementById(`req-card-${taskId}`);
                 if (card) card.classList.add('slide-out-left');
 
@@ -1306,9 +1307,11 @@
 
                         if (res.ok) {
                             showToast("Task completed and wiped!");
+                            
+                            // 1. Instantly destroy the HTML element
                             if (card) card.remove();
                             
-                            // Refresh tabs to clear any empty states
+                            // 2. Fetch fresh data (it won't exist anymore!)
                             loadTasks();
                             loadMyTasks();
                         } else {
@@ -1322,7 +1325,6 @@
                 }, 350);
             });
         }
-
         function deleteMyTask(taskId) {
             showConfirm("Delete Request?", "Are you sure you want to permanently wipe this request from the database?", "Delete", () => {
                 const card = document.getElementById(`req-card-${taskId}`);

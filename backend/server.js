@@ -257,6 +257,7 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Live Server running on port ${PORT}`));
 
 // --- MARK TASK AS DONE (Wipe from DB & Notify Helper) ---
+// --- MARK TASK AS DONE (Wipe from DB & Notify Helper) ---
 app.post('/api/tasks/complete', async (req, res) => {
     try {
         const { taskId, helperPhone } = req.body;
@@ -266,17 +267,24 @@ app.post('/api/tasks/complete', async (req, res) => {
 
         const taskTitle = task.title;
 
-        // 1. Completely wipe the task and its associated chats from the database
+        // 1. Give the helper their +1 point!
+        await User.findOneAndUpdate(
+            { phone: helperPhone },
+            { $inc: { helpsCount: 1 } },
+            { new: true, setDefaultsOnInsert: true }
+        );
+
+        // 2. Completely wipe the task and its associated chats from the database
         await Task.findByIdAndDelete(taskId);
         await Message.deleteMany({ taskId: taskId });
 
-        // 2. Tell ALL phones to instantly remove this card from their UI
+        // 3. Tell ALL phones to instantly remove this card from their UI
         io.emit('taskRemoved', taskId);
 
-        // 3. Send a direct, private Push Notification to the Helper's phone
+        // 4. Send a direct, private Push Notification to the Helper's phone
         io.to(helperPhone).emit('taskCompletedNotification', {
             title: 'Task Completed! 🎉',
-            desc: `The poster marked "${taskTitle}" as done. Great job!`
+            desc: `The poster marked "${taskTitle}" as done. +1 Help Point!`
         });
 
         res.json({ message: "Task completely wiped and helper notified!" });
