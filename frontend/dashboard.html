@@ -611,9 +611,14 @@
                     </div>
 
                     <button id="notif-btn" class="btn"
-                        style="background-color: #4CAF50; margin-bottom: 16px; display: none;"
-                        onclick="subscribeToPush()">🔔 Enable Notifications</button> <button class="logout-btn"
-                        onclick="logout()">Log Out</button>
+                        style="background-color: #4CAF50; margin-bottom: 12px; display: none;"
+                        onclick="subscribeToPush()">🔔 Enable Notifications</button>
+
+                    <button id="location-btn" class="btn"
+                        style="background-color: #2196F3; margin-bottom: 16px; display: none;"
+                        onclick="requestLocationPermission()">📍 Enable Location</button>
+
+                    <button class="logout-btn" onclick="logout()">Log Out</button>
                 </div>
             </div>
         </section>
@@ -776,6 +781,19 @@
                 }
                 loadTasks();
                 initScrollAnimation();
+
+                // 2. Location Button Check
+                if ('permissions' in navigator) {
+                    navigator.permissions.query({ name: 'geolocation' }).then(function(result) {
+                        if (result.state !== 'granted') {
+                            const locBtn = document.getElementById('location-btn');
+                            if (locBtn) locBtn.style.display = 'inline-block';
+                        } else {
+                            // If they already granted it in the past, fetch it silently
+                            getUserLocationSilently(); 
+                        }
+                    });
+                }
 
                 // Show notification button if they haven't allowed it yet
                 if ('Notification' in window && Notification.permission !== 'granted') {
@@ -1803,6 +1821,48 @@
             showToast("Task restored to Home feed.");
         }
 
+        // --- NEW: LOCATION PERMISSION LOGIC ---
+        function getUserLocationSilently() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLat = position.coords.latitude;
+                        userLng = position.coords.longitude;
+                        console.log("📍 Location fetched silently.");
+                    },
+                    (err) => { console.warn("Silent location fetch failed", err); },
+                    { enableHighAccuracy: true }
+                );
+            }
+        }
+
+        function requestLocationPermission() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLat = position.coords.latitude;
+                        userLng = position.coords.longitude;
+                        
+                        showToast("Location access granted!", "success");
+                        
+                        // Hide the button permanently
+                        const locBtn = document.getElementById('location-btn');
+                        if (locBtn) locBtn.style.display = 'none';
+                        
+                        // If they are on the home tab, refresh tasks with the new location!
+                        if (activeTab === 'home') loadTasks(); 
+                    },
+                    (error) => {
+                        console.warn("Location denied or unavailable", error);
+                        showToast("Please allow location in browser settings!", "error");
+                    },
+                    { enableHighAccuracy: true }
+                );
+            } else {
+                showToast("Geolocation is not supported by this browser.", "error");
+            }
+        }
+
         // --- NEW: PUSH NOTIFICATION LOGIC ---
         async function subscribeToPush() {
             if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -1867,11 +1927,11 @@
         function updateRadius() {
             const select = document.getElementById('radius-filter');
             currentRadius = parseFloat(select.value);
-            
+
             showToast(`Filtering tasks within ${currentRadius < 1 ? currentRadius * 1000 + ' m' : currentRadius + ' km'}`);
-            
+
             // Reload the feed. (We will make this actually filter the DB in Phase 3!)
-            loadTasks(); 
+            loadTasks();
         }
     </script>
 </body>
