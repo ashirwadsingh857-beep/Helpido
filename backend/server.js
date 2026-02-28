@@ -5,6 +5,18 @@ const cors = require("cors");
 require("dotenv").config();
 const Message = require("./models/Message.js");
 
+// --- NEW: WEB PUSH SETUP ---
+const webpush = require("web-push");
+
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+    webpush.setVapidDetails(
+        process.env.VAPID_EMAIL || 'mailto:test@test.com',
+        process.env.VAPID_PUBLIC_KEY,
+        process.env.VAPID_PRIVATE_KEY
+    );
+} else {
+    console.warn("⚠️ VAPID keys are missing! Push notifications will not work.");
+}
 // --- NEW: WEBSOCKET IMPORTS ---
 const http = require("http");
 const { Server } = require("socket.io");
@@ -93,6 +105,21 @@ app.post('/api/signup', async (req, res) => {
         res.status(201).json({ message: "Account created! You can now login." });
     } catch (err) {
         res.status(400).json({ message: `DB Error: ${err.message}` });
+    }
+});
+
+// --- NEW ROUTE: Save Android Push Subscription ---
+app.post('/api/subscribe', async (req, res) => {
+    const { phone, subscription } = req.body;
+    try {
+        await User.findOneAndUpdate(
+            { phone: phone },
+            { $set: { pushSubscription: subscription } }
+        );
+        res.status(201).json({ message: "Device registered for push notifications!" });
+    } catch (err) {
+        console.error("Subscription Error:", err);
+        res.status(500).json({ error: "Failed to save push subscription." });
     }
 });
 
