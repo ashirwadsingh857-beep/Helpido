@@ -561,35 +561,18 @@
                 </header>
                 <div class="task-card"
                     style="text-align: center; padding: 30px 20px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                    <div class="task-card"
-                        style="text-align: center; padding: 30px 20px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                        <h2 id="profile-name" style="margin-bottom: 5px; color: var(--text-dark);">Loading...</h2>
-
-                        <div id="profile-helps-badge"
-                            style="display: inline-block; background-color: #FFF3E0; color: #FF5722; padding: 4px 12px; border-radius: 12px; font-weight: bold; font-size: 0.85rem; margin-bottom: 15px;">
-                            ★ 0 Helps
-                        </div>
-
-                        <p id="profile-phone" style="color: var(--text-muted); margin-bottom: 20px;">...</p>
-                        <div id="profile-helps-badge"
-                            style="display: inline-block; background-color: #FFF3E0; color: #FF5722; padding: 4px 12px; border-radius: 12px; font-weight: bold; font-size: 0.85rem; margin-bottom: 15px;">
-                            ★ 0 Helps
-                        </div>
-
-                        <p id="profile-phone" style="color: var(--text-muted); margin-bottom: 20px;">...</p>
-                        <p id="profile-phone" style="color: var(--text-muted); margin-bottom: 20px;">...</p>
-                        <div
-                            style="background-color: var(--bg-light); padding: 16px; border-radius: 12px; text-align: left; margin-bottom: 24px;">
-                            <p
-                                style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">
-                                Home Address</p>
-                            <p id="profile-address"
-                                style="color: var(--text-dark); line-height: 1.4; font-weight: 500;">...
-                            </p>
-                        </div>
-                        <button class="logout-btn" onclick="logout()">Log Out</button>
+                    <h2 id="profile-name" style="margin-bottom: 5px; color: var(--text-dark);">Loading...</h2>
+                    <p id="profile-phone" style="color: var(--text-muted); margin-bottom: 20px;">...</p>
+                    <div
+                        style="background-color: var(--bg-light); padding: 16px; border-radius: 12px; text-align: left; margin-bottom: 24px;">
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">
+                            Home Address</p>
+                        <p id="profile-address" style="color: var(--text-dark); line-height: 1.4; font-weight: 500;">...
+                        </p>
                     </div>
+                    <button class="logout-btn" onclick="logout()">Log Out</button>
                 </div>
+            </div>
         </section>
     </main>
 
@@ -833,8 +816,7 @@
 
         async function loadProfile() {
             try {
-                // Added cache-busting timestamp so profile updates instantly
-                const res = await fetch(`${API_URL}/users/${myPhone}?t=${Date.now()}`);
+                const res = await fetch(`${API_URL}/users/${myPhone}`);
                 if (res.ok) {
                     const user = await res.json();
                     const firstName = user.name.split(' ')[0];
@@ -846,47 +828,15 @@
                     document.getElementById('greeting-name').innerText = `Hi, ${firstName} 👋`;
                     document.getElementById('home-address').innerText = `📍 ${user.address}`;
 
-                    // SAFE Badge Update
-                    const helps = user.helpsCount || 0;
-                    const badge = document.getElementById('profile-helps-badge');
-                    if (badge) badge.innerText = `★ ${helps} Helps`;
-
                     if (user.availability) { currentStatus = user.availability; updateStatusUI(); }
+
+                    setTimeout(() => {
+                        document.getElementById('splash-screen').classList.add('hide');
+                        document.getElementById('main-dash').classList.add('unblur');
+                    }, 800);
                 }
-            } catch (err) {
-                console.error("Profile load failed", err);
-            } finally {
-                // ALWAYS hide the splash screen, no matter what happens!
-                setTimeout(() => {
-                    const splash = document.getElementById('splash-screen');
-                    const main = document.getElementById('main-dash');
-                    if (splash) splash.classList.add('hide');
-                    if (main) main.classList.add('unblur');
-                }, 800);
-            }
+            } catch (err) { console.error("Profile load failed"); }
         }
-        try {
-            const res = await fetch(`${API_URL}/users/${myPhone}`);
-            if (res.ok) {
-                const user = await res.json();
-                const firstName = user.name.split(' ')[0];
-
-                document.getElementById('splash-greeting').innerText = `Hi, ${firstName} 👋`;
-                document.getElementById('profile-name').innerText = user.name;
-                document.getElementById('profile-phone').innerText = "+91 " + user.phone;
-                document.getElementById('profile-address').innerText = user.address;
-                document.getElementById('greeting-name').innerText = `Hi, ${firstName} 👋`;
-                document.getElementById('home-address').innerText = `📍 ${user.address}`;
-
-                if (user.availability) { currentStatus = user.availability; updateStatusUI(); }
-
-                setTimeout(() => {
-                    document.getElementById('splash-screen').classList.add('hide');
-                    document.getElementById('main-dash').classList.add('unblur');
-                }, 800);
-            }
-        } catch (err) { console.error("Profile load failed"); }
-
 
         // NEW: Global cache to securely store names and prevent API spam
         const userCache = {};
@@ -897,13 +847,13 @@
             if (isInitialHomeLoad) feed.innerHTML = getSkeletonHTML(4);
 
             try {
-                // CRITICAL FIX: Added cache-busting timestamp here as well
-                const res = await fetch(`${API_URL}/tasks?t=${Date.now()}`);
+                const res = await fetch(`${API_URL}/tasks`);
                 const allTasks = await res.json();
 
                 let publicTasks = allTasks.filter(t => t.postedBy !== myPhone);
                 const droppedTasks = JSON.parse(localStorage.getItem('dropped_tasks') || "[]");
-                // ... rest of code stays exactly the same
+                const dismissedTasks = JSON.parse(localStorage.getItem('dismissed_tasks') || "[]");
+
                 publicTasks = publicTasks.filter(t => !droppedTasks.includes(t._id) && !dismissedTasks.includes(t._id));
 
                 if (isInitialHomeLoad) {
@@ -955,15 +905,14 @@
                         `;
                     }).join('');
 
-                    // Dynamically fetch and replace real names WITH Helps Count!
+                    // Dynamically fetch and replace real names
                     publicTasks.forEach(async (task) => {
                         const nameEl = document.getElementById(`poster-name-${task._id}`);
                         if (!nameEl) return;
 
                         // Pull from fast cache if already fetched
                         if (userCache[task.postedBy]) {
-                            const user = userCache[task.postedBy];
-                            nameEl.innerHTML = `👤 ${user.name} <span style="color:#FF5722; font-size:0.8rem; margin-left:5px;">(★ ${user.helps} Helps)</span>`;
+                            nameEl.innerText = `👤 ${userCache[task.postedBy]}`;
                             return;
                         }
 
@@ -972,10 +921,8 @@
                             const userRes = await fetch(`${API_URL}/users/${task.postedBy}`);
                             if (userRes.ok) {
                                 const userData = await userRes.json();
-                                const helps = userData.helpsCount || 0; // Default to 0 if new
-
-                                userCache[task.postedBy] = { name: userData.name, helps: helps };
-                                nameEl.innerHTML = `👤 ${userData.name} <span style="color:#FF5722; font-size:0.8rem; margin-left:5px;">(★ ${helps} Helps)</span>`;
+                                userCache[task.postedBy] = userData.name;
+                                nameEl.innerText = `👤 ${userData.name}`;
                             } else {
                                 nameEl.innerText = `👤 Neighbor`;
                             }
@@ -985,8 +932,7 @@
                     });
                 }
             } catch (err) { feed.innerHTML = `<p style="text-align:center; color:red;">Failed to load tasks.</p>`; }
-        }
-        async function loadMyTasks() {
+        } async function loadMyTasks() {
             const reqFeed = document.getElementById('my-requests-feed');
             const jobsFeed = document.getElementById('my-jobs-feed');
             const reqHeader = reqFeed.previousElementSibling;
@@ -1000,19 +946,15 @@
             }
 
             try {
-                // CRITICAL FIX: Added cache-busting timestamp to bypass stale Service Worker data
-                const res = await fetch(`${API_URL}/tasks/my-tasks?phone=${myPhone}&t=${Date.now()}`);
+                const res = await fetch(`${API_URL}/tasks/my-tasks?phone=${myPhone}`);
                 const data = await res.json();
-
-                // Aggressively filter out 'completed' tasks so they never render!
-                data.myRequests = data.myRequests.filter(t => t.status !== 'completed');
-                data.myJobs = data.myJobs.filter(t => t.status !== 'completed');
 
                 if (isInitialTasksLoad) {
                     await new Promise(resolve => setTimeout(resolve, 1500));
                     isInitialTasksLoad = false;
                 }
 
+                // OVERALL EMPTY STATE
                 if (data.myRequests.length === 0 && data.myJobs.length === 0) {
                     reqHeader.style.display = 'none';
                     jobsHeader.style.display = 'none';
@@ -1028,32 +970,10 @@
                 } else {
                     reqHeader.style.display = 'block';
                     const existingReqIds = new Set(Array.from(reqFeed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('req-card-', '')));
-
                     reqFeed.innerHTML = data.myRequests.map((task, index) => {
                         const isNew = !existingReqIds.has(task._id.toString());
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
-
-                        let actionButtons = '';
-                        if (task.status === 'accepted') {
-                            actionButtons = `
-                                <div style="display: flex; gap: 8px; margin-top: 12px;">
-                                    <button class="btn" style="flex: 1; margin: 0; background-color: #2196F3;" onclick="openChat('${task._id}', '${task.helperPhone}')">💬 Chat</button>
-                                    <button class="btn" style="flex: 1; margin: 0; background-color: #4CAF50;" onclick="completeTask('${task._id}', '${task.helperPhone}')">✅ Mark Done</button>
-                                </div>
-                                <p id="helper-info-${task._id}" style="font-size: 0.8rem; color: #666; margin-top: 8px; text-align: center;">Fetching helper stats...</p>
-                            `;
-
-                            fetch(`${API_URL}/users/${task.helperPhone}`).then(r => r.json()).then(h => {
-                                const el = document.getElementById(`helper-info-${task._id}`);
-                                if (el) el.innerHTML = `Helper: <strong>${h.name}</strong> <span style="color:#FF5722;">(★ ${h.helpsCount || 0} Helps)</span>`;
-                            }).catch(() => { });
-                        } else {
-                            actionButtons = `
-                                <div style="margin-bottom: 8px;">
-                                    <span class="status-badge status-${task.status}">${task.status}</span>
-                                </div>
-                            `;
-                        }
+                        const chatBtn = task.status === 'accepted' ? `<button class="btn" style="width:100%; margin-top:12px; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.helperPhone}')">💬 Chat</button>` : '';
 
                         return `
                         <div class="task-card" id="req-card-${task._id}" style="border-left: 4px solid #FF5722; ${animStyle}">
@@ -1064,7 +984,10 @@
                                     <button class="dropdown-item danger" onclick="deleteMyTask('${task._id}')">Delete Request</button>
                                 </div>
                             </div>
-                            ${actionButtons}
+                            <div style="margin-bottom: 8px;">
+                                <span class="status-badge status-${task.status}">${task.status}</span>
+                            </div>
+                            ${chatBtn}
                         </div>
                         `;
                     }).join('');
@@ -1099,39 +1022,6 @@
                     }).join('');
                 }
             } catch (err) { reqFeed.innerHTML = `<p style="text-align:center; color:red;">Error loading tasks.</p>`; }
-        }
-
-        function completeTask(taskId, helperPhone) {
-            showConfirm("Mark as Done?", "Did the helper complete this task? They will receive a +1 to their reputation score!", "Confirm ✅", async () => {
-                const card = document.getElementById(`req-card-${taskId}`);
-                if (card) card.classList.add('slide-out-left');
-
-                setTimeout(async () => {
-                    try {
-                        const res = await fetch(`${API_URL}/tasks/complete`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ taskId, helperPhone })
-                        });
-
-                        if (res.ok) {
-                            showToast("Task Completed! Helper rewarded.");
-
-                            // 🛑 SECURE DOM WIPE
-                            if (card) card.remove();
-                            document.getElementById('my-requests-feed').innerHTML = getSkeletonHTML(1);
-
-                            loadMyTasks();
-                        } else {
-                            if (card) card.classList.remove('slide-out-left');
-                            showToast("Failed to complete task.", "error");
-                        }
-                    } catch (err) {
-                        showToast("Network Error", "error");
-                        if (card) card.classList.remove('slide-out-left');
-                    }
-                }, 350);
-            });
         }
 
         /* =========================================
@@ -1689,13 +1579,13 @@
             document.getElementById('history-modal').classList.add('hidden');
         }
 
-        function clearHistory() {
+function clearHistory() {
             showConfirm("Clear History?", "Are you sure you want to wipe your local task log? This cannot be undone.", "Clear", () => {
                 localStorage.removeItem('helpido_history');
 
                 const deletedFeed = document.getElementById('history-deleted-feed');
                 const droppedFeed = document.getElementById('history-dropped-feed');
-                const dismissedFeed = document.getElementById('history-dismissed-feed');
+                const dismissedFeed = document.getElementById('history-dismissed-feed'); 
 
                 deletedFeed.previousElementSibling.style.display = 'none';
                 droppedFeed.previousElementSibling.style.display = 'none';
@@ -1708,112 +1598,81 @@
                 document.getElementById('clear-history-btn').style.display = 'none';
                 showToast("Task history cleared!");
             });
-        } function reuploadTask(taskId, title) {
-            closeHistory();
+        }            function reuploadTask(taskId, title) {
+                closeHistory();
 
-            let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
-            history = history.filter(t => String(t.id) !== String(taskId));
-            localStorage.setItem('helpido_history', JSON.stringify(history));
+                let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
+                history = history.filter(t => String(t.id) !== String(taskId));
+                localStorage.setItem('helpido_history', JSON.stringify(history));
 
-            openModal();
-            document.getElementById('task-title').value = title;
-            showToast("Fill in the details to repost!", "success");
-        }
-        async function reacceptTask(taskId) {
-            closeHistory();
-            showToast("Re-accepting task...");
-
-            try {
-                // Ping the server FIRST
-                const res = await fetch(`${API_URL}/tasks/accept`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ taskId, helperPhone: myPhone })
-                });
-
-                if (res.ok) {
-                    // Only remove from local blacklists if server confirms
-                    let droppedTasksList = JSON.parse(localStorage.getItem('dropped_tasks') || "[]");
-                    droppedTasksList = droppedTasksList.filter(id => String(id) !== String(taskId));
-                    localStorage.setItem('dropped_tasks', JSON.stringify(droppedTasksList));
-
-                    let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
-                    history = history.filter(t => String(t.id) !== String(taskId));
-                    localStorage.setItem('helpido_history', JSON.stringify(history));
-
-                    showToast("Task Re-accepted! Check 'Tasks' tab.");
-
-                    const reqFeed = document.getElementById('my-jobs-feed');
-                    if (reqFeed) reqFeed.innerHTML = ''; // Force HTML redraw
-
-                    loadTasks();
-                    loadMyTasks();
-                    switchTab('tasks');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                } else {
-                    // Bulletproof error handler in case server rejects
-                    let errorMessage = "Task is no longer available";
-                    try {
-                        const data = await res.json();
-                        if (data.message) errorMessage = data.message;
-                    } catch (e) { } // Fallback if server sends plain text
-                    showToast(errorMessage, "error");
-                }
-            } catch (err) {
-                showToast("Network Error", "error");
+                openModal();
+                document.getElementById('task-title').value = title;
+                showToast("Fill in the details to repost!", "success");
             }
-        } function restoreDismissedTask(taskId) {
-            closeHistory();
+            async function reacceptTask(taskId) {
+                closeHistory();
+                showToast("Re-accepting task...");
 
-            let dismissedTasksList = JSON.parse(localStorage.getItem('dismissed_tasks') || "[]");
-            dismissedTasksList = dismissedTasksList.filter(id => String(id) !== String(taskId));
-            localStorage.setItem('dismissed_tasks', JSON.stringify(dismissedTasksList));
+                try {
+                    // Ping the server FIRST
+                    const res = await fetch(`${API_URL}/tasks/accept`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ taskId, helperPhone: myPhone })
+                    });
 
-            let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
-            history = history.filter(t => String(t.id) !== String(taskId));
-            localStorage.setItem('helpido_history', JSON.stringify(history));
+                    if (res.ok) {
+                        // Only remove from local blacklists if server confirms
+                        let droppedTasksList = JSON.parse(localStorage.getItem('dropped_tasks') || "[]");
+                        droppedTasksList = droppedTasksList.filter(id => String(id) !== String(taskId));
+                        localStorage.setItem('dropped_tasks', JSON.stringify(droppedTasksList));
 
-            const feed = document.getElementById('task-feed');
-            if (feed) feed.innerHTML = '';
+                        let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
+                        history = history.filter(t => String(t.id) !== String(taskId));
+                        localStorage.setItem('helpido_history', JSON.stringify(history));
 
-            if (activeTab !== 'home') {
-                switchTab('home');
-            }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        showToast("Task Re-accepted! Check 'Tasks' tab.");
 
-            loadTasks();
-            showToast("Task restored to Home feed.");
-        }
+                        const reqFeed = document.getElementById('my-jobs-feed');
+                        if (reqFeed) reqFeed.innerHTML = ''; // Force HTML redraw
 
-        function completeTask(taskId, helperPhone) {
-            showConfirm("Mark as Done?", "Did the helper complete this task? They will receive a +1 to their reputation score!", "Confirm ✅", async () => {
-                const card = document.getElementById(`req-card-${taskId}`);
-                if (card) card.classList.add('slide-out-left');
-
-                setTimeout(async () => {
-                    try {
-                        const res = await fetch(`${API_URL}/tasks/complete`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ taskId, helperPhone })
-                        });
-
-                        if (res.ok) {
-                            showToast("Task Completed! Helper rewarded.");
-
-                            // Refresh feeds to remove the completed task from the active screen
-                            loadTasks();
-                            loadMyTasks();
-                        } else {
-                            if (card) card.classList.remove('slide-out-left');
-                            showToast("Failed to complete task.", "error");
-                        }
-                    } catch (err) {
-                        showToast("Network Error", "error");
-                        if (card) card.classList.remove('slide-out-left');
+                        loadTasks();
+                        loadMyTasks();
+                        switchTab('tasks');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } else {
+                        // Bulletproof error handler in case server rejects
+                        let errorMessage = "Task is no longer available";
+                        try {
+                            const data = await res.json();
+                            if (data.message) errorMessage = data.message;
+                        } catch (e) { } // Fallback if server sends plain text
+                        showToast(errorMessage, "error");
                     }
-                }, 350);
-            });
-        }
+                } catch (err) {
+                    showToast("Network Error", "error");
+                }
+            } function restoreDismissedTask(taskId) {
+                closeHistory();
+
+                let dismissedTasksList = JSON.parse(localStorage.getItem('dismissed_tasks') || "[]");
+                dismissedTasksList = dismissedTasksList.filter(id => String(id) !== String(taskId));
+                localStorage.setItem('dismissed_tasks', JSON.stringify(dismissedTasksList));
+
+                let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
+                history = history.filter(t => String(t.id) !== String(taskId));
+                localStorage.setItem('helpido_history', JSON.stringify(history));
+
+                const feed = document.getElementById('task-feed');
+                if (feed) feed.innerHTML = '';
+
+                if (activeTab !== 'home') {
+                    switchTab('home');
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                loadTasks();
+                showToast("Task restored to Home feed.");
+            }
     </script>
 </body>
 
