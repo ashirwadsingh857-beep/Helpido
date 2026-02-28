@@ -67,8 +67,29 @@ io.on('connection', (socket) => {
             io.to(data.taskId).emit('receiveMessage', newMsg); 
             
             // Sends a private push notification ONLY to the person receiving the text
+           // Sends an IN-APP pop-up if they have the app open
             if (data.targetPhone) {
                 io.to(data.targetPhone).emit('notifyMessage', newMsg);
+
+                // --- NEW: FIRE NATIVE ANDROID PUSH NOTIFICATION ---
+                try {
+                    const targetUser = await User.findOne({ phone: data.targetPhone });
+                    if (targetUser && targetUser.pushSubscription) {
+                        const senderUser = await User.findOne({ phone: data.senderPhone });
+                        const senderName = senderUser ? senderUser.name.split(' ')[0] : 'Someone';
+                        
+                        // Create the text that will show on the lock screen
+                        const payload = JSON.stringify({
+                            title: `New message from ${senderName}`,
+                            desc: data.text
+                        });
+
+                        // Send it to Google's push servers!
+                        await webpush.sendNotification(targetUser.pushSubscription, payload);
+                    }
+                } catch (pushErr) {
+                    console.error("Native push failed (maybe user revoked permission):", pushErr.statusCode);
+                }
             }
         } catch(err) { console.error("Message save error", err); }
     });
