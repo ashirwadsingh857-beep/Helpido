@@ -905,14 +905,15 @@
                         `;
                     }).join('');
 
-                    // Dynamically fetch and replace real names
+                   // Dynamically fetch and replace real names WITH Helps Count!
                     publicTasks.forEach(async (task) => {
                         const nameEl = document.getElementById(`poster-name-${task._id}`);
                         if (!nameEl) return;
 
                         // Pull from fast cache if already fetched
                         if (userCache[task.postedBy]) {
-                            nameEl.innerText = `👤 ${userCache[task.postedBy]}`;
+                            const user = userCache[task.postedBy];
+                            nameEl.innerHTML = `👤 ${user.name} <span style="color:#FF5722; font-size:0.8rem; margin-left:5px;">(★ ${user.helps} Helps)</span>`;
                             return;
                         }
 
@@ -921,13 +922,15 @@
                             const userRes = await fetch(`${API_URL}/users/${task.postedBy}`);
                             if (userRes.ok) {
                                 const userData = await userRes.json();
-                                userCache[task.postedBy] = userData.name;
-                                nameEl.innerText = `👤 ${userData.name}`;
+                                const helps = userData.helpsCount || 0; // Default to 0 if new
+                                
+                                userCache[task.postedBy] = { name: userData.name, helps: helps }; 
+                                nameEl.innerHTML = `👤 ${userData.name} <span style="color:#FF5722; font-size:0.8rem; margin-left:5px;">(★ ${helps} Helps)</span>`;
                             } else {
-                                nameEl.innerText = `👤 Neighbor`;
+                                nameEl.innerText = `👤 Neighbor`; 
                             }
                         } catch (e) {
-                            nameEl.innerText = `👤 Neighbor`;
+                            nameEl.innerText = `👤 Neighbor`; 
                         }
                     });
                 }
@@ -973,7 +976,31 @@
                     reqFeed.innerHTML = data.myRequests.map((task, index) => {
                         const isNew = !existingReqIds.has(task._id.toString());
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
-                        const chatBtn = task.status === 'accepted' ? `<button class="btn" style="width:100%; margin-top:12px; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.helperPhone}')">💬 Chat</button>` : '';
+                        // NEW: If accepted, show the "Mark Completed" button and Helper Info!
+                        let actionButtons = '';
+                        if (task.status === 'accepted') {
+                            actionButtons = `
+                                <div style="display: flex; gap: 8px; margin-top: 12px;">
+                                    <button class="btn" style="flex: 1; margin: 0; background-color: #2196F3;" onclick="openChat('${task._id}', '${task.helperPhone}')">💬 Chat</button>
+                                    <button class="btn" style="flex: 1; margin: 0; background-color: #4CAF50;" onclick="completeTask('${task._id}', '${task.helperPhone}')">✅ Mark Done</button>
+                                </div>
+                                <p id="helper-info-${task._id}" style="font-size: 0.8rem; color: #666; margin-top: 8px; text-align: center;">Fetching helper stats...</p>
+                            `;
+                            
+                            // Silently fetch Helper's name and Helps Count
+                            fetch(`${API_URL}/users/${task.helperPhone}`).then(r => r.json()).then(h => {
+                                const el = document.getElementById(`helper-info-${task._id}`);
+                                if(el) el.innerHTML = `Helper: <strong>${h.name}</strong> <span style="color:#FF5722;">(★ ${h.helpsCount || 0} Helps)</span>`;
+                            }).catch(()=>{});
+
+                        } else {
+                            // If still open, just show regular dropdown options
+                            actionButtons = `
+                                <div style="margin-bottom: 8px;">
+                                    <span class="status-badge status-${task.status}">${task.status}</span>
+                                </div>
+                            `;
+                        }
 
                         return `
                         <div class="task-card" id="req-card-${task._id}" style="border-left: 4px solid #FF5722; ${animStyle}">
@@ -984,10 +1011,7 @@
                                     <button class="dropdown-item danger" onclick="deleteMyTask('${task._id}')">Delete Request</button>
                                 </div>
                             </div>
-                            <div style="margin-bottom: 8px;">
-                                <span class="status-badge status-${task.status}">${task.status}</span>
-                            </div>
-                            ${chatBtn}
+                            ${actionButtons}
                         </div>
                         `;
                     }).join('');
@@ -1673,6 +1697,37 @@ function clearHistory() {
                 loadTasks();
                 showToast("Task restored to Home feed.");
             }
+
+            function completeTask(taskId, helperPhone) {
+            showConfirm("Mark as Done?", "Did the helper complete this task? They will receive a +1 to their reputation score!", "Confirm ✅", async () => {
+                const card = document.getElementById(`req-card-${taskId}`);
+                if (card) card.classList.add('slide-out-left');
+
+                setTimeout(async () => {
+                    try {
+                        const res = await fetch(`${API_URL}/tasks/complete`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ taskId, helperPhone })
+                        });
+
+                        if (res.ok) {
+                            showToast("Task Completed! Helper rewarded.");
+                            
+                            // Refresh feeds to remove the completed task from the active screen
+                            loadTasks();
+                            loadMyTasks();
+                        } else {
+                            if (card) card.classList.remove('slide-out-left');
+                            showToast("Failed to complete task.", "error");
+                        }
+                    } catch (err) {
+                        showToast("Network Error", "error");
+                        if (card) card.classList.remove('slide-out-left');
+                    }
+                }, 350);
+            });
+        }
     </script>
 </body>
 

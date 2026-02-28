@@ -255,3 +255,25 @@ app.use((req, res) => { res.sendFile(path.join(frontendPath, 'index.html')); });
 // NEW: Use `server.listen` instead of `app.listen` to activate WebSockets
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Live Server running on port ${PORT}`));
+
+// NEW BACKEND ROUTE: Mark Task as Completed & Reward Helper
+app.post('/api/tasks/complete', async (req, res) => {
+    try {
+        const { taskId, helperPhone } = req.body;
+
+        // 1. Mark task as completed
+        await Task.findByIdAndUpdate(taskId, { status: 'completed' });
+
+        // 2. Add +1 "Helps" to the person who did the job
+        // (Assuming your User schema allows helpsCount. If not, mongoose will just create it)
+        await User.findOneAndUpdate(
+            { phone: helperPhone },
+            { $inc: { helpsCount: 1 } },
+            { new: true, setDefaultsOnInsert: true }
+        );
+
+        res.json({ message: "Task completed and helper rewarded!" });
+    } catch (err) {
+        res.status(500).json({ error: "Could not complete task" });
+    }
+});
