@@ -574,7 +574,6 @@
                     <button id="notif-btn" class="btn" style="background-color: #4CAF50; margin-bottom: 16px; display: none;" onclick="subscribeToPush()">🔔 Enable Notifications</button>
 
                     <button class="logout-btn" onclick="logout()">Log Out</button>
-                    <button class="logout-btn" onclick="logout()">Log Out</button>
                 </div>
             </div>
         </section>
@@ -684,9 +683,12 @@
     </nav>
     <div id="toast" class="toast"></div>
 
-    <script>
-       // --- NEW: PUSH NOTIFICATION SETUP ---
-        // ⚠️ REPLACE THIS STRING WITH YOUR ACTUAL PUBLIC KEY FROM PHASE 1
+   <script>
+        // CRITICAL FIX: Restored the missing core variables!
+        const API_URL = 'https://helpido.onrender.com/api';
+        const myPhone = localStorage.getItem('helpido_phone');
+
+        // --- NEW: PUSH NOTIFICATION SETUP ---
         const PUBLIC_VAPID_KEY = 'BAqAyK807QkmEHBVi6NFEONVZwuuErlZvSd0gX4Ah0xQMTkp4J1n9ZTV9FoqODgQgk9lDD99WG2Ah-VrK69LAk4'; 
 
         // Required utility to convert the key for the browser
