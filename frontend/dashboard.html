@@ -905,6 +905,21 @@ async function loadTasks() {
                         </div>
                         `;
                     }).join('');
+                    // 2. NEW: Now that cards are drawn, silently fetch the actual names and pop them in!
+                    publicTasks.forEach(async (task) => {
+                        try {
+                            const userRes = await fetch(`${API_URL}/users/${task.postedBy}`);
+                            if (userRes.ok) {
+                                const userData = await userRes.json();
+                                const nameEl = document.getElementById(`poster-name-${task._id}`);
+                                if (nameEl) nameEl.innerText = `👤 ${userData.name}`; // Swaps "Loading name..." with the actual name
+                            }
+                        } catch (e) {
+                            const nameEl = document.getElementById(`poster-name-${task._id}`);
+                            if (nameEl) nameEl.innerText = `👤 Neighbor`; // Failsafe
+                        }
+                    });
+                }
                 }
             } catch (err) { feed.innerHTML = `<p style="text-align:center; color:red;">Failed to load tasks.</p>`; }
         }
