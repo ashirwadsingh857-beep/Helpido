@@ -538,10 +538,10 @@
 
                 <div style="display: flex; align-items: center; gap: 6px;">
                     <span style="font-size: 0.8rem; color: #757575; font-weight: 600;">Radius:</span>
-                    <select id="radius-filter" onchange="updateRadius()"
-                        style="border-radius: 8px; padding: 4px 8px; border: 1px solid #ddd; background: #fff; outline: none; font-size: 0.85rem; color: #333; font-weight: 500; cursor: pointer;">
+                  <select id="radius-filter" onchange="updateRadius()" style="border-radius: 8px; padding: 4px 8px; border: 1px solid #ddd; background: #fff; outline: none; font-size: 0.85rem; color: #333; font-weight: 500; cursor: pointer;">
+                        <option value="0.1" selected>100 m</option>
                         <option value="0.5">500 m</option>
-                        <option value="10" selected>10 km</option>
+                        <option value="10">10 km</option>
                         <option value="20">20 km</option>
                         <option value="30">30 km</option>
                         <option value="40">40 km</option>
@@ -752,8 +752,8 @@
         let isInitialHomeLoad = true;
         let isInitialTasksLoad = true;
 
-        // --- NEW: GEOSPATIAL STATE ---
-        let currentRadius = 10; // Default to 10km
+       // --- NEW: GEOSPATIAL STATE ---
+        let currentRadius = 0.1; // Default to 100 meters (0.1 km) for small societies
         let userLat = null;
         let userLng = null;
         let activeTab = 'home';
