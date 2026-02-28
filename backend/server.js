@@ -62,23 +62,24 @@ io.on('connection', (socket) => {
                 text: data.text
             });
             await newMsg.save();
-            
+
             // Updates the screen for anyone actively looking at the chat
-            io.to(data.taskId).emit('receiveMessage', newMsg); 
-            
+            io.to(data.taskId).emit('receiveMessage', newMsg);
+
             // Sends a private push notification ONLY to the person receiving the text
-           // Sends an IN-APP pop-up if they have the app open
+            // Sends an IN-APP pop-up if they have the app open
             if (data.targetPhone) {
                 io.to(data.targetPhone).emit('notifyMessage', newMsg);
 
                 // --- NEW: FIRE NATIVE ANDROID PUSH NOTIFICATION ---
                 try {
                     const targetUser = await User.findOne({ phone: data.targetPhone });
-                    if (targetUser && targetUser.pushSubscription) {
+                    // Check if they have a subscription AND haven't muted chat messages
+                    if (targetUser && targetUser.pushSubscription && targetUser.notifyChatMessages !== false) {
                         const senderUser = await User.findOne({ phone: data.senderPhone });
                         const senderName = senderUser ? senderUser.name.split(' ')[0] : 'Someone';
-                        
-                       // Create the text that will show on the lock screen
+
+                        // Create the text that will show on the lock screen
                         const payload = JSON.stringify({
                             title: `New message from ${senderName}`,
                             desc: data.text,
@@ -95,7 +96,7 @@ io.on('connection', (socket) => {
                     console.error("Native push failed (maybe user revoked permission):", pushErr.statusCode);
                 }
             }
-        } catch(err) { console.error("Message save error", err); }
+        } catch (err) { console.error("Message save error", err); }
     });
 
     socket.on('typing', (data) => {
@@ -113,7 +114,7 @@ app.get('/api/chat/:taskId', async (req, res) => {
     try {
         const messages = await Message.find({ taskId: req.params.taskId }).sort({ createdAt: 1 });
         res.json(messages);
-    } catch(err) { res.status(500).json({ message: "Error fetching chat" }); }
+    } catch (err) { res.status(500).json({ message: "Error fetching chat" }); }
 });
 
 app.use(express.static(path.join(__dirname, '../frontend')));
@@ -121,7 +122,7 @@ app.use(express.static(path.join(__dirname, '../frontend')));
 mongoose.connect(process.env.MONGO_URI)
     .then(async () => {
         console.log("MongoDB Connected");
-        try { await mongoose.connection.collection('users').dropIndex('email_1'); } catch (e) {}
+        try { await mongoose.connection.collection('users').dropIndex('email_1'); } catch (e) { }
     })
     .catch((err) => console.error("Mongo Error:", err));
 
@@ -161,7 +162,7 @@ app.post('/api/login/step1', async (req, res) => {
         if (!user) return res.status(404).json({ message: "User not found! Please sign up." });
         const otp = Math.floor(1000 + Math.random() * 9000).toString();
         await User.updateOne({ phone }, { $set: { otp } });
-        res.json({ message: "OTP generated", otp }); 
+        res.json({ message: "OTP generated", otp });
     } catch (err) { res.status(500).json({ message: "Server error" }); }
 });
 
@@ -196,6 +197,19 @@ app.post('/api/users/status', async (req, res) => {
     } catch (err) { res.status(500).json({ message: "Error updating status" }); }
 });
 
+// --- NEW ROUTE: Update Notification Preferences ---
+app.post('/api/users/notifications', async (req, res) => {
+    const { phone, type, value } = req.body;
+    try {
+        const updateField = {};
+        updateField[type] = value; // e.g., { notifyNewTasks: false }
+        await User.updateOne({ phone }, { $set: updateField });
+        res.json({ message: "Preferences updated" });
+    } catch (err) {
+        res.status(500).json({ message: "Error updating preferences" });
+    }
+});
+
 /* ---------------- TASK ROUTES ---------------- */
 app.post('/api/tasks', async (req, res) => {
     const { title, description, postedBy, reward } = req.body;
@@ -210,10 +224,11 @@ app.post('/api/tasks', async (req, res) => {
             const posterUser = await User.findOne({ phone: postedBy });
             const posterName = posterUser ? posterUser.name.split(' ')[0] : 'Someone';
 
-            // Find all users EXCEPT the poster who have a push subscription
-            const subscribedUsers = await User.find({ 
-                phone: { $ne: postedBy }, 
-                pushSubscription: { $ne: null } 
+            // Find all users EXCEPT the poster who have a push subscription AND haven't muted New Tasks
+            const subscribedUsers = await User.find({
+                phone: { $ne: postedBy },
+                pushSubscription: { $ne: null },
+                notifyNewTasks: { $ne: false }
             });
 
             const payload = JSON.stringify({
@@ -227,7 +242,7 @@ app.post('/api/tasks', async (req, res) => {
                     // Fail silently for individual expired subscriptions
                 });
             });
-            
+
             // We don't use 'await' here so the task posts instantly without waiting for Google's servers
             Promise.all(pushPromises);
 
@@ -259,12 +274,12 @@ app.post("/api/tasks/accept", async (req, res) => {
     try {
         const task = await Task.findById(taskId);
         if (task.postedBy === helperPhone) return res.status(400).json({ message: "Cannot accept your own task!" });
-        task.status = 'accepted'; 
-        task.helperPhone = helperPhone; 
+        task.status = 'accepted';
+        task.helperPhone = helperPhone;
         await task.save();
-        
+
         // Tell all other phones exactly WHICH task to animate off screen
-        io.emit('taskRemoved', taskId); 
+        io.emit('taskRemoved', taskId);
 
         // --- NEW: SEND PUSH NOTIFICATION TO POSTER ---
         try {
@@ -333,7 +348,7 @@ app.post('/api/tasks/cancel', async (req, res) => {
         }
 
         // Tell all active users to refresh their feeds so the task reappears
-        io.emit('refreshFeed'); 
+        io.emit('refreshFeed');
 
         res.json({ message: 'Task dropped, chat wiped, and returned to public feed.' });
     } catch (error) {
@@ -345,7 +360,7 @@ app.post("/api/tasks/prioritize", async (req, res) => {
     const { taskId } = req.body;
     try {
         const task = await Task.findById(taskId);
-        task.isPrioritized = !task.isPrioritized; 
+        task.isPrioritized = !task.isPrioritized;
         await task.save();
         io.emit('refreshFeed'); // Broadcast priority change
         res.json({ message: "Priority updated" });

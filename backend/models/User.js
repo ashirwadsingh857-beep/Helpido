@@ -7,8 +7,10 @@ const userSchema = new mongoose.Schema({
     otp: { type: String, default: null },
     otpExpiry: { type: Date, default: null },
     availability: { type: String, default: 'free' },
-    // NEW: Stores the specific Android device ID for push notifications
-    pushSubscription: { type: Object, default: null } 
+    pushSubscription: { type: Object, default: null },
+    // NEW: Notification Preferences (Default is ON)
+    notifyNewTasks: { type: Boolean, default: true },
+    notifyChatMessages: { type: Boolean, default: true }
 });
 
 module.exports = mongoose.model('User', userSchema);

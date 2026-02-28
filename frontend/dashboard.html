@@ -571,9 +571,35 @@
                         </p>
                     </div>
 
-                    <button id="notif-btn" class="btn" style="background-color: #4CAF50; margin-bottom: 16px; display: none;" onclick="subscribeToPush()">🔔 Enable Notifications</button>
+                    <div
+                        style="background-color: var(--bg-light); padding: 16px; border-radius: 12px; text-align: left; margin-bottom: 24px;">
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px; font-weight: 600;">
+                            Notification Preferences</p>
 
-                    <button class="logout-btn" onclick="logout()">Log Out</button>
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <span style="font-size: 0.95rem; color: #333; font-weight: 500;">New Task Alerts</span>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-new-tasks"
+                                    onchange="updateNotifPref('notifyNewTasks', this.checked)">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.95rem; color: #333; font-weight: 500;">Chat Message Alerts</span>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-chat-msgs"
+                                    onchange="updateNotifPref('notifyChatMessages', this.checked)">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button id="notif-btn" class="btn"
+                        style="background-color: #4CAF50; margin-bottom: 16px; display: none;"
+                        onclick="subscribeToPush()">🔔 Enable Notifications</button> <button class="logout-btn"
+                        onclick="logout()">Log Out</button>
                 </div>
             </div>
         </section>
@@ -683,13 +709,13 @@
     </nav>
     <div id="toast" class="toast"></div>
 
-   <script>
+    <script>
         // CRITICAL FIX: Restored the missing core variables!
         const API_URL = 'https://helpido.onrender.com/api';
         const myPhone = localStorage.getItem('helpido_phone');
 
         // --- NEW: PUSH NOTIFICATION SETUP ---
-        const PUBLIC_VAPID_KEY = 'BAqAyK807QkmEHBVi6NFEONVZwuuErlZvSd0gX4Ah0xQMTkp4J1n9ZTV9FoqODgQgk9lDD99WG2Ah-VrK69LAk4'; 
+        const PUBLIC_VAPID_KEY = 'BAqAyK807QkmEHBVi6NFEONVZwuuErlZvSd0gX4Ah0xQMTkp4J1n9ZTV9FoqODgQgk9lDD99WG2Ah-VrK69LAk4';
 
         // Required utility to convert the key for the browser
         function urlBase64ToUint8Array(base64String) {
@@ -733,7 +759,7 @@
                 initScrollAnimation();
 
                 // --- NEW: HANDLE DEEP LINKING FOR CHAT PUSH NOTIFICATIONS ---
-                
+
                 // Scenario A: App was already open (Service Worker sends a message)
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.addEventListener('message', event => {
@@ -866,7 +892,7 @@
             `).join('');
         }
 
-async function loadProfile() {
+        async function loadProfile() {
             try {
                 const res = await fetch(`${API_URL}/users/${myPhone}`);
                 if (res.ok) {
@@ -880,10 +906,13 @@ async function loadProfile() {
                     document.getElementById('greeting-name').innerText = `Hi, ${firstName} 👋`;
                     document.getElementById('home-address').innerText = `📍 ${user.address}`;
 
+                    // NEW: Set Toggle states (default to true if undefined)
+                    document.getElementById('toggle-new-tasks').checked = user.notifyNewTasks !== false;
+                    document.getElementById('toggle-chat-msgs').checked = user.notifyChatMessages !== false;
                     if (user.availability) { currentStatus = user.availability; updateStatusUI(); }
                 }
-            } catch (err) { 
-                console.error("Profile load failed", err); 
+            } catch (err) {
+                console.error("Profile load failed", err);
             } finally {
                 // CRITICAL FIX: This guarantees the loading screen ALWAYS vanishes!
                 setTimeout(() => {
@@ -1635,13 +1664,13 @@ async function loadProfile() {
             document.getElementById('history-modal').classList.add('hidden');
         }
 
-function clearHistory() {
+        function clearHistory() {
             showConfirm("Clear History?", "Are you sure you want to wipe your local task log? This cannot be undone.", "Clear", () => {
                 localStorage.removeItem('helpido_history');
 
                 const deletedFeed = document.getElementById('history-deleted-feed');
                 const droppedFeed = document.getElementById('history-dropped-feed');
-                const dismissedFeed = document.getElementById('history-dismissed-feed'); 
+                const dismissedFeed = document.getElementById('history-dismissed-feed');
 
                 deletedFeed.previousElementSibling.style.display = 'none';
                 droppedFeed.previousElementSibling.style.display = 'none';
@@ -1654,83 +1683,83 @@ function clearHistory() {
                 document.getElementById('clear-history-btn').style.display = 'none';
                 showToast("Task history cleared!");
             });
-        }            function reuploadTask(taskId, title) {
-                closeHistory();
+        } function reuploadTask(taskId, title) {
+            closeHistory();
 
-                let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
-                history = history.filter(t => String(t.id) !== String(taskId));
-                localStorage.setItem('helpido_history', JSON.stringify(history));
+            let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
+            history = history.filter(t => String(t.id) !== String(taskId));
+            localStorage.setItem('helpido_history', JSON.stringify(history));
 
-                openModal();
-                document.getElementById('task-title').value = title;
-                showToast("Fill in the details to repost!", "success");
-            }
-            async function reacceptTask(taskId) {
-                closeHistory();
-                showToast("Re-accepting task...");
+            openModal();
+            document.getElementById('task-title').value = title;
+            showToast("Fill in the details to repost!", "success");
+        }
+        async function reacceptTask(taskId) {
+            closeHistory();
+            showToast("Re-accepting task...");
 
-                try {
-                    // Ping the server FIRST
-                    const res = await fetch(`${API_URL}/tasks/accept`, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ taskId, helperPhone: myPhone })
-                    });
+            try {
+                // Ping the server FIRST
+                const res = await fetch(`${API_URL}/tasks/accept`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ taskId, helperPhone: myPhone })
+                });
 
-                    if (res.ok) {
-                        // Only remove from local blacklists if server confirms
-                        let droppedTasksList = JSON.parse(localStorage.getItem('dropped_tasks') || "[]");
-                        droppedTasksList = droppedTasksList.filter(id => String(id) !== String(taskId));
-                        localStorage.setItem('dropped_tasks', JSON.stringify(droppedTasksList));
+                if (res.ok) {
+                    // Only remove from local blacklists if server confirms
+                    let droppedTasksList = JSON.parse(localStorage.getItem('dropped_tasks') || "[]");
+                    droppedTasksList = droppedTasksList.filter(id => String(id) !== String(taskId));
+                    localStorage.setItem('dropped_tasks', JSON.stringify(droppedTasksList));
 
-                        let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
-                        history = history.filter(t => String(t.id) !== String(taskId));
-                        localStorage.setItem('helpido_history', JSON.stringify(history));
+                    let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
+                    history = history.filter(t => String(t.id) !== String(taskId));
+                    localStorage.setItem('helpido_history', JSON.stringify(history));
 
-                        showToast("Task Re-accepted! Check 'Tasks' tab.");
+                    showToast("Task Re-accepted! Check 'Tasks' tab.");
 
-                        const reqFeed = document.getElementById('my-jobs-feed');
-                        if (reqFeed) reqFeed.innerHTML = ''; // Force HTML redraw
+                    const reqFeed = document.getElementById('my-jobs-feed');
+                    if (reqFeed) reqFeed.innerHTML = ''; // Force HTML redraw
 
-                        loadTasks();
-                        loadMyTasks();
-                        switchTab('tasks');
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    } else {
-                        // Bulletproof error handler in case server rejects
-                        let errorMessage = "Task is no longer available";
-                        try {
-                            const data = await res.json();
-                            if (data.message) errorMessage = data.message;
-                        } catch (e) { } // Fallback if server sends plain text
-                        showToast(errorMessage, "error");
-                    }
-                } catch (err) {
-                    showToast("Network Error", "error");
+                    loadTasks();
+                    loadMyTasks();
+                    switchTab('tasks');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                    // Bulletproof error handler in case server rejects
+                    let errorMessage = "Task is no longer available";
+                    try {
+                        const data = await res.json();
+                        if (data.message) errorMessage = data.message;
+                    } catch (e) { } // Fallback if server sends plain text
+                    showToast(errorMessage, "error");
                 }
-            } function restoreDismissedTask(taskId) {
-                closeHistory();
-
-                let dismissedTasksList = JSON.parse(localStorage.getItem('dismissed_tasks') || "[]");
-                dismissedTasksList = dismissedTasksList.filter(id => String(id) !== String(taskId));
-                localStorage.setItem('dismissed_tasks', JSON.stringify(dismissedTasksList));
-
-                let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
-                history = history.filter(t => String(t.id) !== String(taskId));
-                localStorage.setItem('helpido_history', JSON.stringify(history));
-
-                const feed = document.getElementById('task-feed');
-                if (feed) feed.innerHTML = '';
-
-                if (activeTab !== 'home') {
-                    switchTab('home');
-                }
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-
-                loadTasks();
-                showToast("Task restored to Home feed.");
+            } catch (err) {
+                showToast("Network Error", "error");
             }
+        } function restoreDismissedTask(taskId) {
+            closeHistory();
 
-          // --- NEW: PUSH NOTIFICATION LOGIC ---
+            let dismissedTasksList = JSON.parse(localStorage.getItem('dismissed_tasks') || "[]");
+            dismissedTasksList = dismissedTasksList.filter(id => String(id) !== String(taskId));
+            localStorage.setItem('dismissed_tasks', JSON.stringify(dismissedTasksList));
+
+            let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
+            history = history.filter(t => String(t.id) !== String(taskId));
+            localStorage.setItem('helpido_history', JSON.stringify(history));
+
+            const feed = document.getElementById('task-feed');
+            if (feed) feed.innerHTML = '';
+
+            if (activeTab !== 'home') {
+                switchTab('home');
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            loadTasks();
+            showToast("Task restored to Home feed.");
+        }
+
+        // --- NEW: PUSH NOTIFICATION LOGIC ---
         async function subscribeToPush() {
             if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
                 showToast("Push notifications not supported on this browser.", "error");
@@ -1773,6 +1802,20 @@ function clearHistory() {
             } catch (err) {
                 console.error("Push subscription error: ", err);
                 showToast("Error enabling notifications.", "error");
+            }
+        }
+
+        // --- NEW: UPDATE NOTIFICATION PREFERENCES ---
+        async function updateNotifPref(type, value) {
+            try {
+                await fetch(`${API_URL}/users/notifications`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: myPhone, type, value })
+                });
+                showToast("Preferences saved!");
+            } catch(e) {
+                showToast("Failed to save preference", "error");
             }
         }
     </script>
