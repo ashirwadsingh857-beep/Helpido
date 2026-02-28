@@ -1614,30 +1614,37 @@
             }
         }
 
-function restoreDismissedTask(taskId) {
+        function restoreDismissedTask(taskId) {
             closeHistory();
 
-            // 1. Remove from local dismissed list so it shows up again
+            // 1. Remove from local dismissed list
             let dismissedTasksList = JSON.parse(localStorage.getItem('dismissed_tasks') || "[]");
             dismissedTasksList = dismissedTasksList.filter(id => String(id) !== String(taskId));
             localStorage.setItem('dismissed_tasks', JSON.stringify(dismissedTasksList));
 
-            // 2. Remove from local history archive
+            // 2. Remove from history archive
             let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
             history = history.filter(t => String(t.id) !== String(taskId));
             localStorage.setItem('helpido_history', JSON.stringify(history));
 
-            showToast("Task restored to Home feed.");
-            
-            // 3. FORCE a fresh load of the tasks immediately to inject the restored card
-            loadTasks();
+            // 3. AGGRESSIVE UI WIPE: Force the Home feed to go blank for a split second 
+            // so the browser is forced to redraw the HTML and trigger the slide-in animation.
+            const feed = document.getElementById('task-feed');
+            if (feed) feed.innerHTML = '';
 
-            // 4. Switch to Home tab (if not already there) so the user can see it
+            // 4. Switch to Home tab if you aren't already there
             if (activeTab !== 'home') {
                 switchTab('home');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
-        }    </script>
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // 5. Fetch fresh tasks and render
+            loadTasks();
+            
+            showToast("Task restored to Home feed.");
+        }   
+        
+        </script>
 </body>
 
 </html>
