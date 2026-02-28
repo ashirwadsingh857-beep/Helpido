@@ -838,7 +838,10 @@
             } catch (err) { console.error("Profile load failed"); }
         }
 
-async function loadTasks() {
+        // NEW: Global cache to securely store names and prevent API spam
+        const userCache = {};
+
+        async function loadTasks() {
             const feed = document.getElementById('task-feed');
 
             if (isInitialHomeLoad) feed.innerHTML = getSkeletonHTML(4);
@@ -850,7 +853,7 @@ async function loadTasks() {
                 let publicTasks = allTasks.filter(t => t.postedBy !== myPhone);
                 const droppedTasks = JSON.parse(localStorage.getItem('dropped_tasks') || "[]");
                 const dismissedTasks = JSON.parse(localStorage.getItem('dismissed_tasks') || "[]");
-                
+
                 publicTasks = publicTasks.filter(t => !droppedTasks.includes(t._id) && !dismissedTasks.includes(t._id));
 
                 if (isInitialHomeLoad) {
@@ -863,7 +866,6 @@ async function loadTasks() {
                 } else {
                     const existingCardIds = new Set(Array.from(feed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('feed-card-', '')));
 
-                    // 1. Render the cards first
                     feed.innerHTML = publicTasks.map((task, index) => {
                         const isNew = !existingCardIds.has(task._id.toString());
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
@@ -878,7 +880,6 @@ async function loadTasks() {
                                     </div>
                                     <span class="reward-tag" style="display: inline-block; margin-top: 6px;">₹${task.reward}</span>
                                 </div>
-                                
                                 <div style="position: relative;">
                                     <button class="menu-btn" onclick="toggleMenu('menu-home-${task._id}', event)">⋮</button>
                                     <div id="menu-home-${task._id}" class="dropdown-menu">
@@ -904,23 +905,34 @@ async function loadTasks() {
                         `;
                     }).join('');
 
-                    // 2. NEW: Now that cards are drawn, silently fetch the actual names and pop them in!
+                    // Dynamically fetch and replace real names
                     publicTasks.forEach(async (task) => {
+                        const nameEl = document.getElementById(`poster-name-${task._id}`);
+                        if (!nameEl) return;
+
+                        // Pull from fast cache if already fetched
+                        if (userCache[task.postedBy]) {
+                            nameEl.innerText = `👤 ${userCache[task.postedBy]}`;
+                            return;
+                        }
+
+                        // Otherwise ping the API safely
                         try {
                             const userRes = await fetch(`${API_URL}/users/${task.postedBy}`);
                             if (userRes.ok) {
                                 const userData = await userRes.json();
-                                const nameEl = document.getElementById(`poster-name-${task._id}`);
-                                if (nameEl) nameEl.innerText = `👤 ${userData.name}`; // Swaps "Loading name..." with the actual name
+                                userCache[task.postedBy] = userData.name;
+                                nameEl.innerText = `👤 ${userData.name}`;
+                            } else {
+                                nameEl.innerText = `👤 Neighbor`;
                             }
                         } catch (e) {
-                            const nameEl = document.getElementById(`poster-name-${task._id}`);
-                            if (nameEl) nameEl.innerText = `👤 Neighbor`; // Failsafe
+                            nameEl.innerText = `👤 Neighbor`;
                         }
                     });
                 }
             } catch (err) { feed.innerHTML = `<p style="text-align:center; color:red;">Failed to load tasks.</p>`; }
-        }        async function loadMyTasks() {
+        } async function loadMyTasks() {
             const reqFeed = document.getElementById('my-requests-feed');
             const jobsFeed = document.getElementById('my-jobs-feed');
             const reqHeader = reqFeed.previousElementSibling;
@@ -1262,26 +1274,28 @@ async function loadTasks() {
         function deleteMyTask(taskId) {
             showConfirm("Delete Request?", "Are you sure you want to permanently wipe this request from the database?", "Delete", () => {
                 const card = document.getElementById(`req-card-${taskId}`);
-
-                let taskTitle = "Unknown Task";
-                if (card) {
-                    const titleEl = card.querySelector('h4');
-                    if (titleEl) taskTitle = titleEl.childNodes[0].nodeValue.trim();
-                }
-                saveToHistory(taskId, taskTitle, 'deleted');
-
                 if (card) card.classList.add('slide-out-left');
 
                 setTimeout(async () => {
                     try {
                         const res = await fetch(`${API_URL}/tasks/${taskId}`, { method: 'DELETE' });
-                        if (res.ok) showToast("Task wiped from database!");
-                        else if (card) card.classList.remove('slide-out-left');
+                        if (res.ok) {
+                            // SECURE: Only save to history if the server actually deleted it
+                            let taskTitle = "Unknown Task";
+                            if (card) {
+                                const titleEl = card.querySelector('h4');
+                                if (titleEl) taskTitle = titleEl.childNodes[0].nodeValue.trim();
+                            }
+                            saveToHistory(taskId, taskTitle, 'deleted');
+                            showToast("Task wiped from database!");
+                        } else {
+                            if (card) card.classList.remove('slide-out-left');
+                            showToast("Could not delete task", "error");
+                        }
                     } catch (err) { showToast("Network error", "error"); if (card) card.classList.remove('slide-out-left'); }
                 }, 350);
             });
         }
-
         function dismissTask(taskId) {
             const card = document.getElementById(`feed-card-${taskId}`);
 
@@ -1312,14 +1326,6 @@ async function loadTasks() {
         function removeJob(taskId) {
             showConfirm("Drop Task?", "Drop this task? It will be returned to the public Home tab for others to accept.", "Drop Task", () => {
                 const card = document.getElementById(`job-card-${taskId}`);
-
-                let taskTitle = "Unknown Task";
-                if (card) {
-                    const titleEl = card.querySelector('h4');
-                    if (titleEl) taskTitle = titleEl.childNodes[0].nodeValue.trim();
-                }
-                saveToHistory(taskId, taskTitle, 'dropped');
-
                 if (card) card.classList.add('slide-out-left');
 
                 setTimeout(async () => {
@@ -1330,6 +1336,14 @@ async function loadTasks() {
                         });
 
                         if (res.ok) {
+                            // SECURE: Only save to history if the server confirms the drop
+                            let taskTitle = "Unknown Task";
+                            if (card) {
+                                const titleEl = card.querySelector('h4');
+                                if (titleEl) taskTitle = titleEl.childNodes[0].nodeValue.trim();
+                            }
+                            saveToHistory(taskId, taskTitle, 'dropped');
+
                             let droppedTasks = JSON.parse(localStorage.getItem('dropped_tasks') || "[]");
                             if (!droppedTasks.includes(taskId)) {
                                 droppedTasks.push(taskId);
@@ -1340,12 +1354,12 @@ async function loadTasks() {
                             loadMyTasks();
                         } else {
                             if (card) card.classList.remove('slide-out-left');
+                            showToast("Could not drop task", "error");
                         }
                     } catch (err) { showToast("Network error", "error"); if (card) card.classList.remove('slide-out-left'); }
                 }, 350);
             });
         }
-
         async function prioritizeJob(taskId) {
             await fetch(`${API_URL}/tasks/prioritize`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1565,20 +1579,18 @@ async function loadTasks() {
             document.getElementById('history-modal').classList.add('hidden');
         }
 
-        function clearHistory() {
+function clearHistory() {
             showConfirm("Clear History?", "Are you sure you want to wipe your local task log? This cannot be undone.", "Clear", () => {
                 localStorage.removeItem('helpido_history');
 
                 const deletedFeed = document.getElementById('history-deleted-feed');
                 const droppedFeed = document.getElementById('history-dropped-feed');
-                const dismissedFeed = document.getElementById('history-dismissed-feed'); // NEW
+                const dismissedFeed = document.getElementById('history-dismissed-feed'); 
 
-                // Hide all headers instantly
                 deletedFeed.previousElementSibling.style.display = 'none';
                 droppedFeed.previousElementSibling.style.display = 'none';
                 dismissedFeed.previousElementSibling.style.display = 'none';
 
-                // Show the empty clock state
                 deletedFeed.innerHTML = `<div style="text-align: center; padding: 40px 20px; color: #999;"><div style="font-size: 3rem; margin-bottom: 10px;">🕰️</div><p style="font-size: 1rem; margin: 0; color: #333;">History is empty.</p></div>`;
                 droppedFeed.innerHTML = '';
                 dismissedFeed.innerHTML = '';
@@ -1586,82 +1598,81 @@ async function loadTasks() {
                 document.getElementById('clear-history-btn').style.display = 'none';
                 showToast("Task history cleared!");
             });
-        } function reuploadTask(taskId, title) {
-            closeHistory();
+        }            function reuploadTask(taskId, title) {
+                closeHistory();
 
-            let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
-            history = history.filter(t => String(t.id) !== String(taskId));
-            localStorage.setItem('helpido_history', JSON.stringify(history));
+                let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
+                history = history.filter(t => String(t.id) !== String(taskId));
+                localStorage.setItem('helpido_history', JSON.stringify(history));
 
-            openModal();
-            document.getElementById('task-title').value = title;
-            showToast("Fill in the details to repost!", "success");
-        }
+                openModal();
+                document.getElementById('task-title').value = title;
+                showToast("Fill in the details to repost!", "success");
+            }
+            async function reacceptTask(taskId) {
+                closeHistory();
+                showToast("Re-accepting task...");
 
-        async function reacceptTask(taskId) {
-            closeHistory();
-            showToast("Re-accepting task...");
+                try {
+                    // Ping the server FIRST
+                    const res = await fetch(`${API_URL}/tasks/accept`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ taskId, helperPhone: myPhone })
+                    });
 
-            try {
-                // 1. Ping the server FIRST
-                const res = await fetch(`${API_URL}/tasks/accept`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ taskId, helperPhone: myPhone })
-                });
+                    if (res.ok) {
+                        // Only remove from local blacklists if server confirms
+                        let droppedTasksList = JSON.parse(localStorage.getItem('dropped_tasks') || "[]");
+                        droppedTasksList = droppedTasksList.filter(id => String(id) !== String(taskId));
+                        localStorage.setItem('dropped_tasks', JSON.stringify(droppedTasksList));
 
-                if (res.ok) {
-                    // 2. ONLY remove from local storage if the server says YES
-                    let droppedTasksList = JSON.parse(localStorage.getItem('dropped_tasks') || "[]");
-                    droppedTasksList = droppedTasksList.filter(id => String(id) !== String(taskId));
-                    localStorage.setItem('dropped_tasks', JSON.stringify(droppedTasksList));
+                        let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
+                        history = history.filter(t => String(t.id) !== String(taskId));
+                        localStorage.setItem('helpido_history', JSON.stringify(history));
 
-                    let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
-                    history = history.filter(t => String(t.id) !== String(taskId));
-                    localStorage.setItem('helpido_history', JSON.stringify(history));
+                        showToast("Task Re-accepted! Check 'Tasks' tab.");
 
-                    showToast("Task Re-accepted! Check 'Tasks' tab.");
-                    loadTasks();
-                    loadMyTasks();
-                    switchTab('tasks'); // Auto-switch to Tasks tab to see it
-                } else {
-                    const data = await res.json();
-                    showToast(data.message || "Task is no longer available", "error");
+                        const reqFeed = document.getElementById('my-jobs-feed');
+                        if (reqFeed) reqFeed.innerHTML = ''; // Force HTML redraw
+
+                        loadTasks();
+                        loadMyTasks();
+                        switchTab('tasks');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } else {
+                        // Bulletproof error handler in case server rejects
+                        let errorMessage = "Task is no longer available";
+                        try {
+                            const data = await res.json();
+                            if (data.message) errorMessage = data.message;
+                        } catch (e) { } // Fallback if server sends plain text
+                        showToast(errorMessage, "error");
+                    }
+                } catch (err) {
+                    showToast("Network Error", "error");
                 }
-            } catch (err) {
-                showToast("Network Error", "error");
+            } function restoreDismissedTask(taskId) {
+                closeHistory();
+
+                let dismissedTasksList = JSON.parse(localStorage.getItem('dismissed_tasks') || "[]");
+                dismissedTasksList = dismissedTasksList.filter(id => String(id) !== String(taskId));
+                localStorage.setItem('dismissed_tasks', JSON.stringify(dismissedTasksList));
+
+                let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
+                history = history.filter(t => String(t.id) !== String(taskId));
+                localStorage.setItem('helpido_history', JSON.stringify(history));
+
+                const feed = document.getElementById('task-feed');
+                if (feed) feed.innerHTML = '';
+
+                if (activeTab !== 'home') {
+                    switchTab('home');
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                loadTasks();
+                showToast("Task restored to Home feed.");
             }
-        }
-
-        function restoreDismissedTask(taskId) {
-            closeHistory();
-
-            // 1. Remove from local dismissed list
-            let dismissedTasksList = JSON.parse(localStorage.getItem('dismissed_tasks') || "[]");
-            dismissedTasksList = dismissedTasksList.filter(id => String(id) !== String(taskId));
-            localStorage.setItem('dismissed_tasks', JSON.stringify(dismissedTasksList));
-
-            // 2. Remove from history archive
-            let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
-            history = history.filter(t => String(t.id) !== String(taskId));
-            localStorage.setItem('helpido_history', JSON.stringify(history));
-
-            // 3. AGGRESSIVE UI WIPE: Force the Home feed to go blank for a split second 
-            // so the browser is forced to redraw the HTML and trigger the slide-in animation.
-            const feed = document.getElementById('task-feed');
-            if (feed) feed.innerHTML = '';
-
-            // 4. Switch to Home tab if you aren't already there
-            if (activeTab !== 'home') {
-                switchTab('home');
-            }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-
-            // 5. Fetch fresh tasks and render
-            loadTasks();
-
-            showToast("Task restored to Home feed.");
-        }
-
     </script>
 </body>
 
