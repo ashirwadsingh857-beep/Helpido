@@ -561,25 +561,35 @@
                 </header>
                 <div class="task-card"
                     style="text-align: center; padding: 30px 20px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                    <h2 id="profile-name" style="margin-bottom: 5px; color: var(--text-dark);">Loading...</h2>
+                    <div class="task-card"
+                        style="text-align: center; padding: 30px 20px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                        <h2 id="profile-name" style="margin-bottom: 5px; color: var(--text-dark);">Loading...</h2>
 
-                    <div id="profile-helps-badge"
-                        style="display: inline-block; background-color: #FFF3E0; color: #FF5722; padding: 4px 12px; border-radius: 12px; font-weight: bold; font-size: 0.85rem; margin-bottom: 15px;">
-                        ★ 0 Helps
-                    </div>
+                        <div id="profile-helps-badge"
+                            style="display: inline-block; background-color: #FFF3E0; color: #FF5722; padding: 4px 12px; border-radius: 12px; font-weight: bold; font-size: 0.85rem; margin-bottom: 15px;">
+                            ★ 0 Helps
+                        </div>
 
-                    <p id="profile-phone" style="color: var(--text-muted); margin-bottom: 20px;">...</p>
-                    <p id="profile-phone" style="color: var(--text-muted); margin-bottom: 20px;">...</p>
-                    <div
-                        style="background-color: var(--bg-light); padding: 16px; border-radius: 12px; text-align: left; margin-bottom: 24px;">
-                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">
-                            Home Address</p>
-                        <p id="profile-address" style="color: var(--text-dark); line-height: 1.4; font-weight: 500;">...
-                        </p>
+                        <p id="profile-phone" style="color: var(--text-muted); margin-bottom: 20px;">...</p>
+                        <div id="profile-helps-badge"
+                            style="display: inline-block; background-color: #FFF3E0; color: #FF5722; padding: 4px 12px; border-radius: 12px; font-weight: bold; font-size: 0.85rem; margin-bottom: 15px;">
+                            ★ 0 Helps
+                        </div>
+
+                        <p id="profile-phone" style="color: var(--text-muted); margin-bottom: 20px;">...</p>
+                        <p id="profile-phone" style="color: var(--text-muted); margin-bottom: 20px;">...</p>
+                        <div
+                            style="background-color: var(--bg-light); padding: 16px; border-radius: 12px; text-align: left; margin-bottom: 24px;">
+                            <p
+                                style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">
+                                Home Address</p>
+                            <p id="profile-address"
+                                style="color: var(--text-dark); line-height: 1.4; font-weight: 500;">...
+                            </p>
+                        </div>
+                        <button class="logout-btn" onclick="logout()">Log Out</button>
                     </div>
-                    <button class="logout-btn" onclick="logout()">Log Out</button>
                 </div>
-            </div>
         </section>
     </main>
 
@@ -823,7 +833,8 @@
 
         async function loadProfile() {
             try {
-                const res = await fetch(`${API_URL}/users/${myPhone}`);
+                // Added cache-busting timestamp so profile updates instantly
+                const res = await fetch(`${API_URL}/users/${myPhone}?t=${Date.now()}`);
                 if (res.ok) {
                     const user = await res.json();
                     const firstName = user.name.split(' ')[0];
@@ -834,21 +845,26 @@
                     document.getElementById('profile-address').innerText = user.address;
                     document.getElementById('greeting-name').innerText = `Hi, ${firstName} 👋`;
                     document.getElementById('home-address').innerText = `📍 ${user.address}`;
-                    
-                    // NEW: Update the Helps Badge!
+
+                    // SAFE Badge Update
                     const helps = user.helpsCount || 0;
-                    document.getElementById('profile-helps-badge').innerText = `★ ${helps} Helps`;
+                    const badge = document.getElementById('profile-helps-badge');
+                    if (badge) badge.innerText = `★ ${helps} Helps`;
 
                     if (user.availability) { currentStatus = user.availability; updateStatusUI(); }
-
-                    setTimeout(() => {
-                        document.getElementById('splash-screen').classList.add('hide');
-                        document.getElementById('main-dash').classList.add('unblur');
-                    }, 800);
                 }
-            } catch (err) { console.error("Profile load failed"); }
+            } catch (err) {
+                console.error("Profile load failed", err);
+            } finally {
+                // ALWAYS hide the splash screen, no matter what happens!
+                setTimeout(() => {
+                    const splash = document.getElementById('splash-screen');
+                    const main = document.getElementById('main-dash');
+                    if (splash) splash.classList.add('hide');
+                    if (main) main.classList.add('unblur');
+                }, 800);
+            }
         }
-        
         try {
             const res = await fetch(`${API_URL}/users/${myPhone}`);
             if (res.ok) {
@@ -870,7 +886,7 @@
                 }, 800);
             }
         } catch (err) { console.error("Profile load failed"); }
-        
+
 
         // NEW: Global cache to securely store names and prevent API spam
         const userCache = {};
@@ -881,13 +897,13 @@
             if (isInitialHomeLoad) feed.innerHTML = getSkeletonHTML(4);
 
             try {
-                const res = await fetch(`${API_URL}/tasks`);
+                // CRITICAL FIX: Added cache-busting timestamp here as well
+                const res = await fetch(`${API_URL}/tasks?t=${Date.now()}`);
                 const allTasks = await res.json();
 
                 let publicTasks = allTasks.filter(t => t.postedBy !== myPhone);
                 const droppedTasks = JSON.parse(localStorage.getItem('dropped_tasks') || "[]");
-                const dismissedTasks = JSON.parse(localStorage.getItem('dismissed_tasks') || "[]");
-
+                // ... rest of code stays exactly the same
                 publicTasks = publicTasks.filter(t => !droppedTasks.includes(t._id) && !dismissedTasks.includes(t._id));
 
                 if (isInitialHomeLoad) {
@@ -969,7 +985,7 @@
                     });
                 }
             } catch (err) { feed.innerHTML = `<p style="text-align:center; color:red;">Failed to load tasks.</p>`; }
-        } 
+        }
         async function loadMyTasks() {
             const reqFeed = document.getElementById('my-requests-feed');
             const jobsFeed = document.getElementById('my-jobs-feed');
@@ -984,10 +1000,11 @@
             }
 
             try {
-                const res = await fetch(`${API_URL}/tasks/my-tasks?phone=${myPhone}`);
+                // CRITICAL FIX: Added cache-busting timestamp to bypass stale Service Worker data
+                const res = await fetch(`${API_URL}/tasks/my-tasks?phone=${myPhone}&t=${Date.now()}`);
                 const data = await res.json();
 
-                // 🛑 NEW: Aggressively filter out 'completed' tasks so they never render!
+                // Aggressively filter out 'completed' tasks so they never render!
                 data.myRequests = data.myRequests.filter(t => t.status !== 'completed');
                 data.myJobs = data.myJobs.filter(t => t.status !== 'completed');
 
@@ -1004,18 +1021,18 @@
                     return;
                 }
 
-               // Render Uploaded Requests
+                // Render Uploaded Requests
                 if (data.myRequests.length === 0) {
                     reqHeader.style.display = 'none';
                     reqFeed.innerHTML = '';
                 } else {
                     reqHeader.style.display = 'block';
                     const existingReqIds = new Set(Array.from(reqFeed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('req-card-', '')));
-                    
+
                     reqFeed.innerHTML = data.myRequests.map((task, index) => {
                         const isNew = !existingReqIds.has(task._id.toString());
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
-                        
+
                         let actionButtons = '';
                         if (task.status === 'accepted') {
                             actionButtons = `
@@ -1025,11 +1042,11 @@
                                 </div>
                                 <p id="helper-info-${task._id}" style="font-size: 0.8rem; color: #666; margin-top: 8px; text-align: center;">Fetching helper stats...</p>
                             `;
-                            
+
                             fetch(`${API_URL}/users/${task.helperPhone}`).then(r => r.json()).then(h => {
                                 const el = document.getElementById(`helper-info-${task._id}`);
-                                if(el) el.innerHTML = `Helper: <strong>${h.name}</strong> <span style="color:#FF5722;">(★ ${h.helpsCount || 0} Helps)</span>`;
-                            }).catch(()=>{});
+                                if (el) el.innerHTML = `Helper: <strong>${h.name}</strong> <span style="color:#FF5722;">(★ ${h.helpsCount || 0} Helps)</span>`;
+                            }).catch(() => { });
                         } else {
                             actionButtons = `
                                 <div style="margin-bottom: 8px;">
@@ -1053,7 +1070,7 @@
                     }).join('');
                 }
 
-               // Render Accepted Jobs
+                // Render Accepted Jobs
                 const sortedJobs = data.myJobs.sort((a, b) => (b.isPrioritized === true) - (a.isPrioritized === true));
                 if (sortedJobs.length === 0) {
                     jobsHeader.style.display = 'none';
@@ -1099,11 +1116,11 @@
 
                         if (res.ok) {
                             showToast("Task Completed! Helper rewarded.");
-                            
+
                             // 🛑 SECURE DOM WIPE
                             if (card) card.remove();
-                            document.getElementById('my-requests-feed').innerHTML = getSkeletonHTML(1); 
-                            
+                            document.getElementById('my-requests-feed').innerHTML = getSkeletonHTML(1);
+
                             loadMyTasks();
                         } else {
                             if (card) card.classList.remove('slide-out-left');
