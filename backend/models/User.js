@@ -6,8 +6,8 @@ const userSchema = new mongoose.Schema({
     address: { type: String, required: true },
     otp: { type: String, default: null },
     otpExpiry: { type: Date, default: null },
-    // Tracks if the user is free or busy
-    availability: { type: String, default: 'free' } 
+    availability: { type: String, default: 'free' }, // <-- ADDED MISSING COMMA HERE
+    helpsCount: { type: Number, default: 0 }
 });
 
 module.exports = mongoose.model('User', userSchema);

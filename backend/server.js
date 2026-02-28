@@ -271,6 +271,9 @@ app.post('/api/tasks/complete', async (req, res) => {
             { new: true, setDefaultsOnInsert: true }
         );
 
+        // 3. SECURE: Tell ALL connected phones to wipe this card off their screens instantly!
+        io.emit('taskRemoved', taskId);
+
         res.json({ message: "Task completed and helper rewarded!" });
     } catch (err) {
         console.error(err);
