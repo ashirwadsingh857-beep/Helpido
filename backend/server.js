@@ -198,18 +198,26 @@ app.post('/api/users/status', async (req, res) => {
 });
 
 // --- NEW ROUTE: Update Notification Preferences ---
-app.post('/api/users/notifications', async (req, res) => {
-    const { phone, type, value } = req.body;
+// --- NEW ROUTE: Update User's Real-Time Location ---
+app.post('/api/users/location', async (req, res) => {
+    const { phone, lat, lng } = req.body;
     try {
-        const updateField = {};
-        updateField[type] = value; // e.g., { notifyNewTasks: false }
-        await User.updateOne({ phone }, { $set: updateField });
-        res.json({ message: "Preferences updated" });
+        await User.updateOne(
+            { phone },
+            { 
+                $set: { 
+                    location: {
+                        type: 'Point',
+                        coordinates: [parseFloat(lng), parseFloat(lat)] // [Longitude, Latitude]
+                    }
+                } 
+            }
+        );
+        res.json({ message: "Location synced" });
     } catch (err) {
-        res.status(500).json({ message: "Error updating preferences" });
+        res.status(500).json({ message: "Error updating location" });
     }
 });
-
 /* ---------------- TASK ROUTES ---------------- */
 app.post('/api/tasks', async (req, res) => {
     // Extract the new lat and lng from the request
@@ -241,10 +249,25 @@ app.post('/api/tasks', async (req, res) => {
             const posterName = posterUser ? posterUser.name.split(' ')[0] : 'Someone';
 
             // Find all users EXCEPT the poster who have a push subscription AND haven't muted New Tasks
-            const subscribedUsers = await User.find({
-                phone: { $ne: postedBy },
+           // --- NEW: GEOSPATIAL PUSH NOTIFICATIONS ---
+            // Draw a 5km (5000 meters) circle around the new task
+            const notificationRadius = 5000; 
+
+            // Find all users EXCEPT the poster who have notifications ON, 
+            // AND are physically standing within 5km of the task!
+            const subscribedUsers = await User.find({ 
+                phone: { $ne: postedBy }, 
                 pushSubscription: { $ne: null },
-                notifyNewTasks: { $ne: false }
+                notifyNewTasks: { $ne: false },
+                location: {
+                    $near: {
+                        $geometry: {
+                            type: "Point",
+                            coordinates: [parseFloat(lng), parseFloat(lat)]
+                        },
+                        $maxDistance: notificationRadius
+                    }
+                }
             });
 
             const payload = JSON.stringify({

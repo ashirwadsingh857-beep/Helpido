@@ -1847,6 +1847,16 @@ async function postHelpRequest() {
             showToast("Task restored to Home feed.");
         }
 
+        // --- NEW: SYNC LOCATION WITH BACKEND ---
+        function syncLocationWithServer(lat, lng) {
+            if (!myPhone) return;
+            fetch(`${API_URL}/users/location`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone: myPhone, lat, lng })
+            }).catch(e => console.warn("Location sync failed"));
+        }
+
         // --- NEW: LOCATION PERMISSION LOGIC ---
         function getUserLocationSilently() {
             if ("geolocation" in navigator) {
@@ -1855,6 +1865,7 @@ async function postHelpRequest() {
                         userLat = position.coords.latitude;
                         userLng = position.coords.longitude;
                         console.log("📍 Location fetched silently.");
+                        syncLocationWithServer(userLat, userLng);
                     },
                     (err) => { console.warn("Silent location fetch failed", err); },
                     { enableHighAccuracy: true }
@@ -1870,6 +1881,7 @@ async function postHelpRequest() {
                         userLng = position.coords.longitude;
 
                         showToast("Location access granted!", "success");
+                        syncLocationWithServer(userLat, userLng);
 
                         // Hide the button permanently
                         const locBtn = document.getElementById('location-btn');
