@@ -1948,19 +1948,36 @@ async function postHelpRequest() {
         }
 
         // --- NEW: UPDATE NOTIFICATION PREFERENCES ---
+// --- UPDATED: BULLETPROOF NOTIFICATION PREFERENCES ---
         async function updateNotifPref(type, value) {
             try {
-                await fetch(`${API_URL}/users/notifications`, {
+                // Safely grab the phone number, regardless of variable scope
+                const phoneToUpdate = typeof myPhone !== 'undefined' ? myPhone : localStorage.getItem('helpido_phone');
+                
+                if (!phoneToUpdate) {
+                    return showToast("Error: Phone number missing.", "error");
+                }
+
+                const res = await fetch(`${API_URL}/users/notifications`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone: myPhone, type, value })
+                    body: JSON.stringify({ phone: phoneToUpdate, type: type, value: value === true })
                 });
-                showToast("Preferences saved!");
-            } catch (e) {
-                showToast("Failed to save preference", "error");
+                
+                if (res.ok) {
+                    showToast("Preferences saved securely!", "success");
+                } else {
+                    showToast("Failed to save to database. Try refreshing.", "error");
+                    // If it failed, flip the toggle back visually so the user isn't tricked
+                    document.getElementById(type === 'notifyNewTasks' ? 'toggle-new-tasks' : 'toggle-chat-msgs').checked = !value;
+                }
+            } catch(e) {
+                console.error(e);
+                showToast("Network error. Could not save.", "error");
+                // Flip back visually on error
+                document.getElementById(type === 'notifyNewTasks' ? 'toggle-new-tasks' : 'toggle-chat-msgs').checked = !value;
             }
         }
-
         // --- NEW: RADIUS FILTER CHANGE ---
         function updateRadius() {
             const select = document.getElementById('radius-filter');

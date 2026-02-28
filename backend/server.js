@@ -198,7 +198,29 @@ app.post('/api/users/status', async (req, res) => {
 });
 
 // --- NEW ROUTE: Update Notification Preferences ---
-// --- NEW ROUTE: Update User's Real-Time Location ---
+app.post('/api/users/notifications', async (req, res) => {
+    const { phone, type, value } = req.body;
+    try {
+        if (!phone) return res.status(400).json({ message: "Phone number missing" });
+        
+        // Force the value into a strict boolean so Mongoose saves it correctly
+        const isEnabled = (value === true || value === 'true'); 
+        
+        const updateField = {};
+        updateField[type] = isEnabled; 
+        
+        const result = await User.updateOne({ phone: phone }, { $set: updateField });
+        
+        if (result.modifiedCount > 0 || result.matchedCount > 0) {
+            res.json({ message: "Preferences locked in" });
+        } else {
+            res.status(404).json({ message: "User not found in database" });
+        }
+    } catch (err) {
+        console.error("Notif Update Error:", err);
+        res.status(500).json({ message: "Error updating preferences" });
+    }
+});// --- NEW ROUTE: Update User's Real-Time Location ---
 app.post('/api/users/location', async (req, res) => {
     const { phone, lat, lng } = req.body;
     try {
