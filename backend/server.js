@@ -9,8 +9,14 @@ const Message = require("./models/Message.js");
 const webpush = require("web-push");
 
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+    // Failsafe: Automatically add 'mailto:' if it's missing from your environment variables
+    let vapidEmail = process.env.VAPID_EMAIL || 'mailto:test@test.com';
+    if (!vapidEmail.startsWith('mailto:') && !vapidEmail.startsWith('http')) {
+        vapidEmail = 'mailto:' + vapidEmail;
+    }
+
     webpush.setVapidDetails(
-        process.env.VAPID_EMAIL || 'mailto:test@test.com',
+        vapidEmail,
         process.env.VAPID_PUBLIC_KEY,
         process.env.VAPID_PRIVATE_KEY
     );
