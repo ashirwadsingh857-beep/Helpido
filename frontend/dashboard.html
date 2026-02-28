@@ -533,8 +533,22 @@
                         style="margin-top: 0; white-space: nowrap;">🟢 Free</button>
                 </div>
             </header>
-            <h3 class="section-title">Help Needed Nearby</h3>
-            <div id="task-feed"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-right: 20px;">
+                <h3 class="section-title" style="margin-bottom: 0;">Help Needed Nearby</h3>
+
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <span style="font-size: 0.8rem; color: #757575; font-weight: 600;">Radius:</span>
+                    <select id="radius-filter" onchange="updateRadius()"
+                        style="border-radius: 8px; padding: 4px 8px; border: 1px solid #ddd; background: #fff; outline: none; font-size: 0.85rem; color: #333; font-weight: 500; cursor: pointer;">
+                        <option value="0.5">500 m</option>
+                        <option value="10" selected>10 km</option>
+                        <option value="20">20 km</option>
+                        <option value="30">30 km</option>
+                        <option value="40">40 km</option>
+                    </select>
+                </div>
+            </div>
+            <div id="task-feed" style="margin-top: 16px;"></div>
         </section>
 
         <section id="tasks-view" class="feed-section hidden">
@@ -732,6 +746,11 @@
         let currentStatus = 'free';
         let isInitialHomeLoad = true;
         let isInitialTasksLoad = true;
+
+        // --- NEW: GEOSPATIAL STATE ---
+        let currentRadius = 10; // Default to 10km
+        let userLat = null;
+        let userLng = null;
         let activeTab = 'home';
         let notifTimeout = null;
 
@@ -757,6 +776,31 @@
                 }
                 loadTasks();
                 initScrollAnimation();
+
+                // Show notification button if they haven't allowed it yet
+                if ('Notification' in window && Notification.permission !== 'granted') {
+                    const notifBtn = document.getElementById('notif-btn');
+                    if (notifBtn) notifBtn.style.display = 'inline-block';
+                }
+
+                // --- NEW: GRAB USER'S GPS COORDINATES ---
+                if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            userLat = position.coords.latitude;
+                            userLng = position.coords.longitude;
+                            console.log(`📍 Location found: ${userLat}, ${userLng}`);
+                        },
+                        (error) => {
+                            console.warn("GPS location denied or unavailable", error);
+                            showToast("Please allow location for local tasks!", "error");
+                        },
+                        { enableHighAccuracy: true } // Forces GPS over IP-based location
+                    );
+                } else {
+                    console.warn("Geolocation API not supported");
+                    showToast("Geolocation not supported in this browser.", "error");
+                }
 
                 // --- NEW: HANDLE DEEP LINKING FOR CHAT PUSH NOTIFICATIONS ---
 
@@ -1814,9 +1858,20 @@
                     body: JSON.stringify({ phone: myPhone, type, value })
                 });
                 showToast("Preferences saved!");
-            } catch(e) {
+            } catch (e) {
                 showToast("Failed to save preference", "error");
             }
+        }
+
+        // --- NEW: RADIUS FILTER CHANGE ---
+        function updateRadius() {
+            const select = document.getElementById('radius-filter');
+            currentRadius = parseFloat(select.value);
+            
+            showToast(`Filtering tasks within ${currentRadius < 1 ? currentRadius * 1000 + ' m' : currentRadius + ' km'}`);
+            
+            // Reload the feed. (We will make this actually filter the DB in Phase 3!)
+            loadTasks(); 
         }
     </script>
 </body>
