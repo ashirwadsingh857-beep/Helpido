@@ -1614,7 +1614,7 @@
             }
         }
 
-        function restoreDismissedTask(taskId) {
+function restoreDismissedTask(taskId) {
             closeHistory();
 
             // 1. Remove from local dismissed list so it shows up again
@@ -1628,15 +1628,16 @@
             localStorage.setItem('helpido_history', JSON.stringify(history));
 
             showToast("Task restored to Home feed.");
+            
+            // 3. FORCE a fresh load of the tasks immediately to inject the restored card
+            loadTasks();
 
-            // 3. Switch to Home tab (or just reload if already there)
-            if (activeTab === 'home') {
-                loadTasks();
-            } else {
+            // 4. Switch to Home tab (if not already there) so the user can see it
+            if (activeTab !== 'home') {
                 switchTab('home');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
-        }
-    </script>
+        }    </script>
 </body>
 
 </html>
