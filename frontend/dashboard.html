@@ -973,9 +973,11 @@
                 } else {
                     reqHeader.style.display = 'block';
                     const existingReqIds = new Set(Array.from(reqFeed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('req-card-', '')));
+                    
                     reqFeed.innerHTML = data.myRequests.map((task, index) => {
                         const isNew = !existingReqIds.has(task._id.toString());
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
+                        
                         // NEW: If accepted, show the "Mark Completed" button and Helper Info!
                         let actionButtons = '';
                         if (task.status === 'accepted') {

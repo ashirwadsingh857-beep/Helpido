@@ -256,16 +256,15 @@ app.use((req, res) => { res.sendFile(path.join(frontendPath, 'index.html')); });
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Live Server running on port ${PORT}`));
 
-// NEW BACKEND ROUTE: Mark Task as Completed & Reward Helper
+// NEW ROUTE: Mark task as completed and reward the helper
 app.post('/api/tasks/complete', async (req, res) => {
     try {
         const { taskId, helperPhone } = req.body;
 
-        // 1. Mark task as completed
+        // 1. Change the task status to 'completed'
         await Task.findByIdAndUpdate(taskId, { status: 'completed' });
 
         // 2. Add +1 "Helps" to the person who did the job
-        // (Assuming your User schema allows helpsCount. If not, mongoose will just create it)
         await User.findOneAndUpdate(
             { phone: helperPhone },
             { $inc: { helpsCount: 1 } },
@@ -274,6 +273,7 @@ app.post('/api/tasks/complete', async (req, res) => {
 
         res.json({ message: "Task completed and helper rewarded!" });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ error: "Could not complete task" });
     }
 });
