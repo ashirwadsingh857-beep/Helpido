@@ -212,10 +212,26 @@ app.post('/api/users/notifications', async (req, res) => {
 
 /* ---------------- TASK ROUTES ---------------- */
 app.post('/api/tasks', async (req, res) => {
-    const { title, description, postedBy, reward } = req.body;
+    // Extract the new lat and lng from the request
+    const { title, description, postedBy, reward, lat, lng } = req.body;
+    
     try {
-        const newTask = new Task({ title, description, postedBy, reward });
+        // --- NEW: ASSEMBLE GEOJSON LOCATION ---
+        const newTask = new Task({ 
+            title, 
+            description, 
+            postedBy, 
+            reward,
+            location: {
+                type: 'Point',
+                // CRITICAL: MongoDB requires [Longitude, Latitude] order
+                coordinates: [parseFloat(lng), parseFloat(lat)] 
+            }
+        });
+        
         await newTask.save();
+        
+        // ... (Keep your existing io.emit and web-push notification logic below this line) ...
         io.emit('refreshFeed'); // Broadcast new task
         io.emit('newTask', newTask);
 

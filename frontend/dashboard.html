@@ -1520,24 +1520,45 @@
             loadMyTasks();
         }
 
-        async function postHelpRequest() {
+async function postHelpRequest() {
             const title = document.getElementById('task-title').value;
             const description = document.getElementById('task-desc').value;
             const reward = parseInt(document.getElementById('task-reward').value) || 0;
 
             if (!title || !description) return showToast("Please fill all fields!", "error");
+            
+            // --- NEW: GEOSPATIAL VALIDATION ---
+            if (userLat === null || userLng === null) {
+                return showConfirm("Location Missing", "We need your GPS location to show this task to nearby neighbors. Try 'Enable Location' in your profile.", "OK", () => {
+                    switchTab('profile');
+                });
+            }
 
             const res = await fetch(`${API_URL}/tasks`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, description, postedBy: myPhone, reward })
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    title, 
+                    description, 
+                    postedBy: myPhone, 
+                    reward,
+                    // NEW: Append the exact GPS coordinates
+                    lat: userLat,
+                    lng: userLng
+                })
             });
 
             if (res.ok) {
-                showToast("Task posted!"); closeModal(); loadTasks();
-                document.getElementById('task-title').value = ""; document.getElementById('task-desc').value = ""; document.getElementById('task-reward').value = "";
+                showToast("Task posted to your neighborhood!", "success"); 
+                closeModal(); 
+                loadTasks();
+                document.getElementById('task-title').value = ""; 
+                document.getElementById('task-desc').value = ""; 
+                document.getElementById('task-reward').value = "";
+            } else {
+                showToast("Failed to post task.", "error");
             }
         }
-
         /* =========================================
            6. MODAL & SESSION UTILITIES
            ========================================= */
