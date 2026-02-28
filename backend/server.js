@@ -78,10 +78,14 @@ io.on('connection', (socket) => {
                         const senderUser = await User.findOne({ phone: data.senderPhone });
                         const senderName = senderUser ? senderUser.name.split(' ')[0] : 'Someone';
                         
-                        // Create the text that will show on the lock screen
+                       // Create the text that will show on the lock screen
                         const payload = JSON.stringify({
                             title: `New message from ${senderName}`,
-                            desc: data.text
+                            desc: data.text,
+                            // NEW: Hidden data to tell the app exactly which chat to open
+                            type: 'chat',
+                            taskId: data.taskId,
+                            senderPhone: data.senderPhone
                         });
 
                         // Send it to Google's push servers!

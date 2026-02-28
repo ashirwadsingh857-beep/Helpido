@@ -39,23 +39,62 @@ self.addEventListener('push', function(event) {
     }
 });
 
-// --- NEW: NOTIFICATION CLICK HANDLER ---
-self.addEventListener('notificationclick', function(event) {
-    event.notification.close(); // Close the Android banner
+// --- NEW: NATIVE PUSH NOTIFICATION HANDLER ---
+self.addEventListener('push', function(event) {
+    if (event.data) {
+        const data = event.data.json(); 
+        
+        const options = {
+            body: data.desc || 'You have a new message!',
+            icon: '/192.png',
+            badge: '/192.png',
+            vibrate: [200, 100, 200], 
+            // NEW: Pass the hidden routing data into the notification
+            data: { 
+                type: data.type,
+                taskId: data.taskId,
+                senderPhone: data.senderPhone
+            } 
+        };
 
-    // When tapped, open the Helpido app!
+        event.waitUntil(
+            self.registration.showNotification(data.title || 'Helpido', options)
+        );
+    }
+});
+
+self.addEventListener('notificationclick', function(event) {
+    event.notification.close(); 
+    const payload = event.notification.data;
+
     event.waitUntil(
-        clients.matchAll({ type: 'window' }).then(windowClients => {
-            // If app is already open in background, just focus it
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+            // 1. Build the URL for a "Cold Start" (App is completely closed)
+            let chatUrl = '/dashboard.html';
+            if (payload && payload.type === 'chat') {
+                chatUrl = `/dashboard.html?action=chat&taskId=${payload.taskId}&phone=${payload.senderPhone}`;
+            }
+
+            // 2. Check if the app is already open in the background
             for (let i = 0; i < windowClients.length; i++) {
                 let client = windowClients[i];
                 if (client.url.includes('/dashboard.html') && 'focus' in client) {
-                    return client.focus();
+                    client.focus();
+                    // Tell the already-open app to slide the chat drawer up
+                    if (payload && payload.type === 'chat') {
+                        client.postMessage({
+                            action: 'openChat',
+                            taskId: payload.taskId,
+                            phone: payload.senderPhone
+                        });
+                    }
+                    return;
                 }
             }
-            // Otherwise, launch the app from scratch
+            
+            // 3. If the app was closed, launch it using the cold start URL
             if (clients.openWindow) {
-                return clients.openWindow('/dashboard.html');
+                return clients.openWindow(chatUrl);
             }
         })
     );

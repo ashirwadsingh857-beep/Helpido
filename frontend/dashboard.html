@@ -732,6 +732,34 @@
                 loadTasks();
                 initScrollAnimation();
 
+                // --- NEW: HANDLE DEEP LINKING FOR CHAT PUSH NOTIFICATIONS ---
+                
+                // Scenario A: App was already open (Service Worker sends a message)
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.addEventListener('message', event => {
+                        if (event.data && event.data.action === 'openChat') {
+                            switchTab('tasks');
+                            openChat(event.data.taskId, event.data.phone);
+                        }
+                    });
+                }
+
+                // Scenario B: App was closed (Cold Start from URL parameters)
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('action') === 'chat') {
+                    const cTaskId = urlParams.get('taskId');
+                    const cPhone = urlParams.get('phone');
+                    if (cTaskId && cPhone) {
+                        // Wait a tiny bit for the UI to finish rendering, then open chat
+                        setTimeout(() => {
+                            switchTab('tasks');
+                            openChat(cTaskId, cPhone);
+                            // Clean up the URL so a manual refresh doesn't reopen the chat
+                            window.history.replaceState({}, document.title, "/dashboard.html");
+                        }, 900);
+                    }
+                }
+
                 globalSocket = io('https://helpido.onrender.com', { transports: ['websocket', 'polling'] });
 
                 globalSocket.on('connect', () => {
