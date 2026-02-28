@@ -1269,30 +1269,31 @@
             showToast("Fill in the details to repost!", "success");
         } 
         
-        async function reacceptTask(taskId) {
+async function reacceptTask(taskId) {
             closeHistory();
-
-            let droppedTasksList = JSON.parse(localStorage.getItem('dropped_tasks') || "[]");
-            droppedTasksList = droppedTasksList.filter(id => id !== taskId);
-            localStorage.setItem('dropped_tasks', JSON.stringify(droppedTasksList));
-
-            let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
-            history = history.filter(t => t.id !== taskId);
-            localStorage.setItem('helpido_history', JSON.stringify(history));
-
             showToast("Re-accepting task...");
 
             try {
+                // 1. Ping the server FIRST
                 const res = await fetch(`${API_URL}/tasks/accept`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ taskId, helperPhone: myPhone })
                 });
 
                 if (res.ok) {
+                    // 2. ONLY remove from local storage if the server says YES
+                    let droppedTasksList = JSON.parse(localStorage.getItem('dropped_tasks') || "[]");
+                    droppedTasksList = droppedTasksList.filter(id => String(id) !== String(taskId));
+                    localStorage.setItem('dropped_tasks', JSON.stringify(droppedTasksList));
+
+                    let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
+                    history = history.filter(t => String(t.id) !== String(taskId));
+                    localStorage.setItem('helpido_history', JSON.stringify(history));
+
                     showToast("Task Re-accepted! Check 'Tasks' tab.");
                     loadTasks();
                     loadMyTasks();
-                    switchTab('tasks');
+                    switchTab('tasks'); // Auto-switch to Tasks tab to see it
                 } else {
                     const data = await res.json();
                     showToast(data.message || "Task is no longer available", "error");
@@ -1300,7 +1301,7 @@
             } catch (err) {
                 showToast("Network Error", "error");
             }
-        }
-    </script>
+        }    
+        </script>
 </body>
 </html>
