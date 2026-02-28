@@ -863,12 +863,10 @@ async function loadTasks() {
                 } else {
                     const existingCardIds = new Set(Array.from(feed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('feed-card-', '')));
 
+                    // 1. Render the cards first
                     feed.innerHTML = publicTasks.map((task, index) => {
                         const isNew = !existingCardIds.has(task._id.toString());
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
-
-                        // Fallback in case your database doesn't pass the name down with the task object
-                        const posterName = task.posterName || "Neighbor";
 
                         return `
                         <div class="task-card" id="feed-card-${task._id}" style="${animStyle}">
@@ -892,7 +890,7 @@ async function loadTasks() {
                             <p class="task-desc" style="margin-top: 12px; margin-bottom: 12px;">${task.description}</p>
                             
                             <div style="background: #f5f5f5; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; border-left: 3px solid #FF5722;">
-                                <p style="margin: 0; font-size: 0.9rem; font-weight: 600; color: #333;">👤 ${posterName}</p>
+                                <p id="poster-name-${task._id}" style="margin: 0; font-size: 0.9rem; font-weight: 600; color: #333;">👤 Loading name...</p>
                                 <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #666;">📞 +91 ${task.postedBy}</p>
                             </div>
                             
@@ -905,6 +903,7 @@ async function loadTasks() {
                         </div>
                         `;
                     }).join('');
+
                     // 2. NEW: Now that cards are drawn, silently fetch the actual names and pop them in!
                     publicTasks.forEach(async (task) => {
                         try {
@@ -920,10 +919,8 @@ async function loadTasks() {
                         }
                     });
                 }
-                }
             } catch (err) { feed.innerHTML = `<p style="text-align:center; color:red;">Failed to load tasks.</p>`; }
-        }
-        async function loadMyTasks() {
+        }        async function loadMyTasks() {
             const reqFeed = document.getElementById('my-requests-feed');
             const jobsFeed = document.getElementById('my-jobs-feed');
             const reqHeader = reqFeed.previousElementSibling;
@@ -1661,11 +1658,11 @@ async function loadTasks() {
 
             // 5. Fetch fresh tasks and render
             loadTasks();
-            
+
             showToast("Task restored to Home feed.");
-        }   
-        
-        </script>
+        }
+
+    </script>
 </body>
 
 </html>
