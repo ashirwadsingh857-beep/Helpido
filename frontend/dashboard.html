@@ -588,6 +588,52 @@
         .toast {
             z-index: 20000 !important;
         }
+
+        /* --- 8. CUSTOM RADIUS DROPDOWN --- */
+        .radius-btn {
+            border-radius: 20px;
+            padding: 6px 14px;
+            background: #fff;
+            border: 1px solid #ddd;
+            font-size: 0.85rem;
+            color: #333;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            transition: transform 0.15s, box-shadow 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .radius-btn:active {
+            transform: scale(0.92);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .radius-option {
+            padding: 16px 20px;
+            background: #fff;
+            border: none;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 1rem;
+            color: #5F6368;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            text-align: center;
+            width: 100%;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .radius-option:last-child {
+            border-bottom: none;
+        }
+        .radius-option:active {
+            background: #f8f9fa;
+        }
+        .radius-option.selected {
+            color: var(--primary);
+            font-weight: 700;
+            background: #fff3e0;
+        }
     </style>
 </head>
 
@@ -611,17 +657,12 @@
             <div style="display: flex; justify-content: space-between; align-items: center; padding-right: 20px;">
                 <h3 class="section-title" style="margin-bottom: 0;">Help Needed Nearby</h3>
 
-                <div style="display: flex; align-items: center; gap: 6px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
                     <span style="font-size: 0.8rem; color: #757575; font-weight: 600;">Radius:</span>
-                    <select id="radius-filter" onchange="updateRadius()"
-                        style="border-radius: 8px; padding: 4px 8px; border: 1px solid #ddd; background: #fff; outline: none; font-size: 0.85rem; color: #333; font-weight: 500; cursor: pointer;">
-                        <option value="0.1" selected>100 m</option>
-                        <option value="0.5">500 m</option>
-                        <option value="10">10 km</option>
-                        <option value="20">20 km</option>
-                        <option value="30">30 km</option>
-                        <option value="40">40 km</option>
-                    </select>
+                    <div id="radius-btn" class="radius-btn" onclick="openRadiusModal()">
+                        <span id="radius-display-text">100 m</span>
+                        <span style="font-size: 0.7rem; color: var(--primary);">▼</span>
+                    </div>
                 </div>
             </div>
             <div id="task-feed" style="margin-top: 16px;"></div>
@@ -766,6 +807,22 @@
                     style="width: 100%; padding: 12px; background: transparent; border: 1px solid #ffcdd2; color: #D32F2F; border-radius: 12px; font-weight: 600; cursor: pointer; margin-top: 10px; display: none;">
                     🗑️ Clear All History
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="radius-modal" class="modal-overlay hidden" onclick="if(event.target === this) closeRadiusModal()">
+        <div class="modal-content" style="padding: 0; overflow: hidden; max-width: 300px;">
+            <div style="padding: 18px; background: #f8f9fa; border-bottom: 1px solid #eee; text-align: center;">
+                <h3 style="margin: 0; color: #333; font-size: 1.1rem;">Select Radius</h3>
+            </div>
+            <div id="radius-options-container" style="display: flex; flex-direction: column;">
+                <button class="radius-option selected" onclick="selectRadius(0.1, '100 m')">100 m</button>
+                <button class="radius-option" onclick="selectRadius(0.5, '500 m')">500 m</button>
+                <button class="radius-option" onclick="selectRadius(10, '10 km')">10 km</button>
+                <button class="radius-option" onclick="selectRadius(20, '20 km')">20 km</button>
+                <button class="radius-option" onclick="selectRadius(30, '30 km')">30 km</button>
+                <button class="radius-option" onclick="selectRadius(40, '40 km')">40 km</button>
             </div>
         </div>
     </div>
@@ -2181,16 +2238,37 @@ function closeHistory() {
             }
         }
         // --- NEW: RADIUS FILTER CHANGE ---
-        function updateRadius() {
-            const select = document.getElementById('radius-filter');
-            currentRadius = parseFloat(select.value);
-
-            showToast(`Filtering tasks within ${currentRadius < 1 ? currentRadius * 1000 + ' m' : currentRadius + ' km'}`);
-
-            // Reload the feed. (We will make this actually filter the DB in Phase 3!)
-            loadTasks();
+// --- UPGRADED: CUSTOM RADIUS MODAL LOGIC ---
+        function openRadiusModal() {
+            document.body.classList.add('no-scroll');
+            document.getElementById('radius-modal').classList.remove('hidden');
         }
 
+        function closeRadiusModal() {
+            document.body.classList.remove('no-scroll');
+            document.getElementById('radius-modal').classList.add('hidden');
+        }
+
+        function selectRadius(value, text) {
+            currentRadius = parseFloat(value);
+            document.getElementById('radius-display-text').innerText = text;
+
+            // Update UI highlighting
+            const options = document.querySelectorAll('.radius-option');
+            options.forEach(opt => {
+                if (opt.innerText === text) {
+                    opt.classList.add('selected');
+                } else {
+                    opt.classList.remove('selected');
+                }
+            });
+
+            closeRadiusModal();
+            showToast(`Filtering tasks within ${text}`);
+            
+            // Reload the feed with the new radius!
+            loadTasks();
+        }
         // --- NEW: AUTO-UPDATE LOCATION WHEN APP IS OPENED ---
         document.addEventListener("visibilitychange", () => {
             // Whenever the user brings the app back to the screen...
