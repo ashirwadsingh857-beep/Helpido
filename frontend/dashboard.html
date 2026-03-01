@@ -852,9 +852,32 @@
 
                 globalSocket.on('refreshFeed', () => { loadTasks(); loadMyTasks(); loadProfile(); });
 
+                // --- NEW: IN-APP DISTANCE MATH (HAVERSINE FORMULA) ---
+                function getDistanceInKm(lat1, lon1, lat2, lon2) {
+                    const R = 6371; // Earth's radius in km
+                    const dLat = (lat2 - lat1) * Math.PI / 180;
+                    const dLon = (lon2 - lon1) * Math.PI / 180;
+                    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                              Math.sin(dLon/2) * Math.sin(dLon/2);
+                    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+                }
+
                 // Routes to Home Tab
                 globalSocket.on('newTask', (task) => {
-                    if (task.postedBy !== myPhone && activeTab !== 'home') {
+                    if (task.postedBy === myPhone) return;
+
+                    // STRICT FRONTEND RADIUS CHECK
+                    if (userLat !== null && userLng !== null && task.location && task.location.coordinates) {
+                        const taskLng = task.location.coordinates[0];
+                        const taskLat = task.location.coordinates[1];
+                        const distance = getDistanceInKm(userLat, userLng, taskLat, taskLng);
+                        
+                        // If the task is further away than your dropdown radius, SILENTLY DESTROY THE NOTIFICATION!
+                        if (distance > currentRadius) return;
+                    }
+
+                    if (activeTab !== 'home') {
                         showAppNotification('👋', `New task posted: ${task.title}`, 'Tap to view the Home feed!', () => {
                             switchTab('home');
                             window.scrollTo({ top: 0, behavior: 'smooth' });
