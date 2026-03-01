@@ -28,8 +28,8 @@ self.addEventListener('push', function (event) {
     const options = {
         // Fallback text covers both tasks and chats
         body: data.desc || 'You have a new notification!', 
-        icon: '/192.png',
-        badge: '/192.png',
+        icon: 'asset/192.png',
+        badge: 'asset/192.png',
         vibrate: [200, 100, 200],
         data: {
             // These will simply be 'undefined' for New Tasks, which is perfectly safe!
