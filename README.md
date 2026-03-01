@@ -41,6 +41,31 @@ Helpido is a hyperlocal, real-time community assistance Progressive Web App (PWA
 | <img src="assets/home-feed.png" width="250" alt="Home Feed"> | <img src="assets/chat.png" width="250" alt="Chat UI"> | <img src="assets/radius.png" width="250" alt="Radius Picker"> |
 
 ---
+## ⚙️ App Permissions (Location & Notifications)
+
+Helpido is a hyper-local PWA that requires your device's GPS to find tasks near you and Push Notifications to alert you of new messages and task updates.
+
+### 1. Standard Method (In-App)
+When you log in and navigate the app, Helpido will automatically request these permissions. 
+* Simply tap **Allow** on the browser pop-ups.
+* If you haven't enabled them yet, you can also trigger the prompts manually by visiting the **Profile** tab inside the app and tapping the enable buttons.
+
+### 2. Alternative Method (Browser Site Settings)
+If you accidentally clicked "Block" or the pop-ups are no longer appearing, you can manually enable permissions through your browser settings:
+
+**For Android (Chrome):**
+1. Open Helpido in your browser.
+2. Tap the **Lock Icon** 🔒 (or the Site Information icon) next to the URL in the address bar.
+3. Select **Permissions** (or **Site settings**).
+4. Tap on **Location** and **Notifications**, and switch both to **Allow**.
+5. Refresh the page.
+
+**For iOS (Safari):**
+1. Open your iPhone's **Settings** app.
+2. Scroll down to **Safari** -> **Location** and set it to **Ask** or **Allow**.
+3. *Note on Notifications:* iOS requires the app to be installed to receive web push notifications. Tap the "Share" button in Safari, select **Add to Home Screen**, open the app from your home screen, and *then* accept the notification prompt.
+
+---
 
 ## 🚀 Local Installation
 
