@@ -279,7 +279,7 @@
         /* =========================================
            5. IN-APP CHAT UI & ANIMATIONS
            ========================================= */
-/* =========================================
+        /* =========================================
            5. IN-APP CHAT UI & ANIMATIONS
            ========================================= */
         .chat-overlay {
@@ -297,15 +297,15 @@
             flex-direction: column;
             justify-content: flex-end;
             transition: opacity 0.3s ease;
-            
+
             /* NEW: Start invisible */
-            opacity: 0; 
+            opacity: 0;
             pointer-events: none;
         }
 
         /* NEW: Completely remove from flow when hidden */
         .chat-overlay.hidden {
-            display: none !important; 
+            display: none !important;
         }
 
         /* NEW: The state when the modal is open */
@@ -325,16 +325,17 @@
             flex-direction: column;
             overflow: hidden;
             box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
-            
+
             /* NEW: Start pushed down off screen */
-            transform: translateY(100%); 
+            transform: translateY(100%);
             transition: transform 0.5s cubic-bezier(0.32, 1.15, 0.25, 1);
         }
 
         /* NEW: The state when the modal is open (Slide up to normal position) */
         .chat-overlay.active .chat-drawer {
-            transform: translateY(0); 
+            transform: translateY(0);
         }
+
         .chat-header {
             padding: 16px 20px;
             border-bottom: 1px solid #eee;
@@ -602,14 +603,16 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
             transition: transform 0.15s, box-shadow 0.15s;
             -webkit-tap-highlight-color: transparent;
         }
+
         .radius-btn:active {
             transform: scale(0.92);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         }
+
         .radius-option {
             padding: 16px 20px;
             background: #fff;
@@ -623,12 +626,15 @@
             width: 100%;
             -webkit-tap-highlight-color: transparent;
         }
+
         .radius-option:last-child {
             border-bottom: none;
         }
+
         .radius-option:active {
             background: #f8f9fa;
         }
+
         .radius-option.selected {
             color: var(--primary);
             font-weight: 700;
@@ -954,7 +960,7 @@
                 // (Keep the rest of your window.onload code below this line exactly as it is)                // --- NEW: HANDLE DEEP LINKING FOR CHAT PUSH NOTIFICATIONS ---
 
                 // Scenario A: App was already open (Service Worker sends a message)
-// Scenario A: App was already open (Service Worker sends a message)
+                // Scenario A: App was already open (Service Worker sends a message)
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.addEventListener('message', event => {
                         if (event.data && event.data.action === 'openChat') {
@@ -965,7 +971,7 @@
                             switchTab('home');
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                             // Optional: Force a fresh fetch to ensure the new task is visible
-                            loadTasks(); 
+                            loadTasks();
                         }
                     });
                 }
@@ -1361,23 +1367,26 @@
         /* =========================================
            3. CHAT ENGINE
            ========================================= */
-async function openChat(taskId, targetPhone) {
+        // --- UPGRADED: CHAT MODAL LOGIC WITH TIMEOUT CLEARING ---
+        let chatCloseTimeout = null;
+
+        async function openChat(taskId, targetPhone) {
             document.body.classList.add('no-scroll');
             currentChatTaskId = taskId;
             currentChatTargetPhone = targetPhone;
             document.getElementById('chat-header-title').innerText = `Loading...`;
-            
-            // 1. Remove hidden to put it in the DOM (but it's still transparent/down)
+
             const chatModal = document.getElementById('chat-modal');
+
+            // NEW: Cancel any pending close animations so it doesn't shut suddenly!
+            clearTimeout(chatCloseTimeout);
+
             chatModal.classList.remove('hidden');
-            
-            // 2. Force reflow so the browser registers the element is present
             void chatModal.offsetWidth;
-            
-            // 3. Add an 'active' class to trigger the CSS transition
             chatModal.classList.add('active');
 
-            fetch(`${API_URL}/users/${targetPhone}`)                .then(res => res.json())
+            fetch(`${API_URL}/users/${targetPhone}`)
+                .then(res => res.json())
                 .then(user => {
                     const firstName = user.name.split(' ')[0];
                     document.getElementById('chat-header-title').innerText = `Chat with ${firstName}`;
@@ -1401,24 +1410,22 @@ async function openChat(taskId, targetPhone) {
             } catch (err) { msgBox.innerHTML = '<p style="color:red; text-align:center;">Failed to load chat.</p>'; }
         }
 
-function closeChat() {
+        function closeChat() {
             if (document.getElementById('history-modal').classList.contains('hidden')) {
                 document.body.classList.remove('no-scroll');
             }
-            
+
             const chatModal = document.getElementById('chat-modal');
-            // Trigger the slide-down animation
             chatModal.classList.remove('active');
-            
-            // Wait for the animation (0.3s) to finish before actually hiding the element
-            setTimeout(() => {
+
+            // NEW: Save the timeout so we can cancel it if the user re-opens quickly
+            chatCloseTimeout = setTimeout(() => {
                 chatModal.classList.add('hidden');
             }, 300);
-            
+
             currentChatTaskId = null;
             currentChatTargetPhone = null;
-        }
-        function sendChatMessage() {
+        } function sendChatMessage() {
             const input = document.getElementById('chat-input');
             const text = input.value.trim();
             if (!text || !currentChatTaskId) return;
@@ -1872,18 +1879,26 @@ function closeChat() {
             history.unshift({ id: taskId, title: title, type: type, date: new Date().toLocaleDateString() });
             localStorage.setItem('helpido_history', JSON.stringify(history));
         }
+        // --- UPGRADED: HISTORY MODAL LOGIC WITH TIMEOUT CLEARING ---
+        let historyCloseTimeout = null;
 
-function openHistory() {
+        function openHistory() {
             document.body.classList.add('no-scroll');
-            
+
             const historyModal = document.getElementById('history-modal');
+
+            // NEW: Cancel any pending close animations!
+            clearTimeout(historyCloseTimeout);
+
             historyModal.classList.remove('hidden');
-            void historyModal.offsetWidth; // Force reflow
+            void historyModal.offsetWidth;
             historyModal.classList.add('active');
 
-            const deletedFeed = document.getElementById('history-deleted-feed');            const droppedFeed = document.getElementById('history-dropped-feed');
-            const dismissedFeed = document.getElementById('history-dismissed-feed'); // NEW
+            const deletedFeed = document.getElementById('history-deleted-feed');
+            const droppedFeed = document.getElementById('history-dropped-feed');
+            const dismissedFeed = document.getElementById('history-dismissed-feed');
 
+            // ... (keep the rest of your openHistory logic here as it is!) ...
             const clearBtn = document.getElementById('clear-history-btn');
 
             const deletedHeader = deletedFeed.previousElementSibling;
@@ -1958,17 +1973,17 @@ function openHistory() {
                     </div>`).join('');
             }
         }
-function closeHistory() {
+        function closeHistory() {
             document.body.classList.remove('no-scroll');
-            
+
             const historyModal = document.getElementById('history-modal');
             historyModal.classList.remove('active');
-            
-            setTimeout(() => {
+
+            // NEW: Save the timeout so we can cancel it if needed
+            historyCloseTimeout = setTimeout(() => {
                 historyModal.classList.add('hidden');
             }, 300);
-        }
-        function clearHistory() {
+        } function clearHistory() {
             showConfirm("Clear History?", "Are you sure you want to wipe your local task log? This cannot be undone.", "Clear", () => {
                 localStorage.removeItem('helpido_history');
 
@@ -2238,7 +2253,7 @@ function closeHistory() {
             }
         }
         // --- NEW: RADIUS FILTER CHANGE ---
-// --- UPGRADED: CUSTOM RADIUS MODAL LOGIC ---
+        // --- UPGRADED: CUSTOM RADIUS MODAL LOGIC ---
         function openRadiusModal() {
             document.body.classList.add('no-scroll');
             document.getElementById('radius-modal').classList.remove('hidden');
@@ -2265,7 +2280,7 @@ function closeHistory() {
 
             closeRadiusModal();
             showToast(`Filtering tasks within ${text}`);
-            
+
             // Reload the feed with the new radius!
             loadTasks();
         }
