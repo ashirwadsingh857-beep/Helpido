@@ -23,6 +23,60 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
+        /* --- PREMIUM UI POLISH & ANIMATIONS --- */
+        :root {
+            --primary: #FF5722;
+            --bg-light: #F8F9FA;
+            --text-dark: #202124;
+            --text-muted: #5F6368;
+        }
+
+        /* Tactile squish effect for all buttons */
+        .btn,
+        .fab-btn,
+        .accept-btn,
+        .nav-item {
+            transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease;
+        }
+
+        .btn:active,
+        .fab-btn:active,
+        .accept-btn:active,
+        .menu-btn:active {
+            transform: scale(0.92) !important;
+            opacity: 0.9;
+        }
+
+        /* Bouncy Bottom Nav */
+        .nav-item.active {
+            color: var(--primary);
+            transform: translateY(-3px);
+            font-weight: bold;
+        }
+
+        .nav-item.active span {
+            transform: scale(1.15);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: inline-block;
+        }
+
+        /* Smooth Tab Content Entrance */
+        .tab-content {
+            animation: fadeSlideUp 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        @keyframes fadeSlideUp {
+            0% {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         /* =========================================
            1. CORE LAYOUT & MOBILE FIXES
            ========================================= */
@@ -620,8 +674,8 @@
                         onclick="requestLocationPermission()">📍 Enable Location</button>
 
                     <button id="install-btn" class="btn"
-                        style="background-color: #FF9800; margin-bottom: 16px; display: none;"
-                        onclick="installPWA()">📲 Install App</button>
+                        style="background-color: #FF9800; margin-bottom: 16px; display: none;" onclick="installPWA()">📲
+                        Install App</button>
 
                     <button class="logout-btn" onclick="logout()">Log Out</button>
                 </div>
@@ -861,10 +915,10 @@
                     const R = 6371; // Earth's radius in km
                     const dLat = (lat2 - lat1) * Math.PI / 180;
                     const dLon = (lon2 - lon1) * Math.PI / 180;
-                    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                              Math.sin(dLon/2) * Math.sin(dLon/2);
-                    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+                    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
                 }
 
                 // Routes to Home Tab
@@ -876,7 +930,7 @@
                         const taskLng = task.location.coordinates[0];
                         const taskLat = task.location.coordinates[1];
                         const distance = getDistanceInKm(userLat, userLng, taskLat, taskLng);
-                        
+
                         // If the task is further away than your dropdown radius, SILENTLY DESTROY THE NOTIFICATION!
                         if (distance > currentRadius) return;
                     }
@@ -1034,7 +1088,7 @@
             try {
                 // Now safely build the URL knowing GPS is guaranteed
                 const fetchUrl = `${API_URL}/tasks?lat=${userLat}&lng=${userLng}&radius=${currentRadius}`;
-                const res = await fetch(fetchUrl); 
+                const res = await fetch(fetchUrl);
                 const allTasks = await res.json();
 
                 let publicTasks = allTasks.filter(t => t.postedBy !== myPhone);
@@ -1048,8 +1102,17 @@
                     isInitialHomeLoad = false;
                 }
 
+                // --- UPGRADED: PREMIUM EMPTY STATE ---
                 if (publicTasks.length === 0) {
-                    feed.innerHTML = `<p style="text-align:center; color:#757575; padding-top:40px;">No tasks available right now.</p>`;
+                    feed.innerHTML = `
+                        <div style="text-align:center; padding: 60px 20px; animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                            <div style="font-size: 4.5rem; margin-bottom: 16px; text-shadow: 0 10px 20px rgba(0,0,0,0.1);">🍃</div>
+                            <h3 style="color: var(--text-dark); margin-bottom: 8px; font-size: 1.3rem;">All quiet here!</h3>
+                            <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5;">
+                                There are no open tasks within ${currentRadius < 1 ? currentRadius * 1000 + ' meters' : currentRadius + ' km'}.<br><br>
+                                Be the first to ask your neighbors for help!
+                            </p>
+                        </div>`;
                 } else {
                     const existingCardIds = new Set(Array.from(feed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('feed-card-', '')));
 
@@ -1359,23 +1422,33 @@
             setTimeout(() => { toast.className = "toast"; }, 3000);
         }
 
+        // --- UPGRADED: SMOOTH NATIVE TAB SWITCHING ---
         function switchTab(tabName) {
             activeTab = tabName;
 
-            document.getElementById('home-view').classList.add('hidden');
-            document.getElementById('tasks-view').classList.add('hidden');
-            document.getElementById('profile-view').classList.add('hidden');
+            // 1. Hide all tabs and remove animation classes
+            ['home', 'tasks', 'profile'].forEach(tab => {
+                const el = document.getElementById(`${tab}-view`);
+                el.classList.add('hidden');
+                el.classList.remove('tab-content');
+                document.getElementById(`nav-${tab}`).classList.remove('active');
+            });
 
-            document.getElementById('nav-home').classList.remove('active');
-            document.getElementById('nav-tasks').classList.remove('active');
-            document.getElementById('nav-profile').classList.remove('active');
+            // 2. Show the active tab
+            const activeEl = document.getElementById(`${tabName}-view`);
+            activeEl.classList.remove('hidden');
 
-            document.getElementById(`${tabName}-view`).classList.remove('hidden');
+            // 3. Force browser reflow to perfectly trigger the slide-up animation
+            void activeEl.offsetWidth;
+            activeEl.classList.add('tab-content');
+
+            // 4. Highlight the nav icon
             document.getElementById(`nav-${tabName}`).classList.add('active');
 
             const fab = document.querySelector('.fab-btn');
             const historyBtn = document.getElementById('history-btn-container');
 
+            // ... (Keep the rest of your switchTab function below this line!) ...
             if (tabName === 'profile') {
                 fab.classList.add('hide-fab');
                 if (historyBtn) historyBtn.style.display = 'block';
@@ -1891,7 +1964,7 @@
             e.preventDefault();
             // Stash the event so it can be triggered later
             deferredPrompt = e;
-            
+
             // Show our custom Install button in the profile
             const installBtn = document.getElementById('install-btn');
             if (installBtn) installBtn.style.display = 'inline-block';
@@ -1899,10 +1972,10 @@
 
         async function installPWA() {
             if (!deferredPrompt) return;
-            
+
             // Show the native browser install prompt
             deferredPrompt.prompt();
-            
+
             // Wait for the user to respond to the prompt
             const { outcome } = await deferredPrompt.userChoice;
             if (outcome === 'accepted') {
@@ -1910,10 +1983,10 @@
             } else {
                 console.log('User dismissed the install prompt');
             }
-            
+
             // We can only use the prompt once, so clear it
             deferredPrompt = null;
-            
+
             // Hide the button (it will reappear on next reload if they dismissed)
             document.getElementById('install-btn').style.display = 'none';
         }
