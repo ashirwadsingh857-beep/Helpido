@@ -616,8 +616,12 @@
                         onclick="subscribeToPush()">🔔 Enable Notifications</button>
 
                     <button id="location-btn" class="btn"
-                        style="background-color: #2196F3; margin-bottom: 16px; display: none;"
+                        style="background-color: #2196F3; margin-bottom: 12px; display: none;"
                         onclick="requestLocationPermission()">📍 Enable Location</button>
+
+                    <button id="install-btn" class="btn"
+                        style="background-color: #FF9800; margin-bottom: 16px; display: none;"
+                        onclick="installPWA()">📲 Install App</button>
 
                     <button class="logout-btn" onclick="logout()">Log Out</button>
                 </div>
@@ -1877,6 +1881,49 @@
             loadTasks();
             showToast("Task restored to Home feed.");
         }
+
+        // --- NEW: PWA INSTALLATION LOGIC ---
+        let deferredPrompt;
+
+        // The browser fires this when the app is ready to be installed
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the mini-infobar from appearing on mobile automatically
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            
+            // Show our custom Install button in the profile
+            const installBtn = document.getElementById('install-btn');
+            if (installBtn) installBtn.style.display = 'inline-block';
+        });
+
+        async function installPWA() {
+            if (!deferredPrompt) return;
+            
+            // Show the native browser install prompt
+            deferredPrompt.prompt();
+            
+            // Wait for the user to respond to the prompt
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                console.log('User accepted the install prompt');
+            } else {
+                console.log('User dismissed the install prompt');
+            }
+            
+            // We can only use the prompt once, so clear it
+            deferredPrompt = null;
+            
+            // Hide the button (it will reappear on next reload if they dismissed)
+            document.getElementById('install-btn').style.display = 'none';
+        }
+
+        // Listen for successful installation to hide the button permanently
+        window.addEventListener('appinstalled', () => {
+            document.getElementById('install-btn').style.display = 'none';
+            deferredPrompt = null;
+            showToast("App installed successfully! 🎉", "success");
+        });
 
         // --- NEW: SYNC LOCATION WITH BACKEND ---
         function syncLocationWithServer(lat, lng) {
