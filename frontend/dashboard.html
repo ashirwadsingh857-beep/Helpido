@@ -286,12 +286,15 @@
             right: 0 !important;
             bottom: 0 !important;
             height: auto !important;
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.35);
+            /* NEW: Frosted glass effect behind the drawer */
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
             z-index: 10000 !important;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
-            transition: opacity 0.3s;
+            transition: opacity 0.3s ease;
         }
 
         .chat-overlay.hidden {
@@ -305,16 +308,22 @@
             max-width: 500px;
             margin: 0 auto;
             height: 65dvh;
-            border-radius: 20px 20px 0 0;
+            border-radius: 24px 24px 0 0;
+            /* Slightly rounder top corners */
             display: flex;
             flex-direction: column;
             transform: translateY(0);
-            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            /* NEW: Premium Spring Physics (Overshoots slightly, then settles) */
+            transition: transform 0.5s cubic-bezier(0.32, 1.15, 0.25, 1);
             overflow: hidden;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
+            /* Deep shadow */
         }
 
         .chat-overlay.hidden .chat-drawer {
             transform: translateY(100%);
+            /* NEW: Faster, flat exit animation (no bouncing on the way down) */
+            transition: transform 0.25s cubic-bezier(0.4, 0, 1, 1);
         }
 
         .chat-header {
@@ -520,15 +529,18 @@
             background: #fff;
             width: 90%;
             max-width: 400px;
-            border-radius: 16px;
+            border-radius: 20px;
             padding: 24px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            transform: translateY(0);
-            transition: transform 0.3s;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            /* NEW: Pops up and slightly scales in */
+            transform: translateY(0) scale(1);
+            transition: transform 0.4s cubic-bezier(0.32, 1.15, 0.25, 1);
         }
 
         .modal-overlay.hidden .modal-content {
-            transform: translateY(20px);
+            /* Drops down slightly and shrinks when hiding */
+            transform: translateY(40px) scale(0.95);
+            transition: transform 0.25s cubic-bezier(0.4, 0, 1, 1);
         }
 
         /* --- ABSOLUTE Z-INDEX LAYERING --- */
