@@ -1988,6 +1988,21 @@ async function postHelpRequest() {
             // Reload the feed. (We will make this actually filter the DB in Phase 3!)
             loadTasks();
         }
+
+        // --- NEW: AUTO-UPDATE LOCATION WHEN APP IS OPENED ---
+        document.addEventListener("visibilitychange", () => {
+            // Whenever the user brings the app back to the screen...
+            if (document.visibilityState === "visible") {
+                console.log("App brought to foreground. Checking for new GPS location...");
+                // Fetch fresh coordinates and sync them to the database!
+                getUserLocationSilently(); 
+                
+                // Optional: Force the feed to refresh with the new location
+                if (activeTab === 'home') {
+                    loadTasks();
+                }
+            }
+        });
     </script>
 </body>
 
