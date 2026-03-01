@@ -19,52 +19,56 @@ self.addEventListener('fetch', (event) => {
     );
 });
 
-// --- NEW: NATIVE PUSH NOTIFICATION HANDLER ---
-self.addEventListener('push', function(event) {
-    if (event.data) {
-        const data = event.data.json(); // Parses the {title, desc} from server
-        
-        const options = {
-            body: data.desc || 'You have a new update!',
-            icon: '/192.png', // The app icon on the notification
-            badge: '/192.png', // The tiny monochrome icon in the top status bar
-            vibrate: [200, 100, 200], // Native vibration pattern
-            data: { url: '/dashboard.html' } // Where to go when tapped
-        };
+// --- UNIFIED NATIVE PUSH HANDLER WITH FOREGROUND SUPPRESSION ---
+self.addEventListener('push', function (event) {
+    if (!event.data) return;
 
-        // Tell Android to show the notification banner!
-        event.waitUntil(
-            self.registration.showNotification(data.title || 'Helpido', options)
-        );
-    }
+    const data = event.data.json();
+
+    const options = {
+        // Fallback text covers both tasks and chats
+        body: data.desc || 'You have a new notification!', 
+        icon: '/192.png',
+        badge: '/192.png',
+        vibrate: [200, 100, 200],
+        data: {
+            // These will simply be 'undefined' for New Tasks, which is perfectly safe!
+            type: data.type,
+            taskId: data.taskId,
+            senderPhone: data.senderPhone
+        }
+    };
+
+    // NEW: Check if the app is currently open and visible on screen
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+            let isAppVisible = false;
+
+            for (let i = 0; i < windowClients.length; i++) {
+                const client = windowClients[i];
+                // If the user is actively looking at the dashboard, flag it!
+                if (client.url.includes('helpido.onrender.com') || client.url.includes('/dashboard.html')) {
+                    if (client.visibilityState === 'visible') {
+                        isAppVisible = true;
+                        break;
+                    }
+                }
+            }
+
+            // If the app is visible, stay silent! (Socket.io will handle the in-app toast)
+            if (isAppVisible) {
+                console.log("Foreground detected: Suppressing native OS notification.");
+                return null; 
+            }
+
+            // If app is minimized, screen is off, or app is closed, fire the native lock-screen alert!
+            return self.registration.showNotification(data.title || 'Helpido', options);
+        })
+    );
 });
 
-// --- NEW: NATIVE PUSH NOTIFICATION HANDLER ---
-self.addEventListener('push', function(event) {
-    if (event.data) {
-        const data = event.data.json(); 
-        
-        const options = {
-            body: data.desc || 'You have a new message!',
-            icon: '/192.png',
-            badge: '/192.png',
-            vibrate: [200, 100, 200], 
-            // NEW: Pass the hidden routing data into the notification
-            data: { 
-                type: data.type,
-                taskId: data.taskId,
-                senderPhone: data.senderPhone
-            } 
-        };
-
-        event.waitUntil(
-            self.registration.showNotification(data.title || 'Helpido', options)
-        );
-    }
-});
-
-self.addEventListener('notificationclick', function(event) {
-    event.notification.close(); 
+self.addEventListener('notificationclick', function (event) {
+    event.notification.close();
     const payload = event.notification.data;
 
     event.waitUntil(
@@ -91,7 +95,7 @@ self.addEventListener('notificationclick', function(event) {
                     return;
                 }
             }
-            
+
             // 3. If the app was closed, launch it using the cold start URL
             if (clients.openWindow) {
                 return clients.openWindow(chatUrl);
