@@ -74,7 +74,7 @@ self.addEventListener('notificationclick', function (event) {
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
             // 1. Build the URL for a "Cold Start" (App is completely closed)
-            let chatUrl = '/dashboard.html';
+            let chatUrl = '/dashboard.html'; // Defaults to Home tab anyway!
             if (payload && payload.type === 'chat') {
                 chatUrl = `/dashboard.html?action=chat&taskId=${payload.taskId}&phone=${payload.senderPhone}`;
             }
@@ -82,15 +82,19 @@ self.addEventListener('notificationclick', function (event) {
             // 2. Check if the app is already open in the background
             for (let i = 0; i < windowClients.length; i++) {
                 let client = windowClients[i];
-                if (client.url.includes('/dashboard.html') && 'focus' in client) {
+                if ((client.url.includes('helpido.onrender.com') || client.url.includes('/dashboard.html')) && 'focus' in client) {
                     client.focus();
-                    // Tell the already-open app to slide the chat drawer up
+                    
+                    // Tell the already-open app what to do!
                     if (payload && payload.type === 'chat') {
                         client.postMessage({
                             action: 'openChat',
                             taskId: payload.taskId,
                             phone: payload.senderPhone
                         });
+                    } else if (payload && payload.type === 'task') {
+                        // NEW: Tell the app to switch to the home feed
+                        client.postMessage({ action: 'openHome' });
                     }
                     return;
                 }

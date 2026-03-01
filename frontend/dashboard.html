@@ -897,15 +897,21 @@
                 // (Keep the rest of your window.onload code below this line exactly as it is)                // --- NEW: HANDLE DEEP LINKING FOR CHAT PUSH NOTIFICATIONS ---
 
                 // Scenario A: App was already open (Service Worker sends a message)
+// Scenario A: App was already open (Service Worker sends a message)
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.addEventListener('message', event => {
                         if (event.data && event.data.action === 'openChat') {
                             switchTab('tasks');
                             openChat(event.data.taskId, event.data.phone);
+                        } else if (event.data && event.data.action === 'openHome') {
+                            // NEW: Instantly switch to the Home feed when a Task push is tapped!
+                            switchTab('home');
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                            // Optional: Force a fresh fetch to ensure the new task is visible
+                            loadTasks(); 
                         }
                     });
                 }
-
                 // Scenario B: App was closed (Cold Start from URL parameters)
                 const urlParams = new URLSearchParams(window.location.search);
                 if (urlParams.get('action') === 'chat') {

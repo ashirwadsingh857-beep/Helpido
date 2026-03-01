@@ -292,11 +292,12 @@ app.post('/api/tasks', async (req, res) => {
                 }
             });
 
+// --- UPDATED: ADD TYPE FOR DEEP LINKING ---
             const payload = JSON.stringify({
                 title: `New Task Near You 📍`,
-                desc: `${posterName} needs help: "${title}" for ₹${reward}`
+                desc: `${posterName} needs help: "${title}" for ₹${reward}`,
+                type: 'task' // NEW: Tells the Service Worker how to route this tap!
             });
-
             // Fire off notifications to everyone in the background
             const pushPromises = subscribedUsers.map(user => {
                 return webpush.sendNotification(user.pushSubscription, payload).catch(e => {
