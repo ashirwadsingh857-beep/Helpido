@@ -872,6 +872,10 @@
     <div id="toast" class="toast"></div>
 
     <script>
+
+        // --- PRODUCTION OVERRIDE: MUTE ALL CONSOLE LOGS ---
+        console.log = function() {};
+        
         // CRITICAL FIX: Restored the missing core variables!
         const API_URL = 'https://helpido.onrender.com/api';
         const myPhone = localStorage.getItem('helpido_phone');
