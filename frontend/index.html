@@ -1,174 +1,238 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Helpido | Login</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* --- NATIVE APP LOGIN SCREEN LOCK --- */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden !important; /* Locks the scroll completely */
+            background-color: #f8f9fa; /* Matches your dashboard background */
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Vertically centers everything */
+            align-items: center;     /* Horizontally centers everything */
+            height: 100dvh;          /* Uses dynamic viewport height for mobile */
+            width: 100%;
+            max-width: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            width: 100%;
+        }
+
+        .header h1 {
+            font-size: 3.2rem;
+            margin-bottom: 5px;
+            color: #FF5722;
+            letter-spacing: -1px;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 360px; /* Perfect width for mobile forms */
+            background: #fff;
+            padding: 30px 24px;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.08); /* Premium floating card look */
+        }
+    </style>
 </head>
 <body>
     <main class="app-container">
         <header class="header fade-in-up">
             <h1>Helpido</h1>
-            <p>Your community network for getting things done</p>
+            <p style="
+                font-size: 1.15rem; 
+                font-weight: 600; 
+                background: linear-gradient(90deg, #FF5722, #FF9800); 
+                -webkit-background-clip: text; 
+                -webkit-text-fill-color: transparent; 
+                margin-top: -5px; 
+                margin-bottom: 0;
+            ">
+                Real-time help, exactly where you stand.
+            </p>
         </header>
-
-        <div class="auth-container fade-in-up" style="animation-delay: 0.15s;"> 
+        <div class="auth-container fade-in-up" style="animation-delay: 0.15s;">
             <div id="login-section" class="form-group">
-                <input type="tel" id="login-phone" class="input-field" placeholder="10-digit Mobile Number" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
+                <input type="tel" id="login-phone" class="input-field" placeholder="10-digit Mobile Number"
+                    maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
                 <button type="button" class="btn" onclick="requestOTP()">Get OTP</button>
                 <p class="toggle-text" style="margin-top:15px; color:#757575;">
-                    New here? <span onclick="switchMode('signup')" style="color:#FF5722; cursor:pointer; font-weight:600;">Sign Up</span>
+                    New here? <span onclick="switchMode('signup')"
+                        style="color:#FF5722; cursor:pointer; font-weight:600;">Sign Up</span>
                 </p>
             </div>
 
             <div id="signup-section" class="form-group" style="display: none;">
                 <input type="text" id="reg-name" class="input-field" placeholder="Full Name">
                 <input type="text" id="reg-address" class="input-field" placeholder="Address (e.g., Datta Mandir)">
-                <input type="tel" id="reg-phone" class="input-field" placeholder="10-digit Mobile Number" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
+                <input type="tel" id="reg-phone" class="input-field" placeholder="10-digit Mobile Number" maxlength="10"
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
                 <button type="button" class="btn" onclick="registerUser()">Create Account</button>
                 <p class="toggle-text" style="margin-top:15px; color:#757575;">
-                    Already registered? <span onclick="switchMode('login')" style="color:#FF5722; cursor:pointer; font-weight:600;">Login</span>
+                    Already registered? <span onclick="switchMode('login')"
+                        style="color:#FF5722; cursor:pointer; font-weight:600;">Login</span>
                 </p>
             </div>
 
             <div id="otp-section" class="form-group" style="display: none;">
-                <p style="margin-bottom:10px; color:#757575; font-size:0.9rem;">Check the popup for your 4-digit code.</p>
-                <input type="number" id="otp-input" class="input-field" placeholder="Enter 4-digit OTP" oninput="this.value = this.value.slice(0, 4);">
+                <p style="margin-bottom:10px; color:#757575; font-size:0.9rem;">Check the popup for your 4-digit code.
+                </p>
+                <input type="number" id="otp-input" class="input-field" placeholder="Enter 4-digit OTP"
+                    oninput="this.value = this.value.slice(0, 4);">
                 <button type="button" class="btn" onclick="verifyOTP()">Verify & Enter</button>
-                <button type="button" class="text-btn" onclick="switchMode('login')" style="margin-top:15px;">Change Number</button>
+                <button type="button" class="text-btn" onclick="switchMode('login')" style="margin-top:15px;">Change
+                    Number</button>
             </div>
         </div>
     </main>
 
     <div id="toast" class="toast"></div>
 
-   <script>
-    const API_URL = 'https://helpido.onrender.com/api';
-    let activePhone = ""; 
+    <script>
+        const API_URL = 'https://helpido.onrender.com/api';
+        let activePhone = "";
 
-    // --- NEW: Auto-Skip Login ---
-    // If the browser remembers them, instantly jump to the dashboard!
-    const savedPhone = localStorage.getItem('helpido_phone');
-    if (savedPhone && savedPhone !== "undefined" && savedPhone !== "null") {
-        window.location.replace('/dashboard.html');
-    }
+        // --- NEW: Auto-Skip Login ---
+        // If the browser remembers them, instantly jump to the dashboard!
+        const savedPhone = localStorage.getItem('helpido_phone');
+        if (savedPhone && savedPhone !== "undefined" && savedPhone !== "null") {
+            window.location.replace('/dashboard.html');
+        }
 
-    function showToast(message, type = "success") {
-        const toast = document.getElementById("toast");
-        toast.innerText = message;
-        toast.className = `toast show ${type}`;
-        setTimeout(() => { toast.className = "toast"; }, 5000);
-    }
+        function showToast(message, type = "success") {
+            const toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.className = `toast show ${type}`;
+            setTimeout(() => { toast.className = "toast"; }, 5000);
+        }
 
-    // ... rest of your code ...
+        // ... rest of your code ...
 
-    function switchMode(mode) {
-        document.getElementById('login-section').style.display = 'none';
-        document.getElementById('signup-section').style.display = 'none';
-        document.getElementById('otp-section').style.display = 'none';
+        function switchMode(mode) {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('signup-section').style.display = 'none';
+            document.getElementById('otp-section').style.display = 'none';
 
-        if (mode === 'login') document.getElementById('login-section').style.display = 'block';
-        if (mode === 'signup') document.getElementById('signup-section').style.display = 'block';
-        if (mode === 'otp') document.getElementById('otp-section').style.display = 'block';
-    }
+            if (mode === 'login') document.getElementById('login-section').style.display = 'block';
+            if (mode === 'signup') document.getElementById('signup-section').style.display = 'block';
+            if (mode === 'otp') document.getElementById('otp-section').style.display = 'block';
+        }
 
-    async function registerUser() {
-        try {
-            const name = document.getElementById('reg-name').value.trim();
-            const address = document.getElementById('reg-address').value.trim();
-            const phone = document.getElementById('reg-phone').value;
+        async function registerUser() {
+            try {
+                const name = document.getElementById('reg-name').value.trim();
+                const address = document.getElementById('reg-address').value.trim();
+                const phone = document.getElementById('reg-phone').value;
 
-            if(!name || !address || !phone) return showToast("Please fill all fields", "error");
-            if(phone.length !== 10) return showToast("Please enter a valid 10-digit number", "error");
+                if (!name || !address || !phone) return showToast("Please fill all fields", "error");
+                if (phone.length !== 10) return showToast("Please enter a valid 10-digit number", "error");
 
-            showToast("Creating account...", "success");
+                showToast("Creating account...", "success");
 
-            const res = await fetch(`${API_URL}/signup`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, address, phone })
-            });
-            const data = await res.json();
-            
-            if(res.ok) {
-                showToast(data.message, "success");
-                document.getElementById('login-phone').value = phone; 
-                document.getElementById('reg-name').value = '';
-                document.getElementById('reg-address').value = '';
-                document.getElementById('reg-phone').value = '';
-                switchMode('login'); 
-            } else {
-                showToast(data.message, "error");
+                const res = await fetch(`${API_URL}/signup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, address, phone })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    showToast(data.message, "success");
+                    document.getElementById('login-phone').value = phone;
+                    document.getElementById('reg-name').value = '';
+                    document.getElementById('reg-address').value = '';
+                    document.getElementById('reg-phone').value = '';
+                    switchMode('login');
+                } else {
+                    showToast(data.message, "error");
+                }
+            } catch (err) {
+                showToast("Network Error: Check internet/Render", "error");
             }
-        } catch (err) {
-            showToast("Network Error: Check internet/Render", "error");
         }
-    }
 
-    async function requestOTP() {
-        try {
-            const phone = document.getElementById('login-phone').value;
-            
-            if(!phone) return showToast("Enter your mobile number", "error");
-            if(phone.length !== 10) return showToast("Please enter a valid 10-digit number", "error");
+        async function requestOTP() {
+            try {
+                const phone = document.getElementById('login-phone').value;
 
-            showToast("Connecting to server...", "success");
-            
-            const res = await fetch(`${API_URL}/login/step1`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone })
-            });
-            const data = await res.json();
+                if (!phone) return showToast("Enter your mobile number", "error");
+                if (phone.length !== 10) return showToast("Please enter a valid 10-digit number", "error");
 
-            if(res.ok) {
-                activePhone = phone; 
-                showToast(`OTP: ${data.otp}`, "success");
-                switchMode('otp'); 
-            } else {
-                showToast(data.message, "error");
+                showToast("Connecting to server...", "success");
+
+                const res = await fetch(`${API_URL}/login/step1`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    activePhone = phone;
+                    showToast(`OTP: ${data.otp}`, "success");
+                    switchMode('otp');
+                } else {
+                    showToast(data.message, "error");
+                }
+            } catch (err) {
+                showToast("Network Error: Server might be asleep", "error");
             }
-        } catch (err) {
-            showToast("Network Error: Server might be asleep", "error");
         }
-    }
 
-  async function verifyOTP() {
-    try {
-        const otp = document.getElementById('otp-input').value;
-        const phone = activePhone || document.getElementById('login-phone').value; 
+        async function verifyOTP() {
+            try {
+                const otp = document.getElementById('otp-input').value;
+                const phone = activePhone || document.getElementById('login-phone').value;
 
-        if(!otp || otp.length !== 4) return showToast("Please enter the 4-digit code", "error");
+                if (!otp || otp.length !== 4) return showToast("Please enter the 4-digit code", "error");
 
-        showToast("Verifying...", "success");
+                showToast("Verifying...", "success");
 
-        const res = await fetch(`${API_URL}/login/step2`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone: phone.toString(), otp: otp.toString() }) 
-        });
-        const data = await res.json();
+                const res = await fetch(`${API_URL}/login/step2`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: phone.toString(), otp: otp.toString() })
+                });
+                const data = await res.json();
 
-        if(res.ok) {
-            // 1. Save credentials safely
-            localStorage.setItem('helpido_user', data.userId);
-            localStorage.setItem('helpido_phone', phone.toString());
-            
-            // 2. Show success toast and automatically jump after a short delay
-            showToast("Login Successful! Loading Dashboard...", "success");
-            setTimeout(() => {
-                window.location.href = '/dashboard.html'; 
-            }, 800);
-            
-        } else {
-            showToast(data.message || "Invalid Code", "error");
+                if (res.ok) {
+                    // 1. Save credentials safely
+                    localStorage.setItem('helpido_user', data.userId);
+                    localStorage.setItem('helpido_phone', phone.toString());
+
+                    // 2. Show success toast and automatically jump after a short delay
+                    showToast("Login Successful! Loading Dashboard...", "success");
+                    setTimeout(() => {
+                        window.location.href = '/dashboard.html';
+                    }, 800);
+
+                } else {
+                    showToast(data.message || "Invalid Code", "error");
+                }
+            } catch (err) {
+                showToast("Network Error: Could not reach backend", "error");
+            }
         }
-    } catch (err) {
-        showToast("Network Error: Could not reach backend", "error");
-    }
-}
 
-</script>
+    </script>
 </body>
+
 </html>
