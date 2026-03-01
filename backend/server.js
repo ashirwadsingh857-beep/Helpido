@@ -319,30 +319,27 @@ app.get("/api/tasks", async (req, res) => {
         const { lat, lng, radius } = req.query;
         let query = { status: 'open' };
 
-        // --- NEW: GEOSPATIAL MATH ---
-        // If the phone sent its GPS location, apply the Radius Filter
-        if (lat && lng && radius && lat !== 'null' && lng !== 'null') {
-            const radiusInMeters = parseFloat(radius) * 1000;
-            query.location = {
-                $near: {
-                    $geometry: {
-                        type: "Point",
-                        // CRITICAL: MongoDB always requires [Longitude, Latitude] order!
-                        coordinates: [parseFloat(lng), parseFloat(lat)] 
-                    },
-                    $maxDistance: radiusInMeters
-                }
-            };
+        // --- STRICT HYPERLOCAL BACKEND LOCK ---
+        // If the frontend fails to send coordinates, reject the request entirely 
+        // to prevent distant tasks from leaking into the feed.
+        if (!lat || !lng || lat === 'null' || lng === 'null') {
+            return res.json([]); 
         }
 
-        // If using $near, MongoDB automatically sorts by closest distance. 
-        // Otherwise, we fallback to sorting by newest first.
-        let tasks;
-        if (query.location) {
-            tasks = await Task.find(query).lean(); 
-        } else {
-            tasks = await Task.find(query).sort({ createdAt: -1 }).lean();
-        }
+        const radiusInMeters = parseFloat(radius) * 1000;
+        query.location = {
+            $near: {
+                $geometry: {
+                    type: "Point",
+                    // CRITICAL: MongoDB always requires [Longitude, Latitude] order!
+                    coordinates: [parseFloat(lng), parseFloat(lat)] 
+                },
+                $maxDistance: radiusInMeters
+            }
+        };
+
+        // Fetch using the geospatial index (Automatically sorts closest to farthest)
+        const tasks = await Task.find(query).lean(); 
 
         const phones = [...new Set(tasks.map(t => t.postedBy))];
         const users = await User.find({ phone: { $in: phones } }, 'phone availability');
@@ -353,12 +350,14 @@ app.get("/api/tasks", async (req, res) => {
             ...task,
             posterStatus: userStatusMap[task.postedBy] || 'free'
         }));
+        
         res.json(tasksWithStatus);
     } catch (err) { 
         console.error("Geospatial fetch error:", err);
         res.status(500).json({ message: "Failed to fetch tasks" }); 
     }
 });
+
 app.post("/api/tasks/accept", async (req, res) => {
     const { taskId, helperPhone } = req.body;
     try {

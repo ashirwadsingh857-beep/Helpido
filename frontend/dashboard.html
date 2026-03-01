@@ -538,7 +538,8 @@
 
                 <div style="display: flex; align-items: center; gap: 6px;">
                     <span style="font-size: 0.8rem; color: #757575; font-weight: 600;">Radius:</span>
-                  <select id="radius-filter" onchange="updateRadius()" style="border-radius: 8px; padding: 4px 8px; border: 1px solid #ddd; background: #fff; outline: none; font-size: 0.85rem; color: #333; font-weight: 500; cursor: pointer;">
+                    <select id="radius-filter" onchange="updateRadius()"
+                        style="border-radius: 8px; padding: 4px 8px; border: 1px solid #ddd; background: #fff; outline: none; font-size: 0.85rem; color: #333; font-weight: 500; cursor: pointer;">
                         <option value="0.1" selected>100 m</option>
                         <option value="0.5">500 m</option>
                         <option value="10">10 km</option>
@@ -752,7 +753,7 @@
         let isInitialHomeLoad = true;
         let isInitialTasksLoad = true;
 
-       // --- NEW: GEOSPATIAL STATE ---
+        // --- NEW: GEOSPATIAL STATE ---
         let currentRadius = 0.1; // Default to 100 meters (0.1 km) for small societies
         let userLat = null;
         let userLng = null;
@@ -774,53 +775,47 @@
         window.onload = () => {
             if (myPhone) {
                 loadProfile();
-                // Show notification button if they haven't allowed it yet
+                initScrollAnimation(); // Removed premature loadTasks()
+
+                // 1. Notification Button Check
                 if ('Notification' in window && Notification.permission !== 'granted') {
                     const notifBtn = document.getElementById('notif-btn');
                     if (notifBtn) notifBtn.style.display = 'inline-block';
                 }
-                loadTasks();
-                initScrollAnimation();
 
-                // 2. Location Button Check
+                // 2. Location Permissions UI Check
                 if ('permissions' in navigator) {
                     navigator.permissions.query({ name: 'geolocation' }).then(function (result) {
-                        if (result.state !== 'granted') {
-                            const locBtn = document.getElementById('location-btn');
-                            if (locBtn) locBtn.style.display = 'inline-block';
-                        } else {
-                            // If they already granted it in the past, fetch it silently
-                            getUserLocationSilently();
+                        const locBtn = document.getElementById('location-btn');
+                        if (result.state !== 'granted' && locBtn) {
+                            locBtn.style.display = 'inline-block';
                         }
                     });
                 }
 
-                // Show notification button if they haven't allowed it yet
-                if ('Notification' in window && Notification.permission !== 'granted') {
-                    const notifBtn = document.getElementById('notif-btn');
-                    if (notifBtn) notifBtn.style.display = 'inline-block';
-                }
-
-                // --- NEW: GRAB USER'S GPS COORDINATES ---
+                // 3. STRICT: WAIT FOR GPS BEFORE LOADING FEED
                 if ("geolocation" in navigator) {
                     navigator.geolocation.getCurrentPosition(
                         (position) => {
                             userLat = position.coords.latitude;
                             userLng = position.coords.longitude;
-                            console.log(`📍 Location found: ${userLat}, ${userLng}`);
+                            syncLocationWithServer(userLat, userLng);
+                            // ONLY load tasks now that we have exact coordinates!
+                            if (activeTab === 'home') loadTasks();
                         },
                         (error) => {
                             console.warn("GPS location denied or unavailable", error);
-                            showToast("Please allow location for local tasks!", "error");
+                            // Run loadTasks anyway to trigger the "Location Required" UI
+                            if (activeTab === 'home') loadTasks();
                         },
-                        { enableHighAccuracy: true } // Forces GPS over IP-based location
+                        { enableHighAccuracy: true }
                     );
                 } else {
-                    console.warn("Geolocation API not supported");
-                    showToast("Geolocation not supported in this browser.", "error");
+                    if (activeTab === 'home') loadTasks();
                 }
 
                 // --- NEW: HANDLE DEEP LINKING FOR CHAT PUSH NOTIFICATIONS ---
+                // (Keep the rest of your window.onload code below this line exactly as it is)                // --- NEW: HANDLE DEEP LINKING FOR CHAT PUSH NOTIFICATIONS ---
 
                 // Scenario A: App was already open (Service Worker sends a message)
                 if ('serviceWorker' in navigator) {
@@ -991,16 +986,29 @@
         async function loadTasks() {
             const feed = document.getElementById('task-feed');
 
+            // --- STRICT GEOSPATIAL FRONTEND LOCK ---
+            if (userLat === null || userLng === null) {
+                feed.innerHTML = `
+                <div style="text-align:center; padding: 40px 20px;">
+                    <div style="font-size: 3.5rem; margin-bottom: 12px;">📍</div>
+                    <h3 style="margin-bottom: 8px; color: #333;">Location Required</h3>
+                    <p style="color: #757575; font-size: 0.95rem; line-height: 1.4; margin-bottom: 20px;">
+                        We need your GPS coordinates to find neighbors requesting help near you.
+                    </p>
+                    <button class="btn" style="width: auto; padding: 12px 24px; background: #2196F3; border-radius: 25px;" onclick="requestLocationPermission()">
+                        Enable Location
+                    </button>
+                </div>`;
+                return; // ABORT server request immediately!
+            }
+
             if (isInitialHomeLoad) feed.innerHTML = getSkeletonHTML(4);
 
             try {
-                // --- NEW: APPEND GPS DATA TO SERVER REQUEST ---
-                let fetchUrl = `${API_URL}/tasks`;
-                if (userLat !== null && userLng !== null) {
-                    fetchUrl += `?lat=${userLat}&lng=${userLng}&radius=${currentRadius}`;
-                }
-
-                const res = await fetch(fetchUrl); const allTasks = await res.json();
+                // Now safely build the URL knowing GPS is guaranteed
+                const fetchUrl = `${API_URL}/tasks?lat=${userLat}&lng=${userLng}&radius=${currentRadius}`;
+                const res = await fetch(fetchUrl); 
+                const allTasks = await res.json();
 
                 let publicTasks = allTasks.filter(t => t.postedBy !== myPhone);
                 const droppedTasks = JSON.parse(localStorage.getItem('dropped_tasks') || "[]");
@@ -1520,13 +1528,13 @@
             loadMyTasks();
         }
 
-async function postHelpRequest() {
+        async function postHelpRequest() {
             const title = document.getElementById('task-title').value;
             const description = document.getElementById('task-desc').value;
             const reward = parseInt(document.getElementById('task-reward').value) || 0;
 
             if (!title || !description) return showToast("Please fill all fields!", "error");
-            
+
             // --- NEW: GEOSPATIAL VALIDATION ---
             if (userLat === null || userLng === null) {
                 return showConfirm("Location Missing", "We need your GPS location to show this task to nearby neighbors. Try 'Enable Location' in your profile.", "OK", () => {
@@ -1535,12 +1543,12 @@ async function postHelpRequest() {
             }
 
             const res = await fetch(`${API_URL}/tasks`, {
-                method: 'POST', 
+                method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    title, 
-                    description, 
-                    postedBy: myPhone, 
+                body: JSON.stringify({
+                    title,
+                    description,
+                    postedBy: myPhone,
                     reward,
                     // NEW: Append the exact GPS coordinates
                     lat: userLat,
@@ -1549,11 +1557,11 @@ async function postHelpRequest() {
             });
 
             if (res.ok) {
-                showToast("Task posted to your neighborhood!", "success"); 
-                closeModal(); 
+                showToast("Task posted to your neighborhood!", "success");
+                closeModal();
                 loadTasks();
-                document.getElementById('task-title').value = ""; 
-                document.getElementById('task-desc').value = ""; 
+                document.getElementById('task-title').value = "";
+                document.getElementById('task-desc').value = "";
                 document.getElementById('task-reward').value = "";
             } else {
                 showToast("Failed to post task.", "error");
@@ -1948,12 +1956,12 @@ async function postHelpRequest() {
         }
 
         // --- NEW: UPDATE NOTIFICATION PREFERENCES ---
-// --- UPDATED: BULLETPROOF NOTIFICATION PREFERENCES ---
+        // --- UPDATED: BULLETPROOF NOTIFICATION PREFERENCES ---
         async function updateNotifPref(type, value) {
             try {
                 // Safely grab the phone number, regardless of variable scope
                 const phoneToUpdate = typeof myPhone !== 'undefined' ? myPhone : localStorage.getItem('helpido_phone');
-                
+
                 if (!phoneToUpdate) {
                     return showToast("Error: Phone number missing.", "error");
                 }
@@ -1963,7 +1971,7 @@ async function postHelpRequest() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ phone: phoneToUpdate, type: type, value: value === true })
                 });
-                
+
                 if (res.ok) {
                     showToast("Preferences saved securely!", "success");
                 } else {
@@ -1971,7 +1979,7 @@ async function postHelpRequest() {
                     // If it failed, flip the toggle back visually so the user isn't tricked
                     document.getElementById(type === 'notifyNewTasks' ? 'toggle-new-tasks' : 'toggle-chat-msgs').checked = !value;
                 }
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 showToast("Network error. Could not save.", "error");
                 // Flip back visually on error
@@ -1995,8 +2003,8 @@ async function postHelpRequest() {
             if (document.visibilityState === "visible") {
                 console.log("App brought to foreground. Checking for new GPS location...");
                 // Fetch fresh coordinates and sync them to the database!
-                getUserLocationSilently(); 
-                
+                getUserLocationSilently();
+
                 // Optional: Force the feed to refresh with the new location
                 if (activeTab === 'home') {
                     loadTasks();
