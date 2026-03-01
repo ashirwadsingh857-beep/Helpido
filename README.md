@@ -34,7 +34,6 @@ Helpido is a hyperlocal, real-time community assistance Progressive Web App (PWA
 ---
 
 ## 📸 Screenshots
-*(Add your screenshots to an `assets` folder in your repository and update these image links)*
 
 | Home Feed | Real-Time Chat | Radius Picker |
 | :---: | :---: | :---: |
