@@ -34,6 +34,16 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+// --- NEW: RATE LIMITING FOR PING ROUTE ---
+const rateLimit = require("express-rate-limit");
+
+const pingLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute window
+    max: 5, // Limit each IP to 5 pings per minute
+    message: "Too many pings, please slow down."
+});
+
+
 // --- WEBSOCKET SETUP ---
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -466,3 +476,8 @@ app.use((req, res) => { res.sendFile(path.join(frontendPath, 'index.html')); });
 // NEW: Use `server.listen` instead of `app.listen` to activate WebSockets
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Live Server running on port ${PORT}`));
+
+// Apply the limiter specifically to this route
+app.get('/ping', pingLimiter, (req, res) => {
+    res.status(200).send('Helpido is awake!');
+});
