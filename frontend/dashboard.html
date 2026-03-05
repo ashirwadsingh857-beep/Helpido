@@ -1198,6 +1198,18 @@
                 globalSocket.on('userStoppedTyping', (data) => {
                     if (currentChatTaskId === data.taskId && data.senderPhone !== myPhone) removeTypingIndicator();
                 });
+
+                // Helper receives this when poster marks task done
+                globalSocket.on('taskCompleted', (data) => {
+                    showAppNotification(
+                        '🎉',
+                        `Task Completed! You got ${data.rating}⭐`,
+                        `"${data.taskTitle}" has been marked done. Well done!`,
+                        () => { switchTab('tasks'); }
+                    );
+                    loadMyTasks();
+                    loadProfile(); // Refresh rating on profile tab
+                });
             }
         };
 
@@ -1442,9 +1454,6 @@
                         const markDoneBtn = task.status === 'accepted'
                             ? `<button class="btn" style="width:100%; margin-top:8px; background-color:#4CAF50;" onclick="openRatingModal('${task._id}')">✅ Mark as Done</button>`
                             : '';
-                        const completedBadge = task.status === 'completed'
-                            ? `<div style="margin-top:8px; background:#EDE7F6; color:#6A1B9A; border-radius:8px; padding:8px 12px; font-size:0.85rem; font-weight:600;">✅ Completed — thank you!</div>`
-                            : '';
 
                         return `
 <div class="task-card" id="req-card-${task._id}" style="border-left: 4px solid #FF5722; ${animStyle}">
@@ -1469,7 +1478,6 @@
         ${helperInfoHtml}
         ${chatBtn}
         ${markDoneBtn}
-        ${completedBadge}
     </div>                        `;
                     }).join('');
 
@@ -1507,47 +1515,52 @@
                         const isNew = !existingJobIds.has(task._id.toString());
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
 
+                        const isCompleted = task.status === 'completed';
                         return `
-<div class="task-card" id="job-card-${task._id}" style="border-left: 4px solid #2E7D32; ${task.isPrioritized ? 'background-color: #FFFDE7;' : ''} ${animStyle}">
+<div class="task-card" id="job-card-${task._id}" style="border-left: 4px solid ${isCompleted ? '#9C27B0' : '#2E7D32'}; ${task.isPrioritized && !isCompleted ? 'background-color: #FFFDE7;' : ''} ${isCompleted ? 'background-color:#F3E5F5;' : ''} ${animStyle}">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
-                <h4 style="margin:0;">${task.title} ${task.isPrioritized ? '<span style="color:#F57F17; font-size:0.8rem; margin-left:6px;">★ Priority</span>' : ''}</h4>
+                <h4 style="margin:0;">${task.title} ${task.isPrioritized && !isCompleted ? '<span style="color:#F57F17; font-size:0.8rem; margin-left:6px;">★ Priority</span>' : ''}</h4>
                <p class="time-ago-label" 
                data-timestamp="${task.updatedAt}" 
-               data-prefix="Accepted"
-               style="font-size: 0.72rem; color: #2E7D32; font-weight: bold; margin-top: 2px;">
-                Accepted ${timeAgo(task.updatedAt)} — Do it ASAP! 🚀
+               data-prefix="${isCompleted ? 'Completed' : 'Accepted'}"
+               style="font-size: 0.72rem; color: ${isCompleted ? '#6A1B9A' : '#2E7D32'}; font-weight: bold; margin-top: 2px;">
+                ${isCompleted ? '✅ Completed' : 'Accepted ' + timeAgo(task.updatedAt) + ' — Do it ASAP! 🚀'}
             </p>
             </div>
-            <button class="menu-btn" onclick="toggleMenu('menu-job-${task._id}', event)">⋮</button>
+            ${isCompleted ? '' : `<button class="menu-btn" onclick="toggleMenu('menu-job-${task._id}', event)">⋮</button>
             <div id="menu-job-${task._id}" class="dropdown-menu">
                 <button class="dropdown-item" onclick="prioritizeJob('${task._id}')">${task.isPrioritized ? 'Remove Priority' : 'Mark as Priority'}</button>
                 <button class="dropdown-item danger" onclick="removeJob('${task._id}')">Drop Task</button>
-            </div>
+            </div>`}
         </div>
-        <div style="background:#e3f2fd; padding:8px 12px; border-radius:8px; margin-bottom:10px; font-size:0.85rem; color:#1565C0; font-weight:600;" id="poster-name-job-${task._id}">👤 Loading poster name...</div>
-        <button class="btn" style="width:100%; margin:0; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.postedBy}')">💬 Chat</button>
+        <div style="background:${isCompleted ? '#EDE7F6' : '#e3f2fd'}; padding:8px 12px; border-radius:8px; margin-bottom:10px; font-size:0.85rem; color:${isCompleted ? '#6A1B9A' : '#1565C0'}; font-weight:600;" id="poster-name-job-${task._id}">${isCompleted ? '🌟 Task marked done by poster' : '👤 Loading poster name...'}</div>
+        ${isCompleted
+                                ? `<div style="background:#EDE7F6; color:#6A1B9A; border-radius:8px; padding:10px 14px; font-size:0.9rem; font-weight:700; text-align:center;">🎉 Task Completed! This will be removed shortly.</div>`
+                                : `<button class="btn" style="width:100%; margin:0; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.postedBy}')">💬 Chat</button>`
+                            }
     </div>                        `;
                     }).join('');
 
-                    // Fetch poster names for accepted jobs
+                    // Fetch poster names for accepted/completed jobs
                     sortedJobs.forEach(async (task) => {
                         const nameEl = document.getElementById(`poster-name-job-${task._id}`);
                         if (!nameEl) return;
+                        const prefix = task.status === 'completed' ? '🌟 Marked done by' : '👤 Posted by';
                         try {
                             if (userCache[task.postedBy]) {
-                                nameEl.innerText = `👤 Posted by ${userCache[task.postedBy]}`;
+                                nameEl.innerText = `${prefix} ${userCache[task.postedBy]}`;
                                 return;
                             }
                             const r = await fetch(`${API_URL}/users/${task.postedBy}`);
                             if (r.ok) {
                                 const u = await r.json();
                                 userCache[task.postedBy] = u.name;
-                                nameEl.innerText = `👤 Posted by ${u.name}`;
+                                nameEl.innerText = `${prefix} ${u.name}`;
                             } else {
-                                nameEl.innerText = `👤 Posted by neighbor`;
+                                nameEl.innerText = `${prefix} neighbor`;
                             }
-                        } catch { nameEl.innerText = `👤 Posted by neighbor`; }
+                        } catch { nameEl.innerText = `${prefix} neighbor`; }
                     });
                 }
             } catch (err) { reqFeed.innerHTML = `<p style="text-align:center; color:red;">Error loading tasks.</p>`; }

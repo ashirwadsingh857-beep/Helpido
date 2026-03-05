@@ -438,8 +438,41 @@ app.post("/api/tasks/complete", async (req, res) => {
             }
         }
 
-        // Broadcast so all clients refresh
-        io.emit('refreshFeed');
+        // 1. Notify helper via Socket.io (in-app, instant)
+        io.to(helperPhone).emit('taskCompleted', {
+            taskId,
+            taskTitle: task.title,
+            rating: Number(rating),
+            newAverage: helper ? helper.averageRating : null
+        });
+
+        // 2. Send web push to helper if subscribed
+        try {
+            if (helper && helper.pushSubscription) {
+                const posterUser = await User.findOne({ phone: ratedBy });
+                const posterName = posterUser ? posterUser.name.split(' ')[0] : 'Someone';
+                const pushPayload = JSON.stringify({
+                    title: `🎉 Task Completed!`,
+                    desc: `${posterName} marked "${task.title}" as done and gave you ${rating}⭐`
+                });
+                await webpush.sendNotification(helper.pushSubscription, pushPayload);
+            }
+        } catch (pushErr) {
+            console.error("Completion push failed:", pushErr.statusCode);
+        }
+
+        // 3. Auto-delete task + chat after 10 minutes
+        setTimeout(async () => {
+            try {
+                await Task.findByIdAndDelete(taskId);
+                await Message.deleteMany({ taskId });
+                io.emit('taskRemoved', taskId);
+                console.log(`Auto-deleted completed task ${taskId}`);
+            } catch (delErr) {
+                console.error("Auto-delete failed:", delErr);
+            }
+        }, 10 * 60 * 1000); // 10 minutes
+
         res.json({ message: "Task completed and rating saved!", averageRating: helper ? helper.averageRating : null });
     } catch (err) {
         console.error("Complete task error:", err);
@@ -460,10 +493,7 @@ app.delete('/api/tasks/:id', async (req, res) => {
     try {
         const task = await Task.findByIdAndDelete(req.params.id);
         if (!task) return res.status(404).json({ message: "Task not found" });
-
-        // --- NEW: Shred all chat messages linked to this dead task ---
         await Message.deleteMany({ taskId: req.params.id });
-
         io.emit('taskRemoved', req.params.id);
         res.json({ message: "Task and associated chats wiped successfully" });
     } catch (err) {
