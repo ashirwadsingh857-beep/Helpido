@@ -1505,7 +1505,27 @@
                 }
 
                 // Render Accepted Jobs
-                const sortedJobs = data.myJobs.sort((a, b) => (b.isPrioritized === true) - (a.isPrioritized === true));
+                // Filter out completed jobs that have passed the 10-min cleanup window (client-side safety net)
+                const TEN_MIN_MS = 10 * 60 * 1000;
+                const now = Date.now();
+                const allJobs = data.myJobs.sort((a, b) => (b.isPrioritized === true) - (a.isPrioritized === true));
+                const visibleJobs = allJobs.filter(task => {
+                    if (task.status !== 'completed') return true;
+                    const completedAt = new Date(task.updatedAt).getTime();
+                    return (now - completedAt) < TEN_MIN_MS; // still within the window
+                });
+
+                // For completed cards still visible, schedule their removal precisely
+                allJobs.forEach(task => {
+                    if (task.status !== 'completed') return;
+                    const completedAt = new Date(task.updatedAt).getTime();
+                    const msRemaining = TEN_MIN_MS - (now - completedAt);
+                    if (msRemaining > 0) {
+                        setTimeout(() => { loadMyTasks(); }, msRemaining + 500);
+                    }
+                });
+
+                const sortedJobs = visibleJobs; // alias for the rest of the render
                 if (sortedJobs.length === 0) {
                     jobsHeader.style.display = 'none';
                     jobsFeed.innerHTML = '';
