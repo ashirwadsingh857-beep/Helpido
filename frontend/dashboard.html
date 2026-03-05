@@ -1632,6 +1632,17 @@
                     history.forEach(msg => appendMessageUI(msg));
                 }
                 msgBox.scrollTop = msgBox.scrollHeight;
+
+                // Auto-focus input so keyboard opens immediately
+                const chatInput = document.getElementById('chat-input');
+                setTimeout(() => chatInput && chatInput.focus(), 100);
+
+                // Tapping the messages area dismisses keyboard — intentional gesture
+                msgBox.addEventListener('touchstart', () => {
+                    const inp = document.getElementById('chat-input');
+                    if (inp) inp.blur();
+                }, { passive: true, once: false });
+
             } catch (err) { msgBox.innerHTML = '<p style="color:red; text-align:center;">Failed to load chat.</p>'; }
         }
 
@@ -1664,6 +1675,8 @@
             input.value = '';
             const sendBtn = document.getElementById('chat-send-btn');
             if (sendBtn) sendBtn.style.background = '#E0E0E0';
+            // Re-focus so keyboard stays open on mobile
+            setTimeout(() => input.focus(), 50);
         }
 
         function formatTime(dateString) {
