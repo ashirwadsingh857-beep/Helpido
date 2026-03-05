@@ -1181,23 +1181,6 @@
         // NEW: Global cache to securely store names and prevent API spam
         const userCache = {};
 
-        function refreshTimeLabels() {
-            // Select all elements where we display the "ago" text
-            const timeLabels = document.querySelectorAll('.time-ago-label');
-
-            timeLabels.forEach(label => {
-                const originalTimestamp = label.getAttribute('data-timestamp');
-                if (originalTimestamp) {
-                    // Recalculate based on the current time
-                    const prefix = label.getAttribute('data-prefix') || 'Uploaded';
-                    label.innerText = `${prefix} ${timeAgo(originalTimestamp)}`;
-                }
-            });
-        }
-
-        // Set it to run every 30 seconds
-        setInterval(refreshTimeLabels, 30000);
-
         async function loadTasks() {
             const feed = document.getElementById('task-feed');
 
@@ -2363,6 +2346,29 @@
                 }
             }
         });
+
+        /**
+ * Lightweight function to update "time ago" text without refetching data.
+ * Optimized for i3/8GB RAM hardware.
+ */
+function refreshTimeLabels() {
+    // Select all elements currently displaying a relative timestamp
+    const timeLabels = document.querySelectorAll('.time-ago-label');
+    
+    timeLabels.forEach(label => {
+        // Pull the original ISO timestamp and the prefix (Uploaded/Accepted)
+        const timestamp = label.getAttribute('data-timestamp');
+        const prefix = label.getAttribute('data-prefix') || 'Uploaded';
+        
+        if (timestamp && timestamp !== "undefined") {
+            // Recalculate the relative time and update the text content
+            label.innerText = `${prefix} ${timeAgo(timestamp)}`;
+        }
+    });
+}
+
+// Execute every 30 seconds to keep the UI fresh without taxing the CPU
+setInterval(refreshTimeLabels, 30000);
     </script>
 </body>
 
