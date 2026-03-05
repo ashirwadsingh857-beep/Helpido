@@ -324,7 +324,10 @@
             width: 100%;
             max-width: 500px;
             margin: 0 auto;
-            height: 65dvh;
+            height: auto;
+            /* NEW: starts small */
+            max-height: 65dvh;
+            /* NEW: grows up to max size */
             border-radius: 24px 24px 0 0;
             display: flex;
             flex-direction: column;
@@ -333,7 +336,7 @@
 
             /* NEW: Start pushed down off screen */
             transform: translateY(100%);
-            transition: transform 0.5s cubic-bezier(0.32, 1.15, 0.25, 1);
+            transition: transform 0.5s cubic-bezier(0.32, 1.15, 0.25, 1), max-height 0.3s ease-out;
         }
 
         /* NEW: The state when the modal is open (Slide up to normal position) */
@@ -1682,7 +1685,18 @@
                 const chatDrawer = document.querySelector('.chat-drawer');
                 const vpHandler = () => {
                     if (!chatDrawer || document.getElementById('chat-modal').classList.contains('hidden')) return;
-                    chatDrawer.style.height = `${window.visualViewport.height}px`;
+
+                    // If the visual viewport is significantly smaller than the window, the keyboard is open
+                    // Usually the keyboard takes up > 25% of the screen.
+                    const isKeyboardOpen = window.visualViewport.height < window.innerHeight * 0.75;
+
+                    if (isKeyboardOpen) {
+                        chatDrawer.style.maxHeight = `${window.visualViewport.height}px`;
+                    } else {
+                        // Keyboard closed — return to default max height so background is visible
+                        chatDrawer.style.maxHeight = `65dvh`;
+                    }
+
                     const mb = document.getElementById('chat-messages');
                     if (mb) mb.scrollTop = mb.scrollHeight;
                 };
