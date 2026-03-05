@@ -856,7 +856,6 @@
                     oninput="document.getElementById('chat-send-btn').style.background = this.value.trim() ? '#FF5722' : '#E0E0E0';"
                     onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); sendChatMessage(); }">
                 <button id="chat-send-btn" onclick="sendChatMessage()" onmousedown="event.preventDefault()"
-                    ontouchstart="event.preventDefault()"
                     style="transition: background 0.2s ease; background: #E0E0E0; color: #fff; border: none; border-radius: 22px; padding: 10px 18px; font-weight: 700; cursor: pointer; font-size: 0.95rem;">Send</button>
             </div>
         </div>
@@ -1232,7 +1231,25 @@
                         () => { switchTab('tasks'); }
                     );
                     loadMyTasks();
-                    loadProfile(); // Refresh rating on profile tab
+                    loadProfile();
+                });
+
+                // Turn ticks blue when the other person reads messages
+                globalSocket.on('messagesSeen', ({ taskId: seenTaskId }) => {
+                    if (seenTaskId !== currentChatTaskId) return;
+                    document.querySelectorAll('#chat-messages .msg-tick').forEach(tick => {
+                        tick.classList.remove('sent');
+                        tick.classList.add('seen');
+                        tick.textContent = '✓✓';
+                    });
+                });
+
+                // Close chat if its task was deleted or dropped
+                globalSocket.on('taskRemoved', (removedTaskId) => {
+                    if (currentChatTaskId && currentChatTaskId === removedTaskId) {
+                        closeChat();
+                        showToast('💬 This task was removed. Chat closed.', 'error');
+                    }
                 });
             }
         };
@@ -1661,6 +1678,21 @@
                 const chatInput = document.getElementById('chat-input');
                 setTimeout(() => chatInput && chatInput.focus(), 100);
 
+                // Resize chat drawer when keyboard opens/closes so messages stay above keyboard
+                const chatDrawer = document.querySelector('.chat-drawer');
+                const vpHandler = () => {
+                    if (!chatDrawer || document.getElementById('chat-modal').classList.contains('hidden')) return;
+                    chatDrawer.style.height = `${window.visualViewport.height}px`;
+                    const mb = document.getElementById('chat-messages');
+                    if (mb) mb.scrollTop = mb.scrollHeight;
+                };
+                if (window.visualViewport) {
+                    window.visualViewport.removeEventListener('resize', chatDrawer._vpHandler);
+                    chatDrawer._vpHandler = vpHandler;
+                    window.visualViewport.addEventListener('resize', vpHandler);
+                    vpHandler(); // run once immediately
+                }
+
                 // Tapping the messages area dismisses keyboard — intentional gesture
                 msgBox.addEventListener('touchstart', () => {
                     const inp = document.getElementById('chat-input');
@@ -1670,23 +1702,7 @@
             } catch (err) { msgBox.innerHTML = '<p style="color:red; text-align:center;">Failed to load chat.</p>'; }
         }
 
-        // Turn ticks blue when other person reads messages
-        globalSocket.on('messagesSeen', ({ taskId: seenTaskId }) => {
-            if (seenTaskId !== currentChatTaskId) return;
-            document.querySelectorAll('#chat-messages .msg-tick').forEach(tick => {
-                tick.classList.remove('sent');
-                tick.classList.add('seen');
-                tick.textContent = '✓✓';
-            });
-        });
 
-        // Close chat with slide-down if task was deleted or dropped while chat is open
-        globalSocket.on('taskRemoved', (removedTaskId) => {
-            if (currentChatTaskId && currentChatTaskId === removedTaskId) {
-                closeChat();
-                showToast('💬 This task was removed. Chat closed.', 'error');
-            }
-        });
 
         function closeChat() {
             if (document.getElementById('history-modal').classList.contains('hidden')) {
