@@ -1270,7 +1270,6 @@
         
         <div style="background: #f5f5f5; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; border-left: 3px solid #FF5722;">
             <p id="poster-name-${task._id}" style="margin: 0; font-size: 0.9rem; font-weight: 600; color: #333;">👤 Loading name...</p>
-            <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #666;">📞 +91 ${task.postedBy}</p>
         </div>
         
         <p class="task-desc" style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
@@ -1407,7 +1406,7 @@
                 <button class="dropdown-item danger" onclick="removeJob('${task._id}')">Drop Task</button>
             </div>
         </div>
-        <p class="task-desc" style="margin-bottom: 12px;">Contact: ${task.postedBy}</p>
+
         <button class="btn" style="width:100%; margin:0; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.postedBy}')">💬 Chat</button>
     </div>                        `;
                     }).join('');
