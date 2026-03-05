@@ -1181,6 +1181,23 @@
         // NEW: Global cache to securely store names and prevent API spam
         const userCache = {};
 
+function refreshTimeLabels() {
+    // Select all elements where we display the "ago" text
+    const timeLabels = document.querySelectorAll('.time-ago-label');
+    
+    timeLabels.forEach(label => {
+        const originalTimestamp = label.getAttribute('data-timestamp');
+        if (originalTimestamp) {
+            // Recalculate based on the current time
+            const prefix = label.getAttribute('data-prefix') || 'Uploaded';
+            label.innerText = `${prefix} ${timeAgo(originalTimestamp)}`;
+        }
+    });
+}
+
+// Set it to run every 30 seconds
+setInterval(refreshTimeLabels, 30000);
+
         async function loadTasks() {
             const feed = document.getElementById('task-feed');
 
@@ -1238,6 +1255,14 @@
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
 
                         return `
+// Inside your template return:
+<p class="time-ago-label" 
+   data-timestamp="${task.createdAt}" 
+   data-prefix="Uploaded"
+   style="font-size: 0.72rem; color: #888; margin: 2px 0 0 0;">
+   Uploaded ${timeAgo(task.createdAt)}
+</p>
+
     <div class="task-card" id="feed-card-${task._id}" style="${animStyle}">
         <div class="task-top" style="align-items: flex-start;">
             <div style="flex: 1;">
@@ -1343,6 +1368,14 @@
                         const chatBtn = task.status === 'accepted' ? `<button class="btn" style="width:100%; margin-top:12px; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.helperPhone}')">💬 Chat</button>` : '';
 
                         return `
+// Inside your template return:
+<p class="time-ago-label" 
+   data-timestamp="${task.updatedAt}" 
+   data-prefix="Accepted"
+   style="font-size: 0.72rem; color: #2E7D32; font-weight: bold; margin-top: 2px;">
+   Accepted ${timeAgo(task.updatedAt)} — Do it ASAP! 🚀
+</p>
+
 <div class="task-card" id="req-card-${task._id}" style="border-left: 4px solid #FF5722; ${animStyle}">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
