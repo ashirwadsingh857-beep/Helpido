@@ -10,8 +10,16 @@ const userSchema = new mongoose.Schema({
     pushSubscription: { type: Object, default: null },
     notifyNewTasks: { type: Boolean, default: true },
     notifyChatMessages: { type: Boolean, default: true },
-    
-    // NEW: Geospatial Location Data for Radius Filtering
+
+    // --- RATING SYSTEM ---
+    ratings: [{
+        taskId: { type: String, required: true },
+        rating: { type: Number, required: true, min: 1, max: 5 },
+        ratedBy: { type: String, required: true } // phone of the poster who rated
+    }],
+    averageRating: { type: Number, default: null },
+
+    // Geospatial Location Data for Radius Filtering
     location: {
         type: { type: String, enum: ['Point'], default: 'Point' },
         coordinates: { type: [Number], default: [0, 0] } // Format: [longitude, latitude]

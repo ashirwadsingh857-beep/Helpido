@@ -212,15 +212,15 @@ app.post('/api/users/notifications', async (req, res) => {
     const { phone, type, value } = req.body;
     try {
         if (!phone) return res.status(400).json({ message: "Phone number missing" });
-        
+
         // Force the value into a strict boolean so Mongoose saves it correctly
-        const isEnabled = (value === true || value === 'true'); 
-        
+        const isEnabled = (value === true || value === 'true');
+
         const updateField = {};
-        updateField[type] = isEnabled; 
-        
+        updateField[type] = isEnabled;
+
         const result = await User.updateOne({ phone: phone }, { $set: updateField });
-        
+
         if (result.modifiedCount > 0 || result.matchedCount > 0) {
             res.json({ message: "Preferences locked in" });
         } else {
@@ -236,13 +236,13 @@ app.post('/api/users/location', async (req, res) => {
     try {
         await User.updateOne(
             { phone },
-            { 
-                $set: { 
+            {
+                $set: {
                     location: {
                         type: 'Point',
                         coordinates: [parseFloat(lng), parseFloat(lat)] // [Longitude, Latitude]
                     }
-                } 
+                }
             }
         );
         res.json({ message: "Location synced" });
@@ -254,23 +254,23 @@ app.post('/api/users/location', async (req, res) => {
 app.post('/api/tasks', async (req, res) => {
     // Extract the new lat and lng from the request
     const { title, description, postedBy, reward, lat, lng } = req.body;
-    
+
     try {
         // --- NEW: ASSEMBLE GEOJSON LOCATION ---
-        const newTask = new Task({ 
-            title, 
-            description, 
-            postedBy, 
+        const newTask = new Task({
+            title,
+            description,
+            postedBy,
             reward,
             location: {
                 type: 'Point',
                 // CRITICAL: MongoDB requires [Longitude, Latitude] order
-                coordinates: [parseFloat(lng), parseFloat(lat)] 
+                coordinates: [parseFloat(lng), parseFloat(lat)]
             }
         });
-        
+
         await newTask.save();
-        
+
         // ... (Keep your existing io.emit and web-push notification logic below this line) ...
         io.emit('refreshFeed'); // Broadcast new task
         io.emit('newTask', newTask);
@@ -281,14 +281,14 @@ app.post('/api/tasks', async (req, res) => {
             const posterName = posterUser ? posterUser.name.split(' ')[0] : 'Someone';
 
             // Find all users EXCEPT the poster who have a push subscription AND haven't muted New Tasks
-           // --- NEW: GEOSPATIAL PUSH NOTIFICATIONS ---
+            // --- NEW: GEOSPATIAL PUSH NOTIFICATIONS ---
             // Draw a 5km (5000 meters) circle around the new task
-            const notificationRadius = 5000; 
+            const notificationRadius = 5000;
 
             // Find all users EXCEPT the poster who have notifications ON, 
             // AND are physically standing within 5km of the task!
-            const subscribedUsers = await User.find({ 
-                phone: { $ne: postedBy }, 
+            const subscribedUsers = await User.find({
+                phone: { $ne: postedBy },
                 pushSubscription: { $ne: null },
                 notifyNewTasks: { $ne: false },
                 location: {
@@ -302,7 +302,7 @@ app.post('/api/tasks', async (req, res) => {
                 }
             });
 
-// --- UPDATED: ADD TYPE FOR DEEP LINKING ---
+            // --- UPDATED: ADD TYPE FOR DEEP LINKING ---
             const payload = JSON.stringify({
                 title: `New Task Near You 📍`,
                 desc: `${posterName} needs help: "${title}" for ₹${reward}`,
@@ -334,7 +334,7 @@ app.get("/api/tasks", async (req, res) => {
         // If the frontend fails to send coordinates, reject the request entirely 
         // to prevent distant tasks from leaking into the feed.
         if (!lat || !lng || lat === 'null' || lng === 'null') {
-            return res.json([]); 
+            return res.json([]);
         }
 
         const radiusInMeters = parseFloat(radius) * 1000;
@@ -343,14 +343,14 @@ app.get("/api/tasks", async (req, res) => {
                 $geometry: {
                     type: "Point",
                     // CRITICAL: MongoDB always requires [Longitude, Latitude] order!
-                    coordinates: [parseFloat(lng), parseFloat(lat)] 
+                    coordinates: [parseFloat(lng), parseFloat(lat)]
                 },
                 $maxDistance: radiusInMeters
             }
         };
 
         // Fetch using the geospatial index (Automatically sorts closest to farthest)
-        const tasks = await Task.find(query).lean(); 
+        const tasks = await Task.find(query).lean();
 
         const phones = [...new Set(tasks.map(t => t.postedBy))];
         const users = await User.find({ phone: { $in: phones } }, 'phone availability');
@@ -361,11 +361,11 @@ app.get("/api/tasks", async (req, res) => {
             ...task,
             posterStatus: userStatusMap[task.postedBy] || 'free'
         }));
-        
+
         res.json(tasksWithStatus);
-    } catch (err) { 
+    } catch (err) {
         console.error("Geospatial fetch error:", err);
-        res.status(500).json({ message: "Failed to fetch tasks" }); 
+        res.status(500).json({ message: "Failed to fetch tasks" });
     }
 });
 
@@ -402,6 +402,51 @@ app.post("/api/tasks/accept", async (req, res) => {
         res.json({ message: "Task accepted!" });
     } catch (err) { res.status(500).json({ message: "Error accepting task" }); }
 });
+
+// --- MARK TASK DONE + SUBMIT RATING ---
+app.post("/api/tasks/complete", async (req, res) => {
+    const { taskId, ratedBy, rating } = req.body;
+
+    // Validate rating range
+    if (!rating || rating < 1 || rating > 5) {
+        return res.status(400).json({ message: "Rating must be between 1 and 5" });
+    }
+
+    try {
+        const task = await Task.findById(taskId);
+        if (!task) return res.status(404).json({ message: "Task not found" });
+        if (task.postedBy !== ratedBy) return res.status(403).json({ message: "Only the poster can mark this done" });
+        if (task.status !== 'accepted') return res.status(400).json({ message: "Task is not in accepted state" });
+
+        const helperPhone = task.helperPhone;
+
+        // Mark task as completed
+        task.status = 'completed';
+        await task.save();
+
+        // Save rating to helper's User doc (prevent duplicate rating on same task)
+        const helper = await User.findOne({ phone: helperPhone });
+        if (helper) {
+            const alreadyRated = helper.ratings && helper.ratings.some(r => r.taskId === taskId);
+            if (!alreadyRated) {
+                helper.ratings = helper.ratings || [];
+                helper.ratings.push({ taskId, rating: Number(rating), ratedBy });
+                // Recalculate average
+                const total = helper.ratings.reduce((sum, r) => sum + r.rating, 0);
+                helper.averageRating = Math.round((total / helper.ratings.length) * 10) / 10;
+                await helper.save();
+            }
+        }
+
+        // Broadcast so all clients refresh
+        io.emit('refreshFeed');
+        res.json({ message: "Task completed and rating saved!", averageRating: helper ? helper.averageRating : null });
+    } catch (err) {
+        console.error("Complete task error:", err);
+        res.status(500).json({ message: "Server error completing task" });
+    }
+});
+
 app.get("/api/tasks/my-tasks", async (req, res) => {
     const phone = req.query.phone;
     try {
