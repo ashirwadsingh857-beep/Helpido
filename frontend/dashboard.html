@@ -677,6 +677,26 @@
             background: #EDE7F6;
             color: #6A1B9A;
         }
+
+        /* --- WHATSAPP-STYLE MESSAGE TICKS --- */
+        .msg-tick {
+            font-size: 0.72rem;
+            margin-left: 3px;
+            letter-spacing: -3px;
+            display: inline-block;
+            vertical-align: middle;
+            line-height: 1;
+        }
+
+        .msg-tick.sent {
+            color: rgba(255, 255, 255, 0.55);
+        }
+
+        .msg-tick.seen {
+            color: #4dd0e1;
+        }
+
+        /* cyan-blue, same as WhatsApp */
     </style>
 </head>
 
@@ -835,7 +855,8 @@
                 <input type="text" id="chat-input" placeholder="Message..." autocomplete="off" enterkeyhint="send"
                     oninput="document.getElementById('chat-send-btn').style.background = this.value.trim() ? '#FF5722' : '#E0E0E0';"
                     onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); sendChatMessage(); }">
-                <button id="chat-send-btn" onclick="sendChatMessage()"
+                <button id="chat-send-btn" onclick="sendChatMessage()" onmousedown="event.preventDefault()"
+                    ontouchstart="event.preventDefault()"
                     style="transition: background 0.2s ease; background: #E0E0E0; color: #fff; border: none; border-radius: 22px; padding: 10px 18px; font-weight: 700; cursor: pointer; font-size: 0.95rem;">Send</button>
             </div>
         </div>
@@ -1619,7 +1640,7 @@
 
             const msgBox = document.getElementById('chat-messages');
             msgBox.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">Loading messages...</p>';
-            globalSocket.emit('joinChat', taskId);
+            globalSocket.emit('joinChat', { taskId, viewerPhone: myPhone });
 
             try {
                 const res = await fetch(`${API_URL}/chat/${taskId}`);
@@ -1675,8 +1696,6 @@
             input.value = '';
             const sendBtn = document.getElementById('chat-send-btn');
             if (sendBtn) sendBtn.style.background = '#E0E0E0';
-            // Re-focus so keyboard stays open on mobile
-            setTimeout(() => input.focus(), 50);
         }
 
         function formatTime(dateString) {
@@ -1692,16 +1711,31 @@
 
             const isMe = msg.senderPhone === myPhone;
             const timeString = formatTime(msg.createdAt || msg.timestamp);
+            const isSeen = isMe && msg.seenBy && msg.seenBy.length > 0;
 
             const bubble = document.createElement('div');
             bubble.className = `msg-bubble ${isMe ? 'msg-sent' : 'msg-received'}`;
+            if (msg._id) bubble.setAttribute('data-msg-id', msg._id);
 
             const textDiv = document.createElement('div');
             textDiv.innerText = msg.text;
 
             const timeDiv = document.createElement('div');
             timeDiv.className = 'msg-time';
+            timeDiv.style.display = 'flex';
+            timeDiv.style.alignItems = 'center';
+            timeDiv.style.justifyContent = 'flex-end';
+            timeDiv.style.gap = '2px';
             timeDiv.innerText = timeString;
+
+            // Tick — only on MY messages
+            if (isMe) {
+                const tick = document.createElement('span');
+                tick.className = `msg-tick ${isSeen ? 'seen' : 'sent'}`;
+                tick.setAttribute('data-tick', 'true');
+                tick.textContent = isSeen ? '✓✓' : '✓';
+                timeDiv.appendChild(tick);
+            }
 
             bubble.appendChild(textDiv);
             bubble.appendChild(timeDiv);

@@ -59,8 +59,15 @@ io.on('connection', (socket) => {
         socket.join(phone);
     });
 
-    socket.on('joinChat', (taskId) => {
+    socket.on('joinChat', (data) => {
+        // data can be { taskId, viewerPhone } or just a taskId string (legacy)
+        const taskId = typeof data === 'string' ? data : data.taskId;
+        const viewerPhone = typeof data === 'object' ? data.viewerPhone : null;
         socket.join(taskId);
+        // Auto-mark seen when user opens the chat
+        if (viewerPhone && taskId) {
+            socket.emit('triggerMarkSeen', { taskId, viewerPhone });
+        }
     });
 
     // 2. Save message, update active chat, and send private notification
@@ -69,7 +76,8 @@ io.on('connection', (socket) => {
             const newMsg = new Message({
                 taskId: data.taskId,
                 senderPhone: data.senderPhone,
-                text: data.text
+                text: data.text,
+                seenBy: []
             });
             await newMsg.save();
 
@@ -107,6 +115,19 @@ io.on('connection', (socket) => {
                 }
             }
         } catch (err) { console.error("Message save error", err); }
+    });
+
+    // --- MARK SEEN ---
+    socket.on('markSeen', async ({ taskId, viewerPhone }) => {
+        try {
+            // Add viewerPhone to seenBy on all messages they didn't send
+            await Message.updateMany(
+                { taskId, senderPhone: { $ne: viewerPhone }, seenBy: { $ne: viewerPhone } },
+                { $push: { seenBy: viewerPhone } }
+            );
+            // Tell the whole chat room (sender sees their ticks go blue)
+            io.to(taskId).emit('messagesSeen', { taskId, seenBy: viewerPhone });
+        } catch (err) { console.error('markSeen error:', err); }
     });
 
     socket.on('typing', (data) => {
