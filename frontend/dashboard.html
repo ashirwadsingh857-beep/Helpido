@@ -1431,8 +1431,28 @@
                     isInitialTasksLoad = false;
                 }
 
-                // OVERALL EMPTY STATE
-                if (data.myRequests.length === 0 && data.myJobs.length === 0) {
+                // Pre-compute visible (non-expired) lists BEFORE the empty-state check
+                const visibleRequests = data.myRequests.filter(t => t.status !== 'completed');
+
+                const TEN_MIN_MS = 10 * 60 * 1000;
+                const now = Date.now();
+                const allJobs = data.myJobs.sort((a, b) => (b.isPrioritized === true) - (a.isPrioritized === true));
+                const visibleJobs = allJobs.filter(task => {
+                    if (task.status !== 'completed') return true;
+                    const completedAt = new Date(task.updatedAt).getTime();
+                    return (now - completedAt) < TEN_MIN_MS;
+                });
+
+                // Schedule auto-removal for completed jobs still in the window
+                allJobs.forEach(task => {
+                    if (task.status !== 'completed') return;
+                    const completedAt = new Date(task.updatedAt).getTime();
+                    const msRemaining = TEN_MIN_MS - (now - completedAt);
+                    if (msRemaining > 0) setTimeout(() => { loadMyTasks(); }, msRemaining + 500);
+                });
+
+                // OVERALL EMPTY STATE — uses filtered counts so completed-only users see the empty state
+                if (visibleRequests.length === 0 && visibleJobs.length === 0) {
                     reqHeader.style.display = 'none';
                     jobsHeader.style.display = 'none';
                     reqFeed.innerHTML = `<div style="text-align: center; padding: 40px 20px; color: #999;"><div style="font-size: 3rem; margin-bottom: 10px;">📭</div><p style="font-size: 1rem; margin: 0; color: #333;">No activity yet.</p><p style="font-size: 0.85rem; margin-top: 5px;">Tasks you post or accept will appear here.</p></div>`;
@@ -1441,7 +1461,6 @@
                 }
 
                 // Render Uploaded Requests (hide completed — they're done!)
-                const visibleRequests = data.myRequests.filter(t => t.status !== 'completed');
                 if (visibleRequests.length === 0) {
                     reqHeader.style.display = 'none';
                     reqFeed.innerHTML = '';
@@ -1508,27 +1527,7 @@
                 }
 
                 // Render Accepted Jobs
-                // Filter out completed jobs that have passed the 10-min cleanup window (client-side safety net)
-                const TEN_MIN_MS = 10 * 60 * 1000;
-                const now = Date.now();
-                const allJobs = data.myJobs.sort((a, b) => (b.isPrioritized === true) - (a.isPrioritized === true));
-                const visibleJobs = allJobs.filter(task => {
-                    if (task.status !== 'completed') return true;
-                    const completedAt = new Date(task.updatedAt).getTime();
-                    return (now - completedAt) < TEN_MIN_MS; // still within the window
-                });
-
-                // For completed cards still visible, schedule their removal precisely
-                allJobs.forEach(task => {
-                    if (task.status !== 'completed') return;
-                    const completedAt = new Date(task.updatedAt).getTime();
-                    const msRemaining = TEN_MIN_MS - (now - completedAt);
-                    if (msRemaining > 0) {
-                        setTimeout(() => { loadMyTasks(); }, msRemaining + 500);
-                    }
-                });
-
-                const sortedJobs = visibleJobs; // alias for the rest of the render
+                const sortedJobs = visibleJobs; // already filtered + sorted above
                 if (sortedJobs.length === 0) {
                     jobsHeader.style.display = 'none';
                     jobsFeed.innerHTML = '';
