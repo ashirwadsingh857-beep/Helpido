@@ -98,9 +98,13 @@
             min-height: 100dvh;
             display: flex;
             flex-direction: column;
-            max-width: 500px;
             margin: 0 auto;
             position: relative;
+            /* Remove the strict 500px and use a wider max for desktop */
+            max-width: 1200px;
+            width: 100%;
+            padding: 0 20px;
+            /* Add breathing room on sides */
         }
 
         .feed-section {
@@ -117,7 +121,7 @@
             left: 50% !important;
             transform: translateX(-50%) !important;
             width: 100%;
-            max-width: 500px;
+            max-width: 600px;
             z-index: 9000 !important;
             height: 70px;
             display: flex;
@@ -128,6 +132,7 @@
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border-top: 1px solid rgba(0, 0, 0, 0.05);
+            border-radius: 30px 30px 0 0;
             box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.03);
         }
 
@@ -645,6 +650,57 @@
             font-weight: 700;
             background: #fff3e0;
         }
+
+        #task-feed,
+        #my-requests-feed,
+        #my-jobs-feed {
+            display: grid;
+            /* This creates 1 column on mobile, and as many as fit on desktop */
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            align-items: start;
+        }
+
+        /* Ensure cards don't look weird when stretched */
+        .task-card {
+            margin-bottom: 0 !important;
+            /* Grid handles spacing now */
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (min-width: 768px) {
+    .dash-header {
+        padding: 40px 0;
+    }
+    
+    #greeting-name {
+        font-size: 2.2rem;
+    }
+    
+    .status-btn {
+        padding: 12px 24px;
+        font-size: 1rem;
+    }
+
+    .chat-drawer, .modal-content {
+    max-width: 450px !important;
+    margin: 0 auto;
+    /* On desktop, don't stick to bottom, center it */
+}
+
+@media (min-width: 768px) {
+    .chat-overlay {
+        justify-content: center;
+        align-items: center;
+    }
+    .chat-drawer {
+        border-radius: 24px;
+        height: 80dvh;
+    }
+}
+}
     </style>
 </head>
 
