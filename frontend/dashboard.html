@@ -1255,7 +1255,6 @@ setInterval(refreshTimeLabels, 30000);
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
 
                         return `
-// Inside your template return:
 <p class="time-ago-label" 
    data-timestamp="${task.createdAt}" 
    data-prefix="Uploaded"
@@ -1368,7 +1367,6 @@ setInterval(refreshTimeLabels, 30000);
                         const chatBtn = task.status === 'accepted' ? `<button class="btn" style="width:100%; margin-top:12px; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.helperPhone}')">💬 Chat</button>` : '';
 
                         return `
-// Inside your template return:
 <p class="time-ago-label" 
    data-timestamp="${task.updatedAt}" 
    data-prefix="Accepted"
