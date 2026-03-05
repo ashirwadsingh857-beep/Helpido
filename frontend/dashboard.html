@@ -1654,6 +1654,9 @@
                 }
                 msgBox.scrollTop = msgBox.scrollHeight;
 
+                // Emit markSeen so sender's ticks go blue
+                globalSocket.emit('markSeen', { taskId, viewerPhone: myPhone });
+
                 // Auto-focus input so keyboard opens immediately
                 const chatInput = document.getElementById('chat-input');
                 setTimeout(() => chatInput && chatInput.focus(), 100);
@@ -1666,6 +1669,24 @@
 
             } catch (err) { msgBox.innerHTML = '<p style="color:red; text-align:center;">Failed to load chat.</p>'; }
         }
+
+        // Turn ticks blue when other person reads messages
+        globalSocket.on('messagesSeen', ({ taskId: seenTaskId }) => {
+            if (seenTaskId !== currentChatTaskId) return;
+            document.querySelectorAll('#chat-messages .msg-tick').forEach(tick => {
+                tick.classList.remove('sent');
+                tick.classList.add('seen');
+                tick.textContent = '✓✓';
+            });
+        });
+
+        // Close chat with slide-down if task was deleted or dropped while chat is open
+        globalSocket.on('taskRemoved', (removedTaskId) => {
+            if (currentChatTaskId && currentChatTaskId === removedTaskId) {
+                closeChat();
+                showToast('💬 This task was removed. Chat closed.', 'error');
+            }
+        });
 
         function closeChat() {
             if (document.getElementById('history-modal').classList.contains('hidden')) {
