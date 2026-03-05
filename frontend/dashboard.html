@@ -1349,6 +1349,9 @@
                     reqFeed.innerHTML = data.myRequests.map((task, index) => {
                         const isNew = !existingReqIds.has(task._id.toString());
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
+                        const helperInfoHtml = task.status === 'accepted' && task.helperPhone
+                            ? `<div style="background:#e8f5e9; padding:8px 12px; border-radius:8px; margin-top:8px; font-size:0.85rem; color:#2e7d32; font-weight:600;" id="helper-name-${task._id}">🤝 Loading helper name...</div>`
+                            : '';
                         const chatBtn = task.status === 'accepted' ? `<button class="btn" style="width:100%; margin-top:12px; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.helperPhone}')">💬 Chat</button>` : '';
 
                         return `
@@ -1371,9 +1374,31 @@
         <div style="margin-bottom: 8px;">
             <span class="status-badge status-${task.status}">${task.status}</span>
         </div>
+        ${helperInfoHtml}
         ${chatBtn}
     </div>                        `;
                     }).join('');
+
+                    // Fetch helper names for accepted requests
+                    data.myRequests.forEach(async (task) => {
+                        if (task.status !== 'accepted' || !task.helperPhone) return;
+                        const nameEl = document.getElementById(`helper-name-${task._id}`);
+                        if (!nameEl) return;
+                        try {
+                            if (userCache[task.helperPhone]) {
+                                nameEl.innerText = `🤝 Being helped by ${userCache[task.helperPhone]}`;
+                                return;
+                            }
+                            const r = await fetch(`${API_URL}/users/${task.helperPhone}`);
+                            if (r.ok) {
+                                const u = await r.json();
+                                userCache[task.helperPhone] = u.name;
+                                nameEl.innerText = `🤝 Being helped by ${u.name}`;
+                            } else {
+                                nameEl.innerText = `🤝 Helper accepted`;
+                            }
+                        } catch { nameEl.innerText = `🤝 Helper accepted`; }
+                    });
                 }
 
                 // Render Accepted Jobs
@@ -1406,10 +1431,30 @@
                 <button class="dropdown-item danger" onclick="removeJob('${task._id}')">Drop Task</button>
             </div>
         </div>
-
+        <div style="background:#e3f2fd; padding:8px 12px; border-radius:8px; margin-bottom:10px; font-size:0.85rem; color:#1565C0; font-weight:600;" id="poster-name-job-${task._id}">👤 Loading poster name...</div>
         <button class="btn" style="width:100%; margin:0; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.postedBy}')">💬 Chat</button>
     </div>                        `;
                     }).join('');
+
+                    // Fetch poster names for accepted jobs
+                    sortedJobs.forEach(async (task) => {
+                        const nameEl = document.getElementById(`poster-name-job-${task._id}`);
+                        if (!nameEl) return;
+                        try {
+                            if (userCache[task.postedBy]) {
+                                nameEl.innerText = `👤 Posted by ${userCache[task.postedBy]}`;
+                                return;
+                            }
+                            const r = await fetch(`${API_URL}/users/${task.postedBy}`);
+                            if (r.ok) {
+                                const u = await r.json();
+                                userCache[task.postedBy] = u.name;
+                                nameEl.innerText = `👤 Posted by ${u.name}`;
+                            } else {
+                                nameEl.innerText = `👤 Posted by neighbor`;
+                            }
+                        } catch { nameEl.innerText = `👤 Posted by neighbor`; }
+                    });
                 }
             } catch (err) { reqFeed.innerHTML = `<p style="text-align:center; color:red;">Error loading tasks.</p>`; }
         }
