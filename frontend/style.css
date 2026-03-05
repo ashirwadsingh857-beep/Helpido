@@ -200,34 +200,30 @@ body {
 
 /* Header */
 .dash-header {
-    background: rgba(255, 255, 255, 0.75);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    padding: 24px 24px 16px 24px;
+    background-color: var(--white);
+    padding: 24px 24px 20px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid #E0E0E0;
     margin-bottom: 20px;
     margin-top: 0;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
 }
 
 .user-greeting h2 {
-    font-size: 1.4rem;
+    font-size: 1.25rem;
     color: var(--text-dark);
     margin-bottom: 4px;
-    font-weight: 700;
 }
 
 .user-greeting p {
     font-size: 0.95rem;
-    color: var(--primary-color);
+    color: #FFF3E0;
+    /* A crisp, bright soft-white/orange that pops beautifully */
     font-weight: 500;
     margin-top: 4px;
     opacity: 1;
+    /* Removes any dullness */
 }
 
 /* Let's also make the Map Pin stand out */
@@ -265,39 +261,6 @@ body {
     transform-origin: center center;
     will-change: transform, opacity;
     /* Hardware acceleration for mobile */
-    position: relative;
-    z-index: 2;
-}
-
-/* Swipe to Drop Container */
-.swipe-container {
-    position: relative;
-    width: 100%;
-    margin-bottom: 16px;
-    overflow: hidden;
-    border-radius: 12px;
-}
-
-.swipe-action-bg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #D32F2F;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding-right: 20px;
-    color: white;
-    font-size: 1.5rem;
-    z-index: 1;
-}
-
-.swipe-container .task-card {
-    margin-bottom: 0;
-    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .task-top {
@@ -313,15 +276,12 @@ body {
 }
 
 .reward-tag {
-    background: linear-gradient(135deg, #4CAF50, #2E7D32);
-    color: white;
-    padding: 6px 14px;
-    border-radius: 20px;
+    background-color: #E8F5E9;
+    color: #2E7D32;
+    padding: 4px 8px;
+    border-radius: 6px;
     font-weight: 700;
-    font-size: 0.9rem;
-    box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
-    display: inline-flex;
-    align-items: center;
+    font-size: 0.85rem;
 }
 
 .task-desc {
@@ -339,12 +299,10 @@ body {
 
 .distance-tag {
     font-size: 0.8rem;
-    font-weight: 600;
-    color: #5C6BC0;
-    background: linear-gradient(135deg, #E8EAF6, #C5CAE9);
-    padding: 6px 12px;
+    color: var(--text-muted);
+    background-color: var(--bg-light);
+    padding: 6px 10px;
     border-radius: 20px;
-    box-shadow: 0 2px 6px rgba(92, 107, 192, 0.2);
 }
 
 .accept-btn {

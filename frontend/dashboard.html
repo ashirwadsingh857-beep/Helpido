@@ -25,8 +25,6 @@
         }
     </script>
     <title>Helpido | Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
@@ -57,17 +55,14 @@
         /* Bouncy Bottom Nav */
         .nav-item.active {
             color: var(--primary);
+            transform: translateY(-3px);
             font-weight: bold;
         }
 
         .nav-item.active span {
             transform: scale(1.15);
-            transition: transform 0.3s cubicbezier(0.175, 0.885, 0.32, 1.275);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: inline-block;
-            background: rgba(255, 87, 34, 0.1);
-            padding: 4px 16px;
-            border-radius: 20px;
-            margin-bottom: 2px;
         }
 
         /* Smooth Tab Content Entrance */
@@ -268,26 +263,22 @@
         }
 
         .status-badge {
-            padding: 6px 14px;
-            border-radius: 20px;
+            padding: 4px 12px;
+            border-radius: 12px;
             font-size: 0.75rem;
-            font-weight: 800;
+            font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 0.8px;
             display: inline-block;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
         }
 
         .status-open {
-            background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
-            color: #1565C0;
-            box-shadow: 0 4px 10px rgba(21, 101, 192, 0.15);
+            background: #e3f2fd;
+            color: #1976d2;
         }
 
         .status-accepted {
-            background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
-            color: #E65100;
-            box-shadow: 0 4px 10px rgba(230, 81, 0, 0.15);
+            background: #e8f5e9;
+            color: #2e7d32;
         }
 
         /* =========================================
@@ -605,34 +596,6 @@
 
         .toast {
             z-index: 20000 !important;
-        }
-
-        /* --- ✨ STAR POP ANIMATION --- */
-        .star-btn {
-            display: inline-block;
-            transition: color 0.2s;
-            color: #E0E0E0;
-            /* Dimmer default */
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .star-btn.active {
-            color: #FFC107;
-            animation: starPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        @keyframes starPop {
-            0% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.4);
-            }
-
-            100% {
-                transform: scale(1);
-            }
         }
 
         /* --- 8. CUSTOM RADIUS DROPDOWN --- */
@@ -1618,11 +1581,7 @@
 
                         const isCompleted = task.status === 'completed';
                         return `
-<div class="swipe-container" data-task-id="${task._id}">
-    <div class="swipe-action-bg">
-        🗑️
-    </div>
-    <div class="task-card swipe-card" id="job-card-${task._id}" style="border-left: 4px solid ${isCompleted ? '#9C27B0' : '#2E7D32'}; ${task.isPrioritized && !isCompleted ? 'background-color: #FFFDE7;' : ''} ${isCompleted ? 'background-color:#F3E5F5;' : ''} ${animStyle}">
+<div class="task-card" id="job-card-${task._id}" style="border-left: 4px solid ${isCompleted ? '#9C27B0' : '#2E7D32'}; ${task.isPrioritized && !isCompleted ? 'background-color: #FFFDE7;' : ''} ${isCompleted ? 'background-color:#F3E5F5;' : ''} ${animStyle}">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
                 <h4 style="margin:0;">${task.title} ${task.isPrioritized && !isCompleted ? '<span style="color:#F57F17; font-size:0.8rem; margin-left:6px;">★ Priority</span>' : ''}</h4>
@@ -1644,8 +1603,7 @@
                                 ? `<div style="background:#EDE7F6; color:#6A1B9A; border-radius:8px; padding:10px 14px; font-size:0.9rem; font-weight:700; text-align:center;">🎉 Task Completed! This will be removed shortly.</div>`
                                 : `<button class="btn" style="width:100%; margin:0; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.postedBy}')">💬 Chat</button>`
                             }
-    </div>
-</div>                        `;
+    </div>                        `;
                     }).join('');
 
                     // Fetch poster names for accepted/completed jobs
@@ -1668,9 +1626,6 @@
                             }
                         } catch { nameEl.innerText = `${prefix} neighbor`; }
                     });
-
-                    // --- NEW: INITIALIZE SWIPE TO DROP LOGIC ---
-                    initSwipeToDrop(jobsFeed);
                 }
             } catch (err) { reqFeed.innerHTML = `<p style="text-align:center; color:red;">Error loading tasks.</p>`; }
         }
@@ -2060,10 +2015,10 @@
             }, 350);
         }
 
-        function removeJob(taskId, bypassConfirm = false) {
-            const doDrop = () => {
-                const cardOuter = document.querySelector(`.swipe-container[data-task-id="${taskId}"]`) || document.getElementById(`job-card-${taskId}`);
-                if (cardOuter) cardOuter.classList.add('slide-out-left');
+        function removeJob(taskId) {
+            showConfirm("Drop Task?", "Drop this task? It will be returned to the public Home tab for others to accept.", "Drop Task", () => {
+                const card = document.getElementById(`job-card-${taskId}`);
+                if (card) card.classList.add('slide-out-left');
 
                 setTimeout(async () => {
                     try {
@@ -2075,8 +2030,8 @@
                         if (res.ok) {
                             // SECURE: Only save to history if the server confirms the drop
                             let taskTitle = "Unknown Task";
-                            if (cardOuter) {
-                                const titleEl = cardOuter.querySelector('h4');
+                            if (card) {
+                                const titleEl = card.querySelector('h4');
                                 if (titleEl) taskTitle = titleEl.childNodes[0].nodeValue.trim();
                             }
                             saveToHistory(taskId, taskTitle, 'dropped');
@@ -2090,82 +2045,13 @@
                             loadTasks();
                             loadMyTasks();
                         } else {
-                            if (cardOuter) cardOuter.classList.remove('slide-out-left');
+                            if (card) card.classList.remove('slide-out-left');
                             showToast("Could not drop task", "error");
                         }
-                    } catch (err) { showToast("Network error", "error"); if (cardOuter) cardOuter.classList.remove('slide-out-left'); }
+                    } catch (err) { showToast("Network error", "error"); if (card) card.classList.remove('slide-out-left'); }
                 }, 350);
-            };
-
-            if (bypassConfirm) {
-                doDrop();
-            } else {
-                showConfirm("Drop Task?", "Drop this task? It will be returned to the public Home tab for others to accept.", "Drop Task", doDrop);
-            }
-        }
-
-        // --- NEW: SWIPE TO DROP LOGIC ---
-        function initSwipeToDrop(container) {
-            let startX = 0;
-            let currentX = 0;
-            let activeCard = null;
-            let activeContainer = null;
-            const SWIPE_THRESHOLD = -100; // Pixels to swipe left before triggering drop
-
-            container.addEventListener('touchstart', e => {
-                const swipeContainer = e.target.closest('.swipe-container');
-                if (!swipeContainer) return;
-
-                activeContainer = swipeContainer;
-                activeCard = swipeContainer.querySelector('.swipe-card');
-                if (!activeCard) return;
-
-                startX = e.touches[0].clientX;
-                currentX = startX;
-
-                // Disable transition during drag for 1:1 finger tracking
-                activeCard.style.transition = 'none';
-            }, { passive: true });
-
-            container.addEventListener('touchmove', e => {
-                if (!activeCard) return;
-                currentX = e.touches[0].clientX;
-                const diff = currentX - startX;
-
-                // Only allow swiping left
-                if (diff < 0) {
-                    // Add resistance as they pull further
-                    const pullText = Math.max(diff, -150) + 'px';
-                    activeCard.style.transform = `translateX(${pullText})`;
-                }
-            }, { passive: true });
-
-            container.addEventListener('touchend', e => {
-                if (!activeCard) return;
-                const diff = currentX - startX;
-
-                // Restore smooth transition for snap back or slide out
-                activeCard.style.transition = 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-
-                if (diff < SWIPE_THRESHOLD) {
-                    // Swiped far enough! Slide it all the way out and trigger drop
-                    activeCard.style.transform = `translateX(-100%)`;
-                    const taskId = activeContainer.getAttribute('data-task-id');
-
-                    // Small delay to let the slide-out animation finish
-                    setTimeout(() => {
-                        removeJob(taskId, true); // true = swipe bypasses confirmation
-                    }, 200);
-                } else {
-                    // Didn't swipe far enough, snap back to center
-                    activeCard.style.transform = `translateX(0)`;
-                }
-
-                activeCard = null;
-                activeContainer = null;
             });
         }
-
         async function prioritizeJob(taskId) {
             await fetch(`${API_URL}/tasks/prioritize`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
