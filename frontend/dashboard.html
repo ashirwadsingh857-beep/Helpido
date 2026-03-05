@@ -873,9 +873,32 @@
 
     <script>
 
+        function timeAgo(dateParam) {
+            if (!dateParam) return null;
+            const date = typeof dateParam === 'object' ? dateParam : new Date(dateParam);
+            const today = new Date();
+            const seconds = Math.round((today - date) / 1000);
+            const minutes = Math.round(seconds / 60);
+            const hours = Math.round(minutes / 60);
+            const days = Math.round(hours / 24);
+            const weeks = Math.round(days / 7);
+            const months = Math.round(days / 30);
+            const years = Math.round(days / 365);
+
+            if (seconds < 5) return 'just now';
+            if (seconds < 60) return `${seconds} seconds ago`;
+            if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+            if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+            if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
+            if (weeks < 4) return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
+            if (months < 12) return `${months} month${months > 1 ? 's' : ''} ago`;
+            return `${years} year${years > 1 ? 's' : ''} ago`;
+        }
+
+
         // --- PRODUCTION OVERRIDE: MUTE ALL CONSOLE LOGS ---
-        console.log = function() {};
-        
+        console.log = function () { };
+
         // CRITICAL FIX: Restored the missing core variables!
         const API_URL = 'https://helpido.onrender.com/api';
         const myPhone = localStorage.getItem('helpido_phone');
@@ -1215,38 +1238,38 @@
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
 
                         return `
-                        <div class="task-card" id="feed-card-${task._id}" style="${animStyle}">
-                            <div class="task-top" style="align-items: flex-start;">
-                                <div style="flex: 1;">
-                                    <div style="display: flex; align-items: center; gap: 8px;">
-                                        <h4 style="margin: 0;">${task.title}</h4>
-                                        <span class="poster-badge ${task.posterStatus}">${task.posterStatus.toUpperCase()}</span>
-                                    </div>
-                                    <span class="reward-tag" style="display: inline-block; margin-top: 6px;">₹${task.reward}</span>
-                                </div>
-                                <div style="position: relative;">
-                                    <button class="menu-btn" onclick="toggleMenu('menu-home-${task._id}', event)">⋮</button>
-                                    <div id="menu-home-${task._id}" class="dropdown-menu">
-                                        <button class="dropdown-item" onclick="dismissTask('${task._id}')">Dismiss Task</button>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <p class="task-desc" style="margin-top: 12px; margin-bottom: 12px;">${task.description}</p>
-                            
-                            <div style="background: #f5f5f5; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; border-left: 3px solid #FF5722;">
-                                <p id="poster-name-${task._id}" style="margin: 0; font-size: 0.9rem; font-weight: 600; color: #333;">👤 Loading name...</p>
-                                <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #666;">📞 +91 ${task.postedBy}</p>
-                            </div>
-                            
-                            <p class="task-desc" style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                                <span class="status-badge status-${task.status}">${task.status}</span>
-                            </p>
-                            <div class="task-bottom" style="justify-content: flex-end;">
-                                <button class="accept-btn" onclick="acceptTask('${task._id}')" style="width: 100%;">I can do it</button>
-                            </div>
-                        </div>
-                        `;
+    <div class="task-card" id="feed-card-${task._id}" style="${animStyle}">
+        <div class="task-top" style="align-items: flex-start;">
+            <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <h4 style="margin: 0;">${task.title}</h4>
+                    <span class="poster-badge ${task.posterStatus}">${task.posterStatus.toUpperCase()}</span>
+                </div>
+                <p style="font-size: 0.72rem; color: #888; margin: 2px 0 0 0;">Uploaded ${timeAgo(task.createdAt)}</p>
+                <span class="reward-tag" style="display: inline-block; margin-top: 6px;">₹${task.reward}</span>
+            </div>
+            <div style="position: relative;">
+                <button class="menu-btn" onclick="toggleMenu('menu-home-${task._id}', event)">⋮</button>
+                <div id="menu-home-${task._id}" class="dropdown-menu">
+                    <button class="dropdown-item" onclick="dismissTask('${task._id}')">Dismiss Task</button>
+                </div>
+            </div>
+        </div>
+        
+        <p class="task-desc" style="margin-top: 12px; margin-bottom: 12px;">${task.description}</p>
+        
+        <div style="background: #f5f5f5; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; border-left: 3px solid #FF5722;">
+            <p id="poster-name-${task._id}" style="margin: 0; font-size: 0.9rem; font-weight: 600; color: #333;">👤 Loading name...</p>
+            <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #666;">📞 +91 ${task.postedBy}</p>
+        </div>
+        
+        <p class="task-desc" style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <span class="status-badge status-${task.status}">${task.status}</span>
+        </p>
+        <div class="task-bottom" style="justify-content: flex-end;">
+            <button class="accept-btn" onclick="acceptTask('${task._id}')" style="width: 100%;">I can do it</button>
+        </div>
+    </div>                        `;
                     }).join('');
 
                     // Dynamically fetch and replace real names
@@ -1320,20 +1343,22 @@
                         const chatBtn = task.status === 'accepted' ? `<button class="btn" style="width:100%; margin-top:12px; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.helperPhone}')">💬 Chat</button>` : '';
 
                         return `
-                        <div class="task-card" id="req-card-${task._id}" style="border-left: 4px solid #FF5722; ${animStyle}">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                                <h4>${task.title} <span style="font-size:0.8rem; color:gray; font-weight:normal;">(₹${task.reward})</span></h4>
-                                <button class="menu-btn" onclick="toggleMenu('menu-req-${task._id}', event)">⋮</button>
-                                <div id="menu-req-${task._id}" class="dropdown-menu">
-                                    <button class="dropdown-item danger" onclick="deleteMyTask('${task._id}')">Delete Request</button>
-                                </div>
-                            </div>
-                            <div style="margin-bottom: 8px;">
-                                <span class="status-badge status-${task.status}">${task.status}</span>
-                            </div>
-                            ${chatBtn}
-                        </div>
-                        `;
+<div class="task-card" id="req-card-${task._id}" style="border-left: 4px solid #FF5722; ${animStyle}">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <h4 style="margin:0;">${task.title} <span style="font-size:0.8rem; color:gray; font-weight:normal;">(₹${task.reward})</span></h4>
+                <p style="font-size: 0.72rem; color: #888; margin-top: 2px;">Uploaded ${timeAgo(task.createdAt)}</p>
+            </div>
+            <button class="menu-btn" onclick="toggleMenu('menu-req-${task._id}', event)">⋮</button>
+            <div id="menu-req-${task._id}" class="dropdown-menu">
+                <button class="dropdown-item danger" onclick="deleteMyTask('${task._id}')">Delete Request</button>
+            </div>
+        </div>
+        <div style="margin-bottom: 8px;">
+            <span class="status-badge status-${task.status}">${task.status}</span>
+        </div>
+        ${chatBtn}
+    </div>                        `;
                     }).join('');
                 }
 
@@ -1350,19 +1375,23 @@
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
 
                         return `
-                        <div class="task-card" id="job-card-${task._id}" style="border-left: 4px solid #2E7D32; ${task.isPrioritized ? 'background-color: #FFFDE7;' : ''} ${animStyle}">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                                <h4>${task.title} ${task.isPrioritized ? '<span style="color:#F57F17; font-size:0.8rem; margin-left:6px;">★ Priority</span>' : ''}</h4>
-                                <button class="menu-btn" onclick="toggleMenu('menu-job-${task._id}', event)">⋮</button>
-                                <div id="menu-job-${task._id}" class="dropdown-menu">
-                                    <button class="dropdown-item" onclick="prioritizeJob('${task._id}')">${task.isPrioritized ? 'Remove Priority' : 'Mark as Priority'}</button>
-                                    <button class="dropdown-item danger" onclick="removeJob('${task._id}')">Drop Task</button>
-                                </div>
-                            </div>
-                            <p class="task-desc" style="margin-bottom: 12px;">Contact: ${task.postedBy}</p>
-                            <button class="btn" style="width:100%; margin:0; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.postedBy}')">💬 Chat</button>
-                        </div>
-                        `;
+<div class="task-card" id="job-card-${task._id}" style="border-left: 4px solid #2E7D32; ${task.isPrioritized ? 'background-color: #FFFDE7;' : ''} ${animStyle}">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <h4 style="margin:0;">${task.title} ${task.isPrioritized ? '<span style="color:#F57F17; font-size:0.8rem; margin-left:6px;">★ Priority</span>' : ''}</h4>
+                <p style="font-size: 0.72rem; color: #2E7D32; font-weight: bold; margin-top: 2px;">
+                    Accepted ${timeAgo(task.updatedAt)} — Do it ASAP! 🚀
+                </p>
+            </div>
+            <button class="menu-btn" onclick="toggleMenu('menu-job-${task._id}', event)">⋮</button>
+            <div id="menu-job-${task._id}" class="dropdown-menu">
+                <button class="dropdown-item" onclick="prioritizeJob('${task._id}')">${task.isPrioritized ? 'Remove Priority' : 'Mark as Priority'}</button>
+                <button class="dropdown-item danger" onclick="removeJob('${task._id}')">Drop Task</button>
+            </div>
+        </div>
+        <p class="task-desc" style="margin-bottom: 12px;">Contact: ${task.postedBy}</p>
+        <button class="btn" style="width:100%; margin:0; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.postedBy}')">💬 Chat</button>
+    </div>                        `;
                     }).join('');
                 }
             } catch (err) { reqFeed.innerHTML = `<p style="text-align:center; color:red;">Error loading tasks.</p>`; }
