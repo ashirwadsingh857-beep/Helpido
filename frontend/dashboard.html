@@ -645,6 +645,38 @@
             font-weight: 700;
             background: #fff3e0;
         }
+
+        /* --- STAR RATING SYSTEM --- */
+        .star-btn {
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.15s;
+            color: #ccc;
+            display: inline-block;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        .star-btn.active {
+            color: #FFC107;
+            transform: scale(1.2);
+        }
+
+        .rating-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            background: #FFF8E1;
+            color: #F57F17;
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 12px;
+            border: 1px solid #FFE082;
+        }
+
+        .status-completed {
+            background: #EDE7F6;
+            color: #6A1B9A;
+        }
     </style>
 </head>
 
@@ -704,7 +736,20 @@
                 <div class="task-card"
                     style="text-align: center; padding: 30px 20px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
                     <h2 id="profile-name" style="margin-bottom: 5px; color: var(--text-dark);">Loading...</h2>
-                    <p id="profile-phone" style="color: var(--text-muted); margin-bottom: 20px;">...</p>
+                    <p id="profile-phone" style="color: var(--text-muted); margin-bottom: 16px;">...</p>
+
+                    <!-- Rating Display -->
+                    <div id="profile-rating-card"
+                        style="background:linear-gradient(135deg,#FFF8E1,#FFF3CD); border:1px solid #FFE082; border-radius:14px; padding:16px; margin-bottom:20px; text-align:center;">
+                        <p
+                            style="font-size:0.78rem; color:#795548; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">
+                            Your Helper Rating</p>
+                        <div id="profile-star-display" style="font-size:1.8rem; letter-spacing:4px; margin-bottom:4px;">
+                            ☆☆☆☆☆</div>
+                        <p id="profile-rating-text" style="font-size:0.9rem; color:#5D4037; font-weight:600; margin:0;">
+                            No ratings yet</p>
+                    </div>
+
                     <div
                         style="background-color: var(--bg-light); padding: 16px; border-radius: 12px; text-align: left; margin-bottom: 24px;">
                         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">
@@ -850,6 +895,29 @@
                     style="flex: 1; background-color: #F5F5F5; color: #757575; margin-top: 0; box-shadow: none;">Cancel</button>
                 <button id="confirm-action-btn" class="btn"
                     style="flex: 1; background-color: #D32F2F; margin-top: 0; box-shadow: none;">Yes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== RATING MODAL ===== -->
+    <div id="rating-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="text-align:center; max-width:320px;">
+            <div style="font-size:2.5rem; margin-bottom:8px;">🌟</div>
+            <h3 style="margin-bottom:6px; color:#202124;">Task Completed!</h3>
+            <p style="color:#757575; font-size:0.9rem; margin-bottom:20px;">Rate your helper's performance</p>
+            <div id="star-picker"
+                style="display:flex; justify-content:center; gap:10px; margin-bottom:24px; font-size:2.2rem; cursor:pointer;">
+                <span class="star-btn" data-val="1" onclick="selectStar(1)">☆</span>
+                <span class="star-btn" data-val="2" onclick="selectStar(2)">☆</span>
+                <span class="star-btn" data-val="3" onclick="selectStar(3)">☆</span>
+                <span class="star-btn" data-val="4" onclick="selectStar(4)">☆</span>
+                <span class="star-btn" data-val="5" onclick="selectStar(5)">☆</span>
+            </div>
+            <div style="display:flex; gap:12px;">
+                <button class="btn" onclick="closeRatingModal()"
+                    style="flex:1; background:#F5F5F5; color:#757575; margin-top:0; box-shadow:none;">Cancel</button>
+                <button class="btn" id="submit-rating-btn" onclick="submitRating()"
+                    style="flex:1; margin-top:0; box-shadow:none;">Submit ⭐</button>
             </div>
         </div>
     </div>
@@ -1170,6 +1238,24 @@
                     document.getElementById('toggle-new-tasks').checked = user.notifyNewTasks !== false;
                     document.getElementById('toggle-chat-msgs').checked = user.notifyChatMessages !== false;
                     if (user.availability) { currentStatus = user.availability; updateStatusUI(); }
+
+                    // Populate rating card on Profile tab
+                    const starDisplay = document.getElementById('profile-star-display');
+                    const ratingText = document.getElementById('profile-rating-text');
+                    if (starDisplay && ratingText) {
+                        if (user.averageRating && user.ratings && user.ratings.length > 0) {
+                            const avg = user.averageRating;
+                            const count = user.ratings.length;
+                            const fullStars = Math.round(avg);
+                            starDisplay.textContent = '★'.repeat(fullStars) + '☆'.repeat(5 - fullStars);
+                            starDisplay.style.color = '#FFC107';
+                            ratingText.textContent = `${avg} / 5  (${count} rating${count !== 1 ? 's' : ''})`;
+                        } else {
+                            starDisplay.textContent = '☆☆☆☆☆';
+                            starDisplay.style.color = '#ccc';
+                            ratingText.textContent = 'No ratings yet — complete tasks to earn ratings!';
+                        }
+                    }
                 }
             } catch (err) {
                 console.error("Profile load failed", err);
@@ -1349,10 +1435,16 @@
                     reqFeed.innerHTML = data.myRequests.map((task, index) => {
                         const isNew = !existingReqIds.has(task._id.toString());
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
-                        const helperInfoHtml = task.status === 'accepted' && task.helperPhone
+                        const helperInfoHtml = (task.status === 'accepted' || task.status === 'completed') && task.helperPhone
                             ? `<div style="background:#e8f5e9; padding:8px 12px; border-radius:8px; margin-top:8px; font-size:0.85rem; color:#2e7d32; font-weight:600;" id="helper-name-${task._id}">🤝 Loading helper name...</div>`
                             : '';
-                        const chatBtn = task.status === 'accepted' ? `<button class="btn" style="width:100%; margin-top:12px; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.helperPhone}')">💬 Chat</button>` : '';
+                        const chatBtn = task.status === 'accepted' ? `<button class="btn" style="width:100%; margin-top:10px; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.helperPhone}')">💬 Chat</button>` : '';
+                        const markDoneBtn = task.status === 'accepted'
+                            ? `<button class="btn" style="width:100%; margin-top:8px; background-color:#4CAF50;" onclick="openRatingModal('${task._id}')">✅ Mark as Done</button>`
+                            : '';
+                        const completedBadge = task.status === 'completed'
+                            ? `<div style="margin-top:8px; background:#EDE7F6; color:#6A1B9A; border-radius:8px; padding:8px 12px; font-size:0.85rem; font-weight:600;">✅ Completed — thank you!</div>`
+                            : '';
 
                         return `
 <div class="task-card" id="req-card-${task._id}" style="border-left: 4px solid #FF5722; ${animStyle}">
@@ -1376,24 +1468,26 @@
         </div>
         ${helperInfoHtml}
         ${chatBtn}
+        ${markDoneBtn}
+        ${completedBadge}
     </div>                        `;
                     }).join('');
 
-                    // Fetch helper names for accepted requests
+                    // Fetch helper names + ratings for accepted/completed requests
                     data.myRequests.forEach(async (task) => {
-                        if (task.status !== 'accepted' || !task.helperPhone) return;
+                        if ((task.status !== 'accepted' && task.status !== 'completed') || !task.helperPhone) return;
                         const nameEl = document.getElementById(`helper-name-${task._id}`);
                         if (!nameEl) return;
                         try {
-                            if (userCache[task.helperPhone]) {
-                                nameEl.innerText = `🤝 Being helped by ${userCache[task.helperPhone]}`;
-                                return;
-                            }
                             const r = await fetch(`${API_URL}/users/${task.helperPhone}`);
                             if (r.ok) {
                                 const u = await r.json();
                                 userCache[task.helperPhone] = u.name;
-                                nameEl.innerText = `🤝 Being helped by ${u.name}`;
+                                const firstName = u.name.split(' ')[0];
+                                const ratingText = u.averageRating
+                                    ? ` &nbsp;⭐ ${u.averageRating} (${u.ratings ? u.ratings.length : 0} rating${u.ratings && u.ratings.length !== 1 ? 's' : ''})`
+                                    : ' &nbsp;<span style="color:#aaa;font-weight:400;">No ratings yet</span>';
+                                nameEl.innerHTML = `🤝 Being helped by <strong>${firstName}</strong>${ratingText}`;
                             } else {
                                 nameEl.innerText = `🤝 Helper accepted`;
                             }
@@ -1828,6 +1922,74 @@
                 body: JSON.stringify({ taskId })
             });
             loadMyTasks();
+        }
+
+        /* =========================================
+           RATING SYSTEM
+           ========================================= */
+        let pendingRatingTaskId = null;
+        let selectedStarValue = 0;
+
+        function openRatingModal(taskId) {
+            pendingRatingTaskId = taskId;
+            selectedStarValue = 0;
+            // Reset all stars to empty
+            document.querySelectorAll('.star-btn').forEach(s => {
+                s.textContent = '☆';
+                s.classList.remove('active');
+            });
+            document.getElementById('rating-modal').classList.remove('hidden');
+        }
+
+        function closeRatingModal() {
+            pendingRatingTaskId = null;
+            selectedStarValue = 0;
+            document.getElementById('rating-modal').classList.add('hidden');
+        }
+
+        function selectStar(val) {
+            selectedStarValue = val;
+            document.querySelectorAll('.star-btn').forEach(s => {
+                const starVal = parseInt(s.getAttribute('data-val'));
+                if (starVal <= val) {
+                    s.textContent = '★';
+                    s.classList.add('active');
+                } else {
+                    s.textContent = '☆';
+                    s.classList.remove('active');
+                }
+            });
+        }
+
+        async function submitRating() {
+            if (!pendingRatingTaskId) return;
+            if (selectedStarValue === 0) return showToast('Please pick a star rating!', 'error');
+
+            const btn = document.getElementById('submit-rating-btn');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+
+            try {
+                const res = await fetch(`${API_URL}/tasks/complete`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ taskId: pendingRatingTaskId, ratedBy: myPhone, rating: selectedStarValue })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    closeRatingModal();
+                    showToast(`✅ Task done! You gave ${selectedStarValue}⭐`, 'success');
+                    loadMyTasks();
+                } else {
+                    showToast(data.message || 'Could not mark done', 'error');
+                }
+            } catch (err) {
+                showToast('Network error', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Submit ⭐';
+            }
         }
 
         async function postHelpRequest() {
