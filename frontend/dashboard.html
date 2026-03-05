@@ -2,6 +2,11 @@
 <html lang="en">
 
 <head>
+    <link rel="icon" type="image/png" href="asset/192.png">
+
+    <link rel="shortcut icon" href="asset/192.png">
+
+    <link rel="apple-touch-icon" href="asset/192.png">
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
@@ -2350,24 +2355,24 @@
  * Lightweight function to update "time ago" text without refetching data.
  * Optimized for i3/8GB RAM hardware.
  */
-function refreshTimeLabels() {
-    // Select all elements currently displaying a relative timestamp
-    const timeLabels = document.querySelectorAll('.time-ago-label');
-    
-    timeLabels.forEach(label => {
-        // Pull the original ISO timestamp and the prefix (Uploaded/Accepted)
-        const timestamp = label.getAttribute('data-timestamp');
-        const prefix = label.getAttribute('data-prefix') || 'Uploaded';
-        
-        if (timestamp && timestamp !== "undefined") {
-            // Recalculate the relative time and update the text content
-            label.innerText = `${prefix} ${timeAgo(timestamp)}`;
-        }
-    });
-}
+        function refreshTimeLabels() {
+            // Select all elements currently displaying a relative timestamp
+            const timeLabels = document.querySelectorAll('.time-ago-label');
 
-// Execute every 30 seconds to keep the UI fresh without taxing the CPU
-setInterval(refreshTimeLabels, 30000);
+            timeLabels.forEach(label => {
+                // Pull the original ISO timestamp and the prefix (Uploaded/Accepted)
+                const timestamp = label.getAttribute('data-timestamp');
+                const prefix = label.getAttribute('data-prefix') || 'Uploaded';
+
+                if (timestamp && timestamp !== "undefined") {
+                    // Recalculate the relative time and update the text content
+                    label.innerText = `${prefix} ${timeAgo(timestamp)}`;
+                }
+            });
+        }
+
+        // Execute every 30 seconds to keep the UI fresh without taxing the CPU
+        setInterval(refreshTimeLabels, 30000);
     </script>
 </body>
 
