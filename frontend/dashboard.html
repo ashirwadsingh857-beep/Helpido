@@ -1172,6 +1172,12 @@
                 });
 
                 globalSocket.on('taskRemoved', (taskId) => {
+                    // Close chat if this task's chat is open
+                    if (currentChatTaskId && currentChatTaskId === taskId) {
+                        closeChat();
+                        showToast('💬 This task was removed. Chat closed.', 'error');
+                    }
+
                     const feedCard = document.getElementById(`feed-card-${taskId}`);
                     const jobCard = document.getElementById(`job-card-${taskId}`);
                     let isAnimating = false;
@@ -1247,13 +1253,7 @@
                     });
                 });
 
-                // Close chat if its task was deleted or dropped
-                globalSocket.on('taskRemoved', (removedTaskId) => {
-                    if (currentChatTaskId && currentChatTaskId === removedTaskId) {
-                        closeChat();
-                        showToast('💬 This task was removed. Chat closed.', 'error');
-                    }
-                });
+                // (taskRemoved chat-close logic is handled in the combined listener above)
             }
         };
 
@@ -1889,8 +1889,8 @@
                 if (historyBtn) historyBtn.style.display = 'none';
             }
 
-            if (tabName === 'home') { if (isInitialHomeLoad) loadTasks(); }
-            if (tabName === 'tasks') { if (isInitialTasksLoad) loadMyTasks(); }
+            if (tabName === 'home') { loadTasks(); }
+            if (tabName === 'tasks') { loadMyTasks(); }
         }
 
         function toggleMenu(menuId, event) {

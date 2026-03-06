@@ -539,9 +539,7 @@ app.post('/api/tasks/cancel', async (req, res) => {
         await task.save();
 
         // SECURITY: Instantly wipe the chat history tied to this task
-        if (typeof Chat !== 'undefined') {
-            await Chat.deleteMany({ taskId: taskId });
-        }
+        await Message.deleteMany({ taskId: taskId });
 
         // Tell all active users to refresh their feeds so the task reappears
         io.emit('refreshFeed');
