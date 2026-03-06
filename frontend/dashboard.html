@@ -1234,10 +1234,11 @@
 
                 // Helper receives this when poster marks task done
                 globalSocket.on('taskCompleted', (data) => {
+                    const posterLabel = data.posterName ? `${data.posterName}` : 'The poster';
                     showAppNotification(
                         '🎉',
-                        `Task Completed! You got ${data.rating}⭐`,
-                        `"${data.taskTitle}" has been marked done. Well done!`,
+                        `${posterLabel} confirmed you're done! You got ${data.rating}⭐`,
+                        `"${data.taskTitle}" is officially closed. Great work!`,
                         () => { switchTab('tasks'); }
                     );
                     loadMyTasks();
@@ -1252,6 +1253,48 @@
                         tick.classList.add('seen');
                         tick.textContent = '✓✓';
                     });
+                });
+
+                // --- Poster's card disappears immediately after confirming done ---
+                globalSocket.on('posterTaskDone', ({ taskId }) => {
+                    const card = document.getElementById(`req-card-${taskId}`);
+                    if (card) {
+                        card.classList.add('slide-out-left');
+                        setTimeout(() => { loadMyTasks(); }, 350);
+                    } else {
+                        loadMyTasks();
+                    }
+                });
+
+                // --- Helper's card disappears after 10-minute timer fires on server ---
+                globalSocket.on('helperTaskRemoved', ({ taskId }) => {
+                    const card = document.getElementById(`job-card-${taskId}`);
+                    if (card) {
+                        card.classList.add('slide-out-left');
+                        setTimeout(() => { loadMyTasks(); }, 350);
+                    } else {
+                        loadMyTasks();
+                    }
+                });
+
+                // --- LIVE: Poster receives real-time signal that helper marked done ---
+                globalSocket.on('helperMarkedDone', (data) => {
+                    // Swap the "Mark as Done" button to "Confirm Completion" on the poster's card
+                    const markDoneBtn = document.querySelector(`#req-card-${data.taskId} .btn[onclick*="openRatingModal"]`);
+                    if (markDoneBtn) {
+                        markDoneBtn.textContent = '🏁 Confirm Completion';
+                        markDoneBtn.style.background = 'linear-gradient(135deg,#4CAF50,#2E7D32)';
+                        markDoneBtn.style.boxShadow = '0 4px 12px rgba(76,175,80,0.35)';
+                        markDoneBtn.style.fontWeight = '700';
+                    }
+                    // Show in-app notification to poster
+                    showAppNotification(
+                        '✅',
+                        `${data.helperName} says they're done!`,
+                        `"${data.taskTitle}" is ready — tap to confirm & rate.`,
+                        () => { switchTab('tasks'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+                    );
+                    showToast(`✅ ${data.helperName} marked "${data.taskTitle}" done — confirm to close it!`);
                 });
 
                 // (taskRemoved chat-close logic is handled in the combined listener above)
@@ -1530,9 +1573,18 @@
                             ? `<div style="background:#e8f5e9; padding:8px 12px; border-radius:8px; margin-top:8px; font-size:0.85rem; color:#2e7d32; font-weight:600;" id="helper-name-${task._id}">🤝 Loading helper name...</div>`
                             : '';
                         const chatBtn = task.status === 'accepted' ? `<button class="btn" style="width:100%; margin-top:10px; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.helperPhone}')">💬 Chat</button>` : '';
-                        const markDoneBtn = task.status === 'accepted'
-                            ? `<button class="btn" style="width:100%; margin-top:8px; background-color:#4CAF50;" onclick="openRatingModal('${task._id}')">✅ Mark as Done</button>`
-                            : '';
+
+                        // Poster action button logic:
+                        // - helperMarkedDone=true  → show "Confirm Completion" (helper has signalled they're done)
+                        // - helperMarkedDone=false → show original "Mark as Done" (poster initiates)
+                        let markDoneBtn = '';
+                        if (task.status === 'accepted') {
+                            if (task.helperMarkedDone) {
+                                markDoneBtn = `<button class="btn" id="confirm-btn-${task._id}" style="width:100%; margin-top:8px; background:linear-gradient(135deg,#4CAF50,#2E7D32); box-shadow:0 4px 12px rgba(76,175,80,0.35); font-weight:700;" onclick="openRatingModal('${task._id}')">🏁 Confirm Completion</button>`;
+                            } else {
+                                markDoneBtn = `<button class="btn" style="width:100%; margin-top:8px; background-color:#4CAF50;" onclick="openRatingModal('${task._id}')">✅ Mark as Done</button>`;
+                            }
+                        }
 
                         return `
 <div class="task-card" id="req-card-${task._id}" style="border-left: 4px solid #FF5722; ${animStyle}">
@@ -1616,7 +1668,11 @@
         <div style="background:${isCompleted ? '#EDE7F6' : '#e3f2fd'}; padding:8px 12px; border-radius:8px; margin-bottom:10px; font-size:0.85rem; color:${isCompleted ? '#6A1B9A' : '#1565C0'}; font-weight:600;" id="poster-name-job-${task._id}">${isCompleted ? '🌟 Task marked done by poster' : '👤 Loading poster name...'}</div>
         ${isCompleted
                                 ? `<div style="background:#EDE7F6; color:#6A1B9A; border-radius:8px; padding:10px 14px; font-size:0.9rem; font-weight:700; text-align:center;">🎉 Task Completed! This will be removed shortly.</div>`
-                                : `<button class="btn" style="width:100%; margin:0; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.postedBy}')">💬 Chat</button>`
+                                : task.helperMarkedDone
+                                    ? `<button class="btn" style="width:100%; margin:8px 0 0; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.postedBy}')">💬 Chat</button>
+                   <div id="helper-waiting-${task._id}" style="margin-top:8px; background:#FFF3E0; border:1px solid #FFE0B2; border-radius:10px; padding:12px 14px; font-size:0.88rem; color:#E65100; font-weight:600; text-align:center;">⏳ Waiting for poster to confirm...</div>`
+                                    : `<button class="btn" style="width:100%; margin:8px 0 0; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.postedBy}')">💬 Chat</button>
+                   <button class="btn" id="helper-done-btn-${task._id}" style="width:100%; margin-top:8px; background-color:#4CAF50;" onclick="helperMarkDone('${task._id}')">✅ Mark as Done</button>`
                             }
     </div>                        `;
                     }).join('');
@@ -1969,7 +2025,42 @@
             else { btn.innerHTML = '🔴 Busy'; btn.className = 'status-btn busy'; }
         }
 
+        // --- HELPER MARKS TASK DONE (Step 1 of 2-sided completion) ---
+        async function helperMarkDone(taskId) {
+            const doneBtn = document.getElementById(`helper-done-btn-${taskId}`);
+            if (doneBtn) { doneBtn.disabled = true; doneBtn.textContent = 'Sending...'; }
+
+            try {
+                const res = await fetch(`${API_URL}/tasks/helper-done`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ taskId, helperPhone: myPhone })
+                });
+
+                if (res.ok) {
+                    // Instantly swap the helper's own card UI without a full reload
+                    const card = document.getElementById(`job-card-${taskId}`);
+                    if (card && doneBtn) {
+                        doneBtn.remove();
+                        const waitDiv = document.createElement('div');
+                        waitDiv.id = `helper-waiting-${taskId}`;
+                        waitDiv.style.cssText = 'margin-top:8px; background:#FFF3E0; border:1px solid #FFE0B2; border-radius:10px; padding:12px 14px; font-size:0.88rem; color:#E65100; font-weight:600; text-align:center;';
+                        waitDiv.textContent = '⏳ Waiting for poster to confirm...';
+                        card.appendChild(waitDiv);
+                    }
+                    showToast('✅ Poster notified! Waiting for their confirmation.');
+                } else {
+                    if (doneBtn) { doneBtn.disabled = false; doneBtn.textContent = '✅ Mark as Done'; }
+                    showToast('Could not signal completion. Try again.', 'error');
+                }
+            } catch (err) {
+                if (doneBtn) { doneBtn.disabled = false; doneBtn.textContent = '✅ Mark as Done'; }
+                showToast('Network error', 'error');
+            }
+        }
+
         async function acceptTask(taskId) {
+
             const card = document.getElementById(`feed-card-${taskId}`);
             if (card) card.classList.add('slide-out-left');
 
