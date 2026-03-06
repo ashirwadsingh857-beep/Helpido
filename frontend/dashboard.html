@@ -1140,6 +1140,7 @@
                 // Routes to Home Tab
                 globalSocket.on('newTask', (task) => {
                     if (task.postedBy === myPhone) return;
+                    if (currentStatus === 'busy') return; // Busy: suppress all new-task alerts
 
                     // STRICT FRONTEND RADIUS CHECK
                     if (userLat !== null && userLng !== null && task.location && task.location.coordinates) {
@@ -1330,6 +1331,20 @@
 
         async function loadTasks() {
             const feed = document.getElementById('task-feed');
+
+            // --- BUSY STATUS LOCK: Show break screen, don't load anything ---
+            if (currentStatus === 'busy') {
+                feed.innerHTML = `
+                <div style="text-align:center; padding: 60px 20px; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                    <div style="font-size: 3.5rem; margin-bottom: 12px;">🔴</div>
+                    <h3 style="margin-bottom: 8px; color: #333;">You're on a break!</h3>
+                    <p style="color: #757575; font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px;">
+                        Your status is <strong>Busy</strong> — the task feed is paused.<br><br>
+                        Tap <strong>🟢 Free</strong> at the top to resume and see all nearby tasks.
+                    </p>
+                </div>`;
+                return;
+            }
 
             // --- STRICT GEOSPATIAL FRONTEND LOCK ---
             if (userLat === null || userLng === null) {
@@ -1931,7 +1946,10 @@
            5. TASK ACTIONS
            ========================================= */
         async function toggleAvailability() {
-            currentStatus = currentStatus === 'free' ? 'busy' : 'free'; updateStatusUI();
+            currentStatus = currentStatus === 'free' ? 'busy' : 'free';
+            updateStatusUI();
+            // Instantly reflect status in the feed (busy = break screen, free = reload tasks)
+            if (activeTab === 'home') loadTasks();
             try {
                 await fetch(`${API_URL}/users/status`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1939,7 +1957,9 @@
                 });
             } catch (err) {
                 showToast("Failed to save status", "error");
-                currentStatus = currentStatus === 'free' ? 'busy' : 'free'; updateStatusUI();
+                currentStatus = currentStatus === 'free' ? 'busy' : 'free';
+                updateStatusUI();
+                if (activeTab === 'home') loadTasks();
             }
         }
 
