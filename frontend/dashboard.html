@@ -1433,16 +1433,22 @@
 
                 // --- EMPTY STATE: only render if not already showing it (prevents animation pulse) ---
                 if (publicTasks.length === 0) {
+                    const radiusText = currentRadius < 1 ? currentRadius * 1000 + ' meters' : currentRadius + ' km';
                     if (!document.getElementById('home-empty-state')) {
+                        // First time: render with the pop-in animation
                         feed.innerHTML = `
                             <div id="home-empty-state" style="text-align:center; padding: 60px 20px; animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
                                 <div style="font-size: 4.5rem; margin-bottom: 16px; text-shadow: 0 10px 20px rgba(0,0,0,0.1);">🍃</div>
                                 <h3 style="color: var(--text-dark); margin-bottom: 8px; font-size: 1.3rem;">All quiet here!</h3>
                                 <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5;">
-                                    There are no open tasks within ${currentRadius < 1 ? currentRadius * 1000 + ' meters' : currentRadius + ' km'}.<br><br>
+                                    There are no open tasks within <span id="home-empty-radius">${radiusText}</span>.<br><br>
                                     Be the first to ask your neighbors for help!
                                 </p>
                             </div>`;
+                    } else {
+                        // Already showing: silently update just the radius text (no re-animation)
+                        const radiusEl = document.getElementById('home-empty-radius');
+                        if (radiusEl) radiusEl.textContent = radiusText;
                     }
                 } else {
                     const existingCardIds = new Set(Array.from(feed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('feed-card-', '')));
