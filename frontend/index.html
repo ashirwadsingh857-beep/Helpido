@@ -243,7 +243,10 @@
                     localStorage.setItem('helpido_user', data.userId);
                     localStorage.setItem('helpido_phone', phone.toString());
 
-                    // 2. Show success toast and automatically jump after a short delay
+                    // 2. Flag this as a fresh login so the dashboard auto-shows the install prompt
+                    localStorage.setItem('helpido_new_install', 'true');
+
+                    // 3. Show success toast and automatically jump after a short delay
                     showToast("Login Successful! Loading Dashboard...", "success");
                     setTimeout(() => {
                         window.location.href = '/dashboard.html';

@@ -2503,7 +2503,7 @@
             showToast("Task restored to Home feed.");
         }
 
-        // --- NEW: PWA INSTALLATION LOGIC ---
+        // --- PWA INSTALLATION LOGIC ---
         let deferredPrompt;
 
         // The browser fires this when the app is ready to be installed
@@ -2516,6 +2516,15 @@
             // Show our custom Install button in the profile
             const installBtn = document.getElementById('install-btn');
             if (installBtn) installBtn.style.display = 'inline-block';
+
+            // NEW: If this is a fresh login, auto-show the native install prompt
+            if (localStorage.getItem('helpido_new_install') === 'true') {
+                localStorage.removeItem('helpido_new_install'); // Consume the flag — only fires once
+                setTimeout(() => {
+                    // Small delay so the dashboard has fully rendered before the popup appears
+                    if (deferredPrompt) deferredPrompt.prompt();
+                }, 2000);
+            }
         });
 
         async function installPWA() {
