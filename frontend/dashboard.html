@@ -1795,11 +1795,19 @@
             msgBox.scrollTop = msgBox.scrollHeight;
         }
 
+        let isTyping = false;
         document.getElementById('chat-input').addEventListener('input', () => {
             if (!currentChatTaskId) return;
-            globalSocket.emit('typing', { taskId: currentChatTaskId, senderPhone: myPhone });
+            // Only emit 'typing' once per typing session — not on every single keystroke
+            if (!isTyping) {
+                isTyping = true;
+                globalSocket.emit('typing', { taskId: currentChatTaskId, senderPhone: myPhone });
+            }
             clearTimeout(typingTimeout);
-            typingTimeout = setTimeout(() => { globalSocket.emit('stopTyping', { taskId: currentChatTaskId, senderPhone: myPhone }); }, 1500);
+            typingTimeout = setTimeout(() => {
+                isTyping = false;
+                globalSocket.emit('stopTyping', { taskId: currentChatTaskId, senderPhone: myPhone });
+            }, 1500);
         });
 
         document.getElementById('chat-input').addEventListener('keypress', function (e) {
@@ -2239,11 +2247,14 @@
             if (window.scrollY === 0) touchStart = e.touches[0].clientY;
         }, { passive: true });
 
+        const PTR_DEADZONE = 12; // px of slack before any movement starts (prevents the tiny gap bug)
         window.addEventListener('touchmove', e => {
             const touchY = e.touches[0].clientY;
             const pullDistance = touchY - touchStart;
-            if (window.scrollY === 0 && pullDistance > 0 && mainContainer) {
-                mainContainer.style.transform = `translateY(${Math.min(pullDistance / 3, 80)}px)`;
+            // Only start moving the container once the user has pulled more than the dead-zone
+            if (window.scrollY === 0 && pullDistance > PTR_DEADZONE && mainContainer) {
+                const adjustedPull = pullDistance - PTR_DEADZONE;
+                mainContainer.style.transform = `translateY(${Math.min(adjustedPull / 3, 80)}px)`;
             }
         }, { passive: true });
 
