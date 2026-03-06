@@ -700,85 +700,6 @@
         }
 
         /* cyan-blue, same as WhatsApp */
-
-        /* =========================================
-           SWIPE GESTURE SYSTEM
-           ========================================= */
-        .swipe-wrapper {
-            position: relative;
-            overflow: hidden;
-            border-radius: 12px;
-            margin-bottom: 16px;
-        }
-
-        /* The action panels that sit behind the card */
-        .swipe-action-panel {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            padding: 0 28px;
-            box-sizing: border-box;
-            pointer-events: none;
-        }
-
-        /* Right panel — revealed by swiping right (accepts/prioritize/markdone) */
-        .swipe-panel-right {
-            background: #4CAF50;
-            justify-content: flex-start;
-        }
-
-        /* Left panel — revealed by swiping left (dismiss/delete/drop) */
-        .swipe-panel-left {
-            background: #f44336;
-            justify-content: flex-end;
-        }
-
-        .swipe-panel-amber {
-            background: #FF8F00;
-        }
-
-        .swipe-panel-blue {
-            background: #1976D2;
-        }
-
-        .swipe-action-icon {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            transition: transform 0.1s ease;
-            transform: scale(0.6);
-        }
-
-        .swipe-action-icon span:first-child {
-            font-size: 1.8rem;
-            line-height: 1;
-        }
-
-        .swipe-action-icon span:last-child {
-            font-size: 0.72rem;
-            font-weight: 700;
-            color: rgba(255, 255, 255, 0.9);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        /* The draggable card itself — no margin-bottom when inside wrapper */
-        .swipe-wrapper>.task-card {
-            margin-bottom: 0;
-            border-radius: 12px;
-            position: relative;
-            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-            will-change: transform;
-        }
-
-        .swipe-wrapper>.task-card.is-swiping {
-            transition: none;
-            /* live follow-finger, no lag */
-        }
     </style>
 </head>
 
@@ -1463,7 +1384,7 @@
                         const isNew = !existingCardIds.has(task._id.toString());
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
 
-                        const cardHtml = `
+                        return `
     <div class="task-card" id="feed-card-${task._id}" style="${animStyle}">
         <div class="task-top" style="align-items: flex-start;">
             <div style="flex: 1;">
@@ -1471,49 +1392,49 @@
                     <h4 style="margin: 0;">${task.title}</h4>
                     <span class="poster-badge ${task.posterStatus}">${task.posterStatus.toUpperCase()}</span>
                 </div>
-                <p class="time-ago-label"
-                   data-timestamp="${task.createdAt}"
-                   data-prefix="Uploaded"
-                   style="font-size: 0.72rem; color: #888; margin: 2px 0 0 0;">
-                   Uploaded ${timeAgo(task.createdAt)}
-                </p>
+                <p class="time-ago-label" 
+               data-timestamp="${task.createdAt}" 
+               data-prefix="Uploaded"
+               style="font-size: 0.72rem; color: #888; margin: 2px 0 0 0;">
+               Uploaded ${timeAgo(task.createdAt)}
+            </p>
                 <span class="reward-tag" style="display: inline-block; margin-top: 6px;">₹${task.reward}</span>
             </div>
+            <div style="position: relative;">
+                <button class="menu-btn" onclick="toggleMenu('menu-home-${task._id}', event)">⋮</button>
+                <div id="menu-home-${task._id}" class="dropdown-menu">
+                    <button class="dropdown-item" onclick="dismissTask('${task._id}')">Dismiss Task</button>
+                </div>
+            </div>
         </div>
+        
         <p class="task-desc" style="margin-top: 12px; margin-bottom: 12px;">${task.description}</p>
-        <div style="background: #f5f5f5; padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid #FF5722;">
+        
+        <div style="background: #f5f5f5; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; border-left: 3px solid #FF5722;">
             <p id="poster-name-${task._id}" style="margin: 0; font-size: 0.9rem; font-weight: 600; color: #333;">👤 Loading name...</p>
         </div>
-        <p style="font-size:0.75rem; color:#aaa; text-align:center; margin:6px 0 2px; letter-spacing:0.3px;">← Dismiss &nbsp;&nbsp; Accept →</p>
-    </div>`;
-
-                        return swipeWrap(
-                            `feed-${task._id}`,
-                            cardHtml,
-                            { icon: '✅', label: 'Accept', onTrigger: () => acceptTask(task._id) },
-                            { icon: '❌', label: 'Dismiss', onTrigger: () => dismissTask(task._id) }
-                        );
+        
+        <p class="task-desc" style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <span class="status-badge status-${task.status}">${task.status}</span>
+        </p>
+        <div class="task-bottom" style="justify-content: flex-end;">
+            <button class="accept-btn" onclick="acceptTask('${task._id}')" style="width: 100%;">I can do it</button>
+        </div>
+    </div>                        `;
                     }).join('');
-
-                    // Bind swipe gestures
-                    bindSwipeCards(feed, (wrapper) => {
-                        const card = wrapper.querySelector('.task-card');
-                        if (!card) return null;
-                        const id = card.id.replace('feed-card-', '');
-                        return {
-                            rightAction: { onTrigger: () => acceptTask(id) },
-                            leftAction: { onTrigger: () => dismissTask(id) }
-                        };
-                    });
 
                     // Dynamically fetch and replace real names
                     publicTasks.forEach(async (task) => {
                         const nameEl = document.getElementById(`poster-name-${task._id}`);
                         if (!nameEl) return;
+
+                        // Pull from fast cache if already fetched
                         if (userCache[task.postedBy]) {
                             nameEl.innerText = `👤 ${userCache[task.postedBy]}`;
                             return;
                         }
+
+                        // Otherwise ping the API safely
                         try {
                             const userRes = await fetch(`${API_URL}/users/${task.postedBy}`);
                             if (userRes.ok) {
@@ -1594,59 +1515,35 @@
                             ? `<div style="background:#e8f5e9; padding:8px 12px; border-radius:8px; margin-top:8px; font-size:0.85rem; color:#2e7d32; font-weight:600;" id="helper-name-${task._id}">🤝 Loading helper name...</div>`
                             : '';
                         const chatBtn = task.status === 'accepted' ? `<button class="btn" style="width:100%; margin-top:10px; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.helperPhone}')">💬 Chat</button>` : '';
+                        const markDoneBtn = task.status === 'accepted'
+                            ? `<button class="btn" style="width:100%; margin-top:8px; background-color:#4CAF50;" onclick="openRatingModal('${task._id}')">✅ Mark as Done</button>`
+                            : '';
 
-                        const isAccepted = task.status === 'accepted';
-                        const swipeHint = `<p style="font-size:0.72rem; color:#aaa; text-align:center; margin:6px 0 2px; letter-spacing:0.3px;">${isAccepted ? '← Delete &nbsp;&nbsp; Mark Done →' : '← Delete'}</p>`;
-
-                        const cardHtml = `
+                        return `
 <div class="task-card" id="req-card-${task._id}" style="border-left: 4px solid #FF5722; ${animStyle}">
-        <div style="display: flex; align-items: flex-start;">
-            <div style="flex:1;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
                 <h4 style="margin:0;">${task.title} <span style="font-size:0.8rem; color:gray; font-weight:normal;">(₹${task.reward})</span></h4>
-                <p class="time-ago-label"
-                   data-timestamp="${task.createdAt}"
-                   data-prefix="Uploaded"
-                   style="font-size: 0.72rem; color: #888; margin-top: 2px;">
-                   Uploaded ${timeAgo(task.createdAt)}
-                </p>
+<p class="time-ago-label" 
+               data-timestamp="${task.createdAt}" 
+               data-prefix="Uploaded"
+               style="font-size: 0.72rem; color: #888; margin-top: 2px;">
+               Uploaded ${timeAgo(task.createdAt)}
+            </p>            
+            </div>
+            <button class="menu-btn" onclick="toggleMenu('menu-req-${task._id}', event)">⋮</button>
+            <div id="menu-req-${task._id}" class="dropdown-menu">
+                <button class="dropdown-item danger" onclick="deleteMyTask('${task._id}')">Delete Request</button>
             </div>
         </div>
-        <div style="margin-bottom: 8px; margin-top: 6px;">
+        <div style="margin-bottom: 8px;">
             <span class="status-badge status-${task.status}">${task.status}</span>
         </div>
         ${helperInfoHtml}
         ${chatBtn}
-        ${swipeHint}
-    </div>`;
-
-                        if (isAccepted) {
-                            return swipeWrap(
-                                `req-${task._id}`,
-                                cardHtml,
-                                { icon: '✅', label: 'Mark Done', onTrigger: () => openRatingModal(task._id) },
-                                { icon: '🗑️', label: 'Delete', onTrigger: () => deleteMyTask(task._id) }
-                            );
-                        } else {
-                            return swipeWrap(
-                                `req-${task._id}`,
-                                cardHtml,
-                                null,
-                                { icon: '🗑️', label: 'Delete', onTrigger: () => deleteMyTask(task._id) }
-                            );
-                        }
+        ${markDoneBtn}
+    </div>                        `;
                     }).join('');
-
-                    // Bind swipe gestures for req cards
-                    bindSwipeCards(reqFeed, (wrapper) => {
-                        const card = wrapper.querySelector('.task-card');
-                        if (!card) return null;
-                        const id = card.id.replace('req-card-', '');
-                        const isAcc = card.style.borderLeft.includes('FF5722') && wrapper.querySelector('.swipe-icon-right');
-                        return {
-                            rightAction: isAcc ? { onTrigger: () => openRatingModal(id) } : null,
-                            leftAction: { onTrigger: () => deleteMyTask(id) }
-                        };
-                    });
 
                     // Fetch helper names + ratings for accepted requests
                     visibleRequests.forEach(async (task) => {
@@ -1683,51 +1580,31 @@
                         const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
 
                         const isCompleted = task.status === 'completed';
-                        const priorityLabel = task.isPrioritized ? 'Remove ★' : 'Prioritize';
-                        const chatOrDone = isCompleted
-                            ? `<div style="background:#EDE7F6; color:#6A1B9A; border-radius:8px; padding:10px 14px; font-size:0.9rem; font-weight:700; text-align:center;">🎉 Task Completed! This will be removed shortly.</div>`
-                            : `<button class="btn" style="width:100%; margin:0; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.postedBy}')">💬 Chat</button>`;
-                        const swipeHint = isCompleted ? '' : `<p style="font-size:0.72rem; color:#aaa; text-align:center; margin:6px 0 2px; letter-spacing:0.3px;">← Drop Task &nbsp;&nbsp; ${priorityLabel} →</p>`;
-
-                        const cardHtml = `
+                        return `
 <div class="task-card" id="job-card-${task._id}" style="border-left: 4px solid ${isCompleted ? '#9C27B0' : '#2E7D32'}; ${task.isPrioritized && !isCompleted ? 'background-color: #FFFDE7;' : ''} ${isCompleted ? 'background-color:#F3E5F5;' : ''} ${animStyle}">
-        <div style="display: flex; align-items: flex-start;">
-            <div style="flex:1;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
                 <h4 style="margin:0;">${task.title} ${task.isPrioritized && !isCompleted ? '<span style="color:#F57F17; font-size:0.8rem; margin-left:6px;">★ Priority</span>' : ''}</h4>
-                <p class="time-ago-label"
-                   data-timestamp="${task.updatedAt}"
-                   data-prefix="${isCompleted ? 'Completed' : 'Accepted'}"
-                   style="font-size: 0.72rem; color: ${isCompleted ? '#6A1B9A' : '#2E7D32'}; font-weight: bold; margin-top: 2px;">
-                   ${isCompleted ? '✅ Completed' : 'Accepted ' + timeAgo(task.updatedAt) + ' — Do it ASAP! 🚀'}
-                </p>
+               <p class="time-ago-label" 
+               data-timestamp="${task.updatedAt}" 
+               data-prefix="${isCompleted ? 'Completed' : 'Accepted'}"
+               style="font-size: 0.72rem; color: ${isCompleted ? '#6A1B9A' : '#2E7D32'}; font-weight: bold; margin-top: 2px;">
+                ${isCompleted ? '✅ Completed' : 'Accepted ' + timeAgo(task.updatedAt) + ' — Do it ASAP! 🚀'}
+            </p>
             </div>
+            ${isCompleted ? '' : `<button class="menu-btn" onclick="toggleMenu('menu-job-${task._id}', event)">⋮</button>
+            <div id="menu-job-${task._id}" class="dropdown-menu">
+                <button class="dropdown-item" onclick="prioritizeJob('${task._id}')">${task.isPrioritized ? 'Remove Priority' : 'Mark as Priority'}</button>
+                <button class="dropdown-item danger" onclick="removeJob('${task._id}')">Drop Task</button>
+            </div>`}
         </div>
         <div style="background:${isCompleted ? '#EDE7F6' : '#e3f2fd'}; padding:8px 12px; border-radius:8px; margin-bottom:10px; font-size:0.85rem; color:${isCompleted ? '#6A1B9A' : '#1565C0'}; font-weight:600;" id="poster-name-job-${task._id}">${isCompleted ? '🌟 Task marked done by poster' : '👤 Loading poster name...'}</div>
-        ${chatOrDone}
-        ${swipeHint}
-    </div>`;
-
-                        if (isCompleted) return `<div class="swipe-wrapper" id="swipe-job-${task._id}">${cardHtml}</div>`;
-
-                        return swipeWrap(
-                            `job-${task._id}`,
-                            cardHtml,
-                            { icon: '⭐', label: priorityLabel, extraClass: 'swipe-panel-amber', onTrigger: () => prioritizeJob(task._id) },
-                            { icon: '🚫', label: 'Drop Task', onTrigger: () => removeJob(task._id) }
-                        );
+        ${isCompleted
+                                ? `<div style="background:#EDE7F6; color:#6A1B9A; border-radius:8px; padding:10px 14px; font-size:0.9rem; font-weight:700; text-align:center;">🎉 Task Completed! This will be removed shortly.</div>`
+                                : `<button class="btn" style="width:100%; margin:0; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.postedBy}')">💬 Chat</button>`
+                            }
+    </div>                        `;
                     }).join('');
-
-                    // Bind swipe gestures for job cards
-                    bindSwipeCards(jobsFeed, (wrapper) => {
-                        const card = wrapper.querySelector('.task-card');
-                        if (!card) return null;
-                        const id = card.id.replace('job-card-', '');
-                        if (!wrapper.querySelector('.swipe-icon-right')) return null; // completed cards — no swipe
-                        return {
-                            rightAction: { onTrigger: () => prioritizeJob(id) },
-                            leftAction: { onTrigger: () => removeJob(id) }
-                        };
-                    });
 
                     // Fetch poster names for accepted/completed jobs
                     sortedJobs.forEach(async (task) => {
@@ -2323,106 +2200,6 @@
         /* =========================================
            7. GESTURES & ANIMATIONS
            ========================================= */
-
-        /* ---- SWIPE CARD ENGINE ---- */
-        function initSwipeCard(wrapperEl, opts) {
-            // opts: { leftAction, rightAction }
-            // action: { icon, label, panelClass, onTrigger }
-            const card = wrapperEl.querySelector('.task-card');
-            if (!card) return;
-
-            const THRESHOLD = 88;   // px to trigger action
-            const MAX_DRAG = 120;  // px max visual travel
-            let startX = 0, currentX = 0, dragging = false;
-
-            const leftIconEl = wrapperEl.querySelector('.swipe-icon-left');
-            const rightIconEl = wrapperEl.querySelector('.swipe-icon-right');
-
-            function onStart(e) {
-                // Don't hijack scrolls of inner elements (buttons, inputs)
-                if (e.target.closest('button, input, a')) return;
-                startX = e.touches[0].clientX;
-                currentX = 0;
-                dragging = true;
-                card.classList.add('is-swiping');
-            }
-
-            function onMove(e) {
-                if (!dragging) return;
-                const dx = e.touches[0].clientX - startX;
-                currentX = Math.max(-MAX_DRAG, Math.min(MAX_DRAG, dx));
-
-                // Only move if we're sure this is a horizontal gesture (not scroll)
-                if (Math.abs(currentX) < 6) return;
-                card.style.transform = `translateX(${currentX}px)`;
-
-                // Scale the revealed icon 0.6 → 1.2 based on progress
-                const progress = Math.min(Math.abs(currentX) / THRESHOLD, 1.2);
-                const scale = 0.6 + progress * 0.6;
-
-                if (currentX > 0 && rightIconEl) {
-                    rightIconEl.style.transform = `scale(${scale})`;
-                    if (leftIconEl) leftIconEl.style.transform = 'scale(0.6)';
-                } else if (currentX < 0 && leftIconEl) {
-                    leftIconEl.style.transform = `scale(${scale})`;
-                    if (rightIconEl) rightIconEl.style.transform = 'scale(0.6)';
-                }
-            }
-
-            function onEnd() {
-                if (!dragging) return;
-                dragging = false;
-                card.classList.remove('is-swiping');
-
-                if (currentX > THRESHOLD && opts.rightAction) {
-                    // Swipe RIGHT — fly card off to the right then trigger
-                    card.style.transform = `translateX(110%)`;
-                    card.style.transition = 'transform 0.3s ease';
-                    setTimeout(() => opts.rightAction.onTrigger(), 280);
-                } else if (currentX < -THRESHOLD && opts.leftAction) {
-                    // Swipe LEFT — fly card off to the left then trigger
-                    card.style.transform = `translateX(-110%)`;
-                    card.style.transition = 'transform 0.3s ease';
-                    setTimeout(() => opts.leftAction.onTrigger(), 280);
-                } else {
-                    // Not far enough — snap back
-                    card.style.transform = 'translateX(0)';
-                    if (leftIconEl) leftIconEl.style.transform = 'scale(0.6)';
-                    if (rightIconEl) rightIconEl.style.transform = 'scale(0.6)';
-                }
-                currentX = 0;
-            }
-
-            card.addEventListener('touchstart', onStart, { passive: true });
-            card.addEventListener('touchmove', onMove, { passive: true });
-            card.addEventListener('touchend', onEnd, { passive: true });
-        }
-
-        /* Helper: build the wrapper HTML string for a swipe card */
-        function swipeWrap(cardId, cardHtml, rightAction, leftAction) {
-            const rightPanel = rightAction ? `
-                <div class="swipe-action-panel swipe-panel-right ${rightAction.extraClass || ''}">
-                    <div class="swipe-action-icon swipe-icon-right" style="transform:scale(0.6)">
-                        <span>${rightAction.icon}</span><span>${rightAction.label}</span>
-                    </div>
-                </div>` : '';
-            const leftPanel = leftAction ? `
-                <div class="swipe-action-panel swipe-panel-left ${leftAction.extraClass || ''}">
-                    <div class="swipe-action-icon swipe-icon-left" style="transform:scale(0.6)">
-                        <span>${leftAction.icon}</span><span>${leftAction.label}</span>
-                    </div>
-                </div>` : '';
-            return `<div class="swipe-wrapper" id="swipe-${cardId}">${rightPanel}${leftPanel}${cardHtml}</div>`;
-        }
-
-        /* After rendering cards, wire up swipe on every wrapper */
-        function bindSwipeCards(containerEl, getOptsForWrapper) {
-            containerEl.querySelectorAll('.swipe-wrapper').forEach(wrapper => {
-                const opts = getOptsForWrapper(wrapper);
-                if (opts) initSwipeCard(wrapper, opts);
-            });
-        }
-
         function initScrollAnimation() {
             let isScrolling = false;
             function requestUpdate() {
