@@ -65,22 +65,8 @@
             display: inline-block;
         }
 
-        /* Smooth Tab Content Entrance */
-        .tab-content {
-            animation: fadeSlideUp 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-        }
-
-        @keyframes fadeSlideUp {
-            0% {
-                opacity: 0;
-                transform: translateY(15px);
-            }
-
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+        /* Smooth Tab Content Entrance (Now managed by shared style.css) */
+        /* Removed duplicate fadeSlideUp animation definition here */
 
         /* =========================================
            1. CORE LAYOUT & MOBILE FIXES
@@ -1312,17 +1298,36 @@
            2. DATA RENDERING & API CALLS
            ========================================= */
         function getSkeletonHTML(count) {
+            // Updated skeleton builder to match the exact proportions of a real populated task card
             return Array(count).fill(`
                 <div class="task-card skeleton-card">
-                    <div class="task-top" style="margin-bottom: 12px;">
-                        <div class="skeleton-element" style="width: 50%; height: 22px;"></div>
-                        <div class="skeleton-element" style="width: 60px; height: 22px; border-radius: 12px;"></div>
+                    <div class="task-top" style="align-items: flex-start;">
+                        <div style="flex: 1;">
+                            <!-- Title box & Status Badge inline mock -->
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div class="skeleton-element" style="width: 60%; height: 22px; border-radius: 4px;"></div>
+                                <div class="skeleton-element" style="width: 55px; height: 18px; border-radius: 12px;"></div>
+                            </div>
+                            <!-- Time ago text mock -->
+                            <div class="skeleton-element" style="width: 35%; height: 12px; margin-top: 6px; border-radius: 4px;"></div>
+                            <!-- Price Tag mock -->
+                            <div class="skeleton-element" style="width: 45px; height: 22px; margin-top: 8px; border-radius: 6px;"></div>
+                        </div>
+                        <!-- Kebab menu dot mock -->
+                        <div class="skeleton-element" style="width: 14px; height: 20px; border-radius: 2px;"></div>
                     </div>
-                    <div class="skeleton-element" style="width: 100%; height: 14px; margin-bottom: 8px;"></div>
-                    <div class="skeleton-element" style="width: 75%; height: 14px; margin-bottom: 20px;"></div>
-                    <div class="task-bottom" style="justify-content: flex-end;">
+                    <!-- Description lines mock -->
+                    <div class="skeleton-element" style="width: 100%; height: 14px; margin-top: 16px; border-radius: 4px;"></div>
+                    <div class="skeleton-element" style="width: 80%; height: 14px; margin-top: 8px; border-radius: 4px;"></div>
+                    <div class="skeleton-element" style="width: 40%; height: 14px; margin-top: 8px; margin-bottom: 16px; border-radius: 4px;"></div>
+                    
+                    <!-- Poster info box mock -->
+                    <div class="skeleton-element" style="width: 100%; height: 42px; border-radius: 8px; margin-bottom: 16px;"></div>
+                    
+                    <!-- Bottom action button mock -->
+                     <div class="task-bottom" style="justify-content: flex-end;">
                         <div class="skeleton-element" style="width: 100%; height: 38px; border-radius: 8px;"></div>
-                    </div>
+                     </div>
                 </div>
             `).join('');
         }
@@ -1455,10 +1460,12 @@
 
                     feed.innerHTML = publicTasks.map((task, index) => {
                         const isNew = !existingCardIds.has(task._id.toString());
-                        const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
+                        // Apply physics entrance animation AND attach the breathing effect class
+                        const animStyle = isNew ? `animation: cardEntrance 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateY(0);`;
+                        const breatheClass = isNew ? 'new-attention-border' : '';
 
                         return `
-    <div class="task-card" id="feed-card-${task._id}" style="${animStyle}">
+    <div class="task-card ${breatheClass}" id="feed-card-${task._id}" style="${animStyle}">
         <div class="task-top" style="align-items: flex-start;">
             <div style="flex: 1;">
                 <div style="display: flex; align-items: center; gap: 8px;">
@@ -1521,6 +1528,15 @@
                             nameEl.innerText = `👤 Neighbor`;
                         }
                     });
+
+                    // Remove the breathing border effect after 5 seconds
+                    setTimeout(() => {
+                        document.querySelectorAll('#task-feed .new-attention-border').forEach(el => {
+                            el.classList.remove('new-attention-border');
+                            // Specifically for the feed card, default is usually clear/no explicit border left,
+                            // but let's clear the inline style overriding the animation just in case.
+                        });
+                    }, 5000);
                 }
             } catch (err) { feed.innerHTML = `<p style="text-align:center; color:red;">Failed to load tasks.</p>`; }
         } async function loadMyTasks() {
@@ -1585,7 +1601,8 @@
                     const existingReqIds = new Set(Array.from(reqFeed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('req-card-', '')));
                     reqFeed.innerHTML = visibleRequests.map((task, index) => {
                         const isNew = !existingReqIds.has(task._id.toString());
-                        const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
+                        const animStyle = isNew ? `animation: cardEntrance 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateY(0);`;
+                        const breatherClass = isNew ? 'new-attention-border' : '';
                         const helperInfoHtml = (task.status === 'accepted' || task.status === 'completed') && task.helperPhone
                             ? `<div style="background:#e8f5e9; padding:8px 12px; border-radius:8px; margin-top:8px; font-size:0.85rem; color:#2e7d32; font-weight:600;" id="helper-name-${task._id}">🤝 Loading helper name...</div>`
                             : '';
@@ -1603,8 +1620,9 @@
                             }
                         }
 
+                        // My request card has a fixed orange border normally
                         return `
-<div class="task-card" id="req-card-${task._id}" style="border-left: 4px solid #FF5722; ${animStyle}">
+<div class="task-card ${breatherClass}" id="req-card-${task._id}" style="border-left: 4px solid #FF5722; ${animStyle}">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
                 <h4 style="margin:0;">${task.title} <span style="font-size:0.8rem; color:gray; font-weight:normal;">(₹${task.reward})</span></h4>
@@ -1661,11 +1679,12 @@
                     const existingJobIds = new Set(Array.from(jobsFeed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('job-card-', '')));
                     jobsFeed.innerHTML = sortedJobs.map((task, index) => {
                         const isNew = !existingJobIds.has(task._id.toString());
-                        const animStyle = isNew ? `animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateX(0);`;
+                        const animStyle = isNew ? `animation: cardEntrance 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; animation-delay: ${index * 0.08}s; opacity: 0;` : `opacity: 1; transform: translateY(0);`;
+                        const breatherClass = isNew ? 'new-attention-border' : '';
 
                         const isCompleted = task.status === 'completed';
                         return `
-<div class="task-card" id="job-card-${task._id}" style="border-left: 4px solid ${isCompleted ? '#9C27B0' : '#2E7D32'}; ${task.isPrioritized && !isCompleted ? 'background-color: #FFFDE7;' : ''} ${isCompleted ? 'background-color:#F3E5F5;' : ''} ${animStyle}">
+<div class="task-card ${breatherClass}" id="job-card-${task._id}" style="border-left: 4px solid ${isCompleted ? '#9C27B0' : '#2E7D32'}; ${task.isPrioritized && !isCompleted ? 'background-color: #FFFDE7;' : ''} ${isCompleted ? 'background-color:#F3E5F5;' : ''} ${animStyle}">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
                 <h4 style="margin:0;">${task.title} ${task.isPrioritized && !isCompleted ? '<span style="color:#F57F17; font-size:0.8rem; margin-left:6px;">★ Priority</span>' : ''}</h4>
@@ -1714,6 +1733,13 @@
                             }
                         } catch { nameEl.innerText = `${prefix} neighbor`; }
                     });
+
+                    // Remove the breathing border effect dynamically from Tasks tab
+                    setTimeout(() => {
+                        document.querySelectorAll('#tasks-view .new-attention-border').forEach(el => {
+                            el.classList.remove('new-attention-border');
+                        });
+                    }, 5000);
                 }
             } catch (err) { reqFeed.innerHTML = `<p style="text-align:center; color:red;">Error loading tasks.</p>`; }
         }
@@ -1952,6 +1978,9 @@
 
         // --- UPGRADED: SMOOTH NATIVE TAB SWITCHING ---
         function switchTab(tabName) {
+            // Prevent re-animating if already on the same tab
+            if (activeTab === tabName) return;
+
             activeTab = tabName;
 
             // 1. Hide all tabs and remove animation classes
@@ -1966,7 +1995,7 @@
             const activeEl = document.getElementById(`${tabName}-view`);
             activeEl.classList.remove('hidden');
 
-            // 3. Force browser reflow to perfectly trigger the slide-up animation
+            // 3. Force browser reflow to perfectly trigger the crossfade animation
             void activeEl.offsetWidth;
             activeEl.classList.add('tab-content');
 

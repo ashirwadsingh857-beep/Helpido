@@ -263,6 +263,40 @@ body {
     /* Hardware acceleration for mobile */
 }
 
+/* New: Physics-based card entrance animation */
+@keyframes cardEntrance {
+    0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* New: Breathing border attention effect */
+@keyframes breatheBorderColor {
+
+    0%,
+    100% {
+        border-left-color: var(--primary-color);
+        box-shadow: -4px 0 15px -5px var(--primary-color);
+    }
+
+    50% {
+        border-left-color: #FFA726;
+        /* Lighter vivid orange */
+        box-shadow: -4px 0 25px -2px #FFA726;
+    }
+}
+
+.new-attention-border {
+    animation: cardEntrance 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards, breatheBorderColor 1.5s ease-in-out infinite;
+    /* We override the inline fade animation slightly by applying both here, though the forwards keeps it fully visible. */
+}
+
 .task-top {
     display: flex;
     justify-content: space-between;
@@ -392,6 +426,31 @@ body {
 .nav-item p {
     font-size: 0.75rem;
     font-weight: 500;
+}
+
+/* New: Animated indicator dot for active tab */
+.nav-item {
+    position: relative;
+    /* Create a stacking context for indicator */
+}
+
+.nav-item::after {
+    content: '';
+    position: absolute;
+    top: -12px;
+    /* Top edge of the nav bar padding */
+    left: 50%;
+    transform: translateX(-50%) scaleX(0);
+    width: 30%;
+    /* Width around the icon */
+    height: 4px;
+    background-color: var(--primary-color);
+    border-radius: 0 0 4px 4px;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.nav-item.active::after {
+    transform: translateX(-50%) scaleX(1);
 }
 
 .nav-item.active {
@@ -796,6 +855,25 @@ input[type="number"] {
 /* Hidden Class */
 .hidden {
     display: none !important;
+}
+
+/* New: Tab Crossfade Logic */
+/* We don't just use display none anymore, we animate opacity */
+.tab-content {
+    /* Instead of raw slide up, true crossfade + minimal slide */
+    animation: tabCrossfade 0.3s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+}
+
+@keyframes tabCrossfade {
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* =========================================
