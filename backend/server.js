@@ -312,6 +312,7 @@ app.post('/api/tasks', async (req, res) => {
                 phone: { $ne: postedBy },
                 pushSubscription: { $ne: null },
                 notifyNewTasks: { $ne: false },
+                availability: { $ne: 'busy' }, // Skip users who are busy
                 location: {
                     $near: {
                         $geometry: {
@@ -424,6 +425,50 @@ app.post("/api/tasks/accept", async (req, res) => {
     } catch (err) { res.status(500).json({ message: "Error accepting task" }); }
 });
 
+// --- HELPER SIGNALS TASK IS DONE (Step 1 of 2-sided completion) ---
+app.post("/api/tasks/helper-done", async (req, res) => {
+    const { taskId, helperPhone } = req.body;
+    try {
+        const task = await Task.findById(taskId);
+        if (!task) return res.status(404).json({ message: "Task not found" });
+        if (task.helperPhone !== helperPhone) return res.status(403).json({ message: "Not authorised" });
+        if (task.status !== 'accepted') return res.status(400).json({ message: "Task not in accepted state" });
+
+        task.helperMarkedDone = true;
+        await task.save();
+
+        // Fetch names for notification copy
+        const helperUser = await User.findOne({ phone: helperPhone });
+        const helperName = helperUser ? helperUser.name.split(' ')[0] : 'Your helper';
+
+        // 1. Real-time socket push to poster's personal room
+        io.to(task.postedBy).emit('helperMarkedDone', {
+            taskId,
+            taskTitle: task.title,
+            helperName
+        });
+
+        // 2. Web push to poster
+        try {
+            const posterUser = await User.findOne({ phone: task.postedBy });
+            if (posterUser && posterUser.pushSubscription) {
+                const payload = JSON.stringify({
+                    title: `✅ ${helperName} says they're done!`,
+                    desc: `"${task.title}" is ready for your review — confirm & rate to close it out.`
+                });
+                await webpush.sendNotification(posterUser.pushSubscription, payload);
+            }
+        } catch (pushErr) {
+            console.error("helper-done push failed:", pushErr.statusCode);
+        }
+
+        res.json({ message: "Helper marked done, poster notified." });
+    } catch (err) {
+        console.error("helper-done error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 // --- MARK TASK DONE + SUBMIT RATING ---
 app.post("/api/tasks/complete", async (req, res) => {
     const { taskId, ratedBy, rating } = req.body;
@@ -460,21 +505,27 @@ app.post("/api/tasks/complete", async (req, res) => {
         }
 
         // 1. Notify helper via Socket.io (in-app, instant)
+        const posterUserForNotif = await User.findOne({ phone: ratedBy });
+        const posterFirstName = posterUserForNotif ? posterUserForNotif.name.split(' ')[0] : 'The poster';
+        const starEmoji = '⭐'.repeat(Number(rating));
+
         io.to(helperPhone).emit('taskCompleted', {
             taskId,
             taskTitle: task.title,
             rating: Number(rating),
+            posterName: posterFirstName,
             newAverage: helper ? helper.averageRating : null
         });
+
+        // 1b. Immediately remove the task card from the POSTER's screen only
+        io.to(ratedBy).emit('posterTaskDone', { taskId });
 
         // 2. Send web push to helper if subscribed
         try {
             if (helper && helper.pushSubscription) {
-                const posterUser = await User.findOne({ phone: ratedBy });
-                const posterName = posterUser ? posterUser.name.split(' ')[0] : 'Someone';
                 const pushPayload = JSON.stringify({
-                    title: `🎉 Task Completed!`,
-                    desc: `${posterName} marked "${task.title}" as done and gave you ${rating}⭐`
+                    title: `${starEmoji} ${posterFirstName} confirmed you're done!`,
+                    desc: `"${task.title}" is officially closed. You earned ${rating}⭐ — great work!`
                 });
                 await webpush.sendNotification(helper.pushSubscription, pushPayload);
             }
@@ -482,12 +533,13 @@ app.post("/api/tasks/complete", async (req, res) => {
             console.error("Completion push failed:", pushErr.statusCode);
         }
 
-        // 3. Auto-delete task + chat after 10 minutes
+        // 3. After 10 minutes: delete from DB and remove from HELPER's screen only
         setTimeout(async () => {
             try {
                 await Task.findByIdAndDelete(taskId);
                 await Message.deleteMany({ taskId });
-                io.emit('taskRemoved', taskId);
+                // Only target the helper — poster's card is already gone
+                io.to(helperPhone).emit('helperTaskRemoved', { taskId });
                 console.log(`Auto-deleted completed task ${taskId}`);
             } catch (delErr) {
                 console.error("Auto-delete failed:", delErr);
