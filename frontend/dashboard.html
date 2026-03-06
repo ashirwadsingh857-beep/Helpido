@@ -104,7 +104,7 @@
             position: relative;
         }
 
-        
+
 
         .feed-section {
             flex: 1;
@@ -1431,17 +1431,19 @@
                     isInitialHomeLoad = false;
                 }
 
-                // --- UPGRADED: PREMIUM EMPTY STATE ---
+                // --- EMPTY STATE: only render if not already showing it (prevents animation pulse) ---
                 if (publicTasks.length === 0) {
-                    feed.innerHTML = `
-                        <div style="text-align:center; padding: 60px 20px; animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
-                            <div style="font-size: 4.5rem; margin-bottom: 16px; text-shadow: 0 10px 20px rgba(0,0,0,0.1);">🍃</div>
-                            <h3 style="color: var(--text-dark); margin-bottom: 8px; font-size: 1.3rem;">All quiet here!</h3>
-                            <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5;">
-                                There are no open tasks within ${currentRadius < 1 ? currentRadius * 1000 + ' meters' : currentRadius + ' km'}.<br><br>
-                                Be the first to ask your neighbors for help!
-                            </p>
-                        </div>`;
+                    if (!document.getElementById('home-empty-state')) {
+                        feed.innerHTML = `
+                            <div id="home-empty-state" style="text-align:center; padding: 60px 20px; animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                                <div style="font-size: 4.5rem; margin-bottom: 16px; text-shadow: 0 10px 20px rgba(0,0,0,0.1);">🍃</div>
+                                <h3 style="color: var(--text-dark); margin-bottom: 8px; font-size: 1.3rem;">All quiet here!</h3>
+                                <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5;">
+                                    There are no open tasks within ${currentRadius < 1 ? currentRadius * 1000 + ' meters' : currentRadius + ' km'}.<br><br>
+                                    Be the first to ask your neighbors for help!
+                                </p>
+                            </div>`;
+                    }
                 } else {
                     const existingCardIds = new Set(Array.from(feed.querySelectorAll('.task-card:not(.skeleton-card)')).map(c => c.id.replace('feed-card-', '')));
 
@@ -1557,11 +1559,13 @@
                     if (msRemaining > 0) setTimeout(() => { loadMyTasks(); }, msRemaining + 500);
                 });
 
-                // OVERALL EMPTY STATE — uses filtered counts so completed-only users see the empty state
+                // OVERALL EMPTY STATE — only render if not already showing (prevents animation pulse)
                 if (visibleRequests.length === 0 && visibleJobs.length === 0) {
                     reqHeader.style.display = 'none';
                     jobsHeader.style.display = 'none';
-                    reqFeed.innerHTML = `<div style="text-align: center; padding: 40px 20px; color: #999;"><div style="font-size: 3rem; margin-bottom: 10px;">📭</div><p style="font-size: 1rem; margin: 0; color: #333;">No activity yet.</p><p style="font-size: 0.85rem; margin-top: 5px;">Tasks you post or accept will appear here.</p></div>`;
+                    if (!document.getElementById('tasks-empty-state')) {
+                        reqFeed.innerHTML = `<div id="tasks-empty-state" style="text-align: center; padding: 40px 20px; color: #999;"><div style="font-size: 3rem; margin-bottom: 10px;">📭</div><p style="font-size: 1rem; margin: 0; color: #333;">No activity yet.</p><p style="font-size: 0.85rem; margin-top: 5px;">Tasks you post or accept will appear here.</p></div>`;
+                    }
                     jobsFeed.innerHTML = '';
                     return;
                 }
