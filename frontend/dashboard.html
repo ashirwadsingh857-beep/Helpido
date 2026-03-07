@@ -95,6 +95,8 @@
             max-width: 500px;
             margin: 0 auto;
             position: relative;
+            padding-top: 0;
+            /* Ensure it starts from the top */
         }
 
 
@@ -994,7 +996,7 @@
     </div>
 
     <div id="history-btn-container"
-        style="position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 450px; display: none;">
+        style="position: fixed; bottom: calc(100px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: 85%; max-width: 450px; display: none;">
         <button class="btn" onclick="openHistory()"
             style="background-color: #E0E0E0; color: #333; width: 100%; padding: 14px; border-radius: 20px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: flex; justify-content: center; align-items: center; gap: 8px; margin: 0;">
             <span style="font-size: 1.1rem;">🕒</span> View Task History

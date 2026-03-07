@@ -360,7 +360,7 @@ body {
 /* Floating Action Button (FAB) */
 .fab-btn {
     position: fixed;
-    bottom: 90px;
+    bottom: calc(90px + env(safe-area-inset-bottom));
     right: 24px;
     width: 60px;
     height: 60px;
