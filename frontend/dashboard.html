@@ -75,10 +75,15 @@
         body {
             margin: 0;
             padding: 0;
-            min-height: 100%;
+            min-height: 100dvh;
             background-color: var(--bg-light);
+            display: block;
+            /* Override flex from style.css */
+            overflow-y: auto;
             overflow-x: hidden;
             overscroll-behavior-y: contain;
+            /* Prevents white bar / bounce while allowing internal scroll */
+            -webkit-overflow-scrolling: touch;
         }
 
         .app-container {
@@ -365,8 +370,6 @@
 
         body.no-scroll {
             overflow: hidden !important;
-            position: fixed;
-            width: 100%;
         }
 
         .msg-bubble {
