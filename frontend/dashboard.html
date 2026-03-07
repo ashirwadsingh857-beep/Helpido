@@ -72,20 +72,24 @@
            ========================================= */
         html {
             height: 100%;
-            overflow-y: auto;
-            /* Allow HTML to scroll for better PC compatibility */
+            overflow: hidden;
+            /* Lock the root */
         }
 
         body {
             margin: 0;
             padding: 0;
-            min-height: 100%;
+            height: 100%;
+            /* scroller must have fixed size */
             background-color: var(--bg-light);
             display: block !important;
+            overflow-y: auto;
+            /* body is the primary scroller */
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
             overscroll-behavior-y: contain;
-            /* Prevents the 'ugly white bar' refresh on mobile top */
+            touch-action: pan-y;
+            /* Allow vertical touch gestures */
         }
 
         .app-container {
@@ -2449,16 +2453,20 @@
         const ptrThreshold = 150;
         const mainContainer = document.getElementById('main-dash');
 
+        // Helper to get active scroll pos regardless of which element is scrolling
+        function getScrollTop() {
+            return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
+        }
+
         window.addEventListener('touchstart', e => {
-            if (window.scrollY === 0) touchStart = e.touches[0].clientY;
+            if (getScrollTop() === 0) touchStart = e.touches[0].clientY;
         }, { passive: true });
 
-        const PTR_DEADZONE = 12; // px of slack before any movement starts (prevents the tiny gap bug)
+        const PTR_DEADZONE = 12;
         window.addEventListener('touchmove', e => {
             const touchY = e.touches[0].clientY;
             const pullDistance = touchY - touchStart;
-            // Only start moving the container once the user has pulled more than the dead-zone
-            if (window.scrollY === 0 && pullDistance > PTR_DEADZONE && mainContainer) {
+            if (getScrollTop() === 0 && pullDistance > PTR_DEADZONE && mainContainer) {
                 const adjustedPull = pullDistance - PTR_DEADZONE;
                 mainContainer.style.transform = `translateY(${Math.min(adjustedPull / 3, 80)}px)`;
             }
@@ -2474,7 +2482,7 @@
                 }, 300);
             }
             const touchEnd = e.changedTouches[0].clientY;
-            if (window.scrollY === 0 && (touchEnd - touchStart) > ptrThreshold) {
+            if (getScrollTop() === 0 && (touchEnd - touchStart) > ptrThreshold) {
                 showAppNotification('↻', 'Refreshing...', 'Fetching latest tasks');
                 if (activeTab === 'home') loadTasks();
                 if (activeTab === 'tasks') loadMyTasks();
