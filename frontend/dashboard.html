@@ -72,24 +72,20 @@
            ========================================= */
         html {
             height: 100%;
-            overflow: hidden;
-            /* Lock the root */
+            overflow-y: auto;
+            /* Root is the primary scroller */
+            overscroll-behavior-y: none;
+            /* Modern fix for mobile white bar */
         }
 
         body {
             margin: 0;
             padding: 0;
-            height: 100%;
-            /* scroller must have fixed size */
+            min-height: 100%;
             background-color: var(--bg-light);
             display: block !important;
-            overflow-y: auto;
-            /* body is the primary scroller */
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
-            overscroll-behavior-y: contain;
-            touch-action: pan-y;
-            /* Allow vertical touch gestures */
         }
 
         .app-container {
