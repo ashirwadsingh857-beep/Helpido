@@ -115,12 +115,16 @@
             width: 100%;
             max-width: 500px;
             z-index: 9000 !important;
-            height: 70px;
+            height: 80px;
+            /* Increased height */
             display: flex;
-            align-items: center;
+            align-items: flex-start;
+            /* Changed to start to allow padding to drive layout */
             justify-content: space-around;
-            padding-bottom: env(safe-area-inset-bottom);
-            background: rgba(255, 255, 255, 0.85);
+            padding-top: 8px;
+            padding-bottom: calc(8px + env(safe-area-inset-bottom));
+            background: rgba(255, 255, 255, 0.9);
+            /* Slightly more opaque */
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border-top: 1px solid rgba(0, 0, 0, 0.05);
@@ -129,13 +133,16 @@
 
         .nav-item {
             flex: 1;
-            height: 100%;
+            /* Removed height: 100% to let padding define the pill */
+            padding: 8px 12px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
+            border-radius: 20px;
+            /* Smoother pill shape */
         }
 
         /* =========================================
