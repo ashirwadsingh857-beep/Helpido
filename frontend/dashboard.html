@@ -8,8 +8,7 @@
 
     <link rel="apple-touch-icon" href="asset/192.png">
     <meta charset="UTF-8">
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#FF5722">
 
@@ -71,19 +70,22 @@
         /* =========================================
            1. CORE LAYOUT & MOBILE FIXES
            ========================================= */
-        html,
+        html {
+            height: 100%;
+            overflow: hidden;
+        }
+
         body {
             margin: 0;
             padding: 0;
-            min-height: 100dvh;
+            height: 100%;
             background-color: var(--bg-light);
-            display: block;
-            /* Override flex from style.css */
+            display: block !important;
+            /* Force block over flex */
             overflow-y: auto;
             overflow-x: hidden;
-            overscroll-behavior-y: contain;
-            /* Prevents white bar / bounce while allowing internal scroll */
             -webkit-overflow-scrolling: touch;
+            touch-action: pan-y;
         }
 
         .app-container {
