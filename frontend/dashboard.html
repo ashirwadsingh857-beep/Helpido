@@ -729,7 +729,38 @@
                     </div>
                 </div>
             </div>
-            <div id="task-feed" style="margin-top: 16px;"></div>
+            <div id="task-feed" style="margin-top: 16px;">
+                <!-- INSTANT SKELETON: Displayed immediately before GPS/API kicks in -->
+                <div class="task-card skeleton-card">
+                    <div class="task-top" style="align-items: flex-start;">
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div class="skeleton-element" style="width: 60%; height: 22px; border-radius: 4px;">
+                                </div>
+                                <div class="skeleton-element" style="width: 55px; height: 18px; border-radius: 12px;">
+                                </div>
+                            </div>
+                            <div class="skeleton-element"
+                                style="width: 35%; height: 12px; margin-top: 6px; border-radius: 4px;"></div>
+                            <div class="skeleton-element"
+                                style="width: 45px; height: 22px; margin-top: 8px; border-radius: 6px;"></div>
+                        </div>
+                        <div class="skeleton-element" style="width: 14px; height: 20px; border-radius: 2px;"></div>
+                    </div>
+                    <div class="skeleton-element"
+                        style="width: 100%; height: 14px; margin-top: 16px; border-radius: 4px;"></div>
+                    <div class="skeleton-element"
+                        style="width: 80%; height: 14px; margin-top: 8px; border-radius: 4px;"></div>
+                    <div class="skeleton-element"
+                        style="width: 40%; height: 14px; margin-top: 8px; margin-bottom: 16px; border-radius: 4px;">
+                    </div>
+                    <div class="skeleton-element"
+                        style="width: 100%; height: 42px; border-radius: 8px; margin-bottom: 16px;"></div>
+                    <div class="task-bottom" style="justify-content: flex-end;">
+                        <div class="skeleton-element" style="width: 100%; height: 38px; border-radius: 8px;"></div>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <section id="tasks-view" class="feed-section hidden">
@@ -1377,13 +1408,11 @@
             } catch (err) {
                 console.error("Profile load failed", err);
             } finally {
-                // CRITICAL FIX: This guarantees the loading screen ALWAYS vanishes!
-                setTimeout(() => {
-                    const splash = document.getElementById('splash-screen');
-                    const main = document.getElementById('main-dash');
-                    if (splash) splash.classList.add('hide');
-                    if (main) main.classList.add('unblur');
-                }, 800);
+                // CRITICAL FIX: Instant transition — no more artificial delay!
+                const splash = document.getElementById('splash-screen');
+                const main = document.getElementById('main-dash');
+                if (splash) splash.classList.add('hide');
+                if (main) main.classList.add('unblur');
             }
         }
         // NEW: Global cache to securely store names and prevent API spam
@@ -1394,8 +1423,9 @@
 
             // --- BUSY STATUS LOCK: Show break screen, don't load anything ---
             if (currentStatus === 'busy') {
-                feed.innerHTML = `
-                <div style="text-align:center; padding: 60px 20px; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                if (!document.getElementById('busy-status-view')) {
+                    feed.innerHTML = `
+                <div id="busy-status-view" style="text-align:center; padding: 60px 20px; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
                     <div style="font-size: 3.5rem; margin-bottom: 12px;">🔴</div>
                     <h3 style="margin-bottom: 8px; color: #333;">You're on a break!</h3>
                     <p style="color: #757575; font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px;">
@@ -1403,6 +1433,7 @@
                         Tap <strong>🟢 Free</strong> at the top to resume and see all nearby tasks.
                     </p>
                 </div>`;
+                }
                 return;
             }
 
@@ -1437,7 +1468,6 @@
                 publicTasks = publicTasks.filter(t => !droppedTasks.includes(t._id) && !dismissedTasks.includes(t._id));
 
                 if (isInitialHomeLoad) {
-                    await new Promise(resolve => setTimeout(resolve, 1500));
                     isInitialHomeLoad = false;
                 }
 
@@ -2362,30 +2392,26 @@
         /* =========================================
            7. GESTURES & ANIMATIONS
            ========================================= */
+        // --- UPGRADED: HIGH-PERFORMANCE SCROLL ANIMATIONS ---
         function initScrollAnimation() {
-            let isScrolling = false;
-            function requestUpdate() {
-                if (!isScrolling) {
-                    window.requestAnimationFrame(applyScrollEffects);
-                    isScrolling = true;
-                }
-            }
-            window.addEventListener('scroll', requestUpdate, { passive: true });
-            window.addEventListener('touchmove', requestUpdate, { passive: true });
-            setInterval(requestUpdate, 1000);
+            const observerOptions = {
+                root: null, // use the viewport
+                rootMargin: '0px',
+                threshold: Array.from({ length: 21 }, (_, i) => i * 0.05) // 0%, 5%, 10%...100%
+            };
 
-            function applyScrollEffects() {
-                const H = window.innerHeight;
-                const C = H / 2;
-                const safeRadius = H * 0.35;
-
-                document.querySelectorAll('.task-card').forEach(card => {
-                    const rect = card.getBoundingClientRect();
-                    if (rect.top > H + 100 || rect.bottom < -100) return;
-
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const card = entry.target;
+                    const rect = entry.boundingClientRect;
+                    const H = window.innerHeight;
+                    const C = H / 2;
                     const Y = rect.top + (rect.height / 2);
                     const dist = Math.abs(Y - C);
-                    let scale = 1; let opacity = 1;
+                    const safeRadius = H * 0.35;
+
+                    let scale = 1;
+                    let opacity = 1;
 
                     if (dist > safeRadius) {
                         const excess = dist - safeRadius;
@@ -2394,11 +2420,29 @@
                         scale = 1 - (factor * 0.15);
                         opacity = 1 - (factor * 0.5);
                     }
+
                     card.style.transform = `scale(${scale})`;
                     card.style.opacity = `${opacity}`;
                 });
-                isScrolling = false;
+            }, observerOptions);
+
+            // Function to start observing existing and new cards
+            function observeCards() {
+                document.querySelectorAll('.task-card:not(.observed)').forEach(card => {
+                    observer.observe(card);
+                    card.classList.add('observed');
+                });
             }
+
+            // Initial observation
+            observeCards();
+
+            // Use a MutationObserver to catch new tasks injected via AJAX
+            const feedObserver = new MutationObserver(() => observeCards());
+            ['task-feed', 'my-requests-feed', 'my-jobs-feed'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) feedObserver.observe(el, { childList: true });
+            });
         }
 
         let touchStart = 0;

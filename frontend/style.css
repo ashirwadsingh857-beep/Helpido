@@ -1150,7 +1150,7 @@ input[type="number"] {
 }
 
 .feed-section:not(.hidden) {
-    animation: fadeInTab 0.4s ease-out forwards;
+    animation: fadeInTab 0.2s ease-out forwards;
 }
 
 /* 4. Modal Pop In */

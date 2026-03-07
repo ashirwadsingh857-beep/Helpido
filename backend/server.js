@@ -488,7 +488,12 @@ app.post("/api/tasks/complete", async (req, res) => {
 
         // Mark task as completed
         task.status = 'completed';
+        task.completedAt = new Date(); // Triggers 10-minute TTL auto-delete
         await task.save();
+
+        // 3. Set expiration for messages as well
+        const tenMinsFromNow = new Date(Date.now() + 10 * 60 * 1000);
+        await Message.updateMany({ taskId }, { $set: { expiresAt: tenMinsFromNow } });
 
         // Save rating to helper's User doc (prevent duplicate rating on same task)
         const helper = await User.findOne({ phone: helperPhone });
@@ -533,18 +538,10 @@ app.post("/api/tasks/complete", async (req, res) => {
             console.error("Completion push failed:", pushErr.statusCode);
         }
 
-        // 3. After 10 minutes: delete from DB and remove from HELPER's screen only
-        setTimeout(async () => {
-            try {
-                await Task.findByIdAndDelete(taskId);
-                await Message.deleteMany({ taskId });
-                // Only target the helper — poster's card is already gone
-                io.to(helperPhone).emit('helperTaskRemoved', { taskId });
-                console.log(`Auto-deleted completed task ${taskId}`);
-            } catch (delErr) {
-                console.error("Auto-delete failed:", delErr);
-            }
-        }, 10 * 60 * 1000); // 10 minutes
+        // 4. Also notify the helper's client to remove the card after 10 mins
+        setTimeout(() => {
+            io.to(helperPhone).emit('helperTaskRemoved', { taskId });
+        }, 10 * 60 * 1000);
 
         res.json({ message: "Task completed and rating saved!", averageRating: helper ? helper.averageRating : null });
     } catch (err) {
