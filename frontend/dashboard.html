@@ -70,6 +70,34 @@
         /* =========================================
            1. CORE LAYOUT & MOBILE FIXES
            ========================================= */
+        // --- NEW: FLUTTER BRIDGE FOR FCM TOKEN ---
+        window.receiveFlutterFCMToken=function(token) {
+            if ( !token) return;
+            console.log("FCM Token received from Flutter: " + token);
+
+            // Send the token to the backend subscribe endpoint
+            const phoneToUpdate=localStorage.getItem('helpido_phone');
+            if ( !phoneToUpdate) return;
+
+            fetch(`$ {
+                    API_URL
+                }
+
+                /subscribe`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+
+                ,
+                body: JSON.stringify({
+                    phone: phoneToUpdate, fcmToken: token
+                })
+        }) .then(res=> res.json()) .then(data=> console.log("FCM Token saved to server")) .catch(err=> console.error("Error saving FCM Token:", err));
+        }
+
+        ;
+
         html {
             height: 100%;
             overflow-y: auto;
@@ -2900,6 +2928,14 @@
 
                 if (res.ok) {
                     showToast("Preferences saved securely!", "success");
+
+                    // NEW: Notify Flutter via JavaScript Bridge
+                    if (window.flutter_inappwebview) {
+                        window.flutter_inappwebview.callHandler('syncNotificationPreference', {
+                            type: type,
+                            value: value === true
+                        });
+                    }
                 } else {
                     showToast("Failed to save to database. Try refreshing.", "error");
                     // If it failed, flip the toggle back visually so the user isn't tricked

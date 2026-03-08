@@ -7,6 +7,14 @@ const Message = require("./models/Message.js");
 
 // --- NEW: WEB PUSH SETUP ---
 const webpush = require("web-push");
+const admin = require("firebase-admin");
+
+// --- NEW: FIREBASE ADMIN SETUP ---
+const serviceAccount = require("./helpido-1610f-firebase-adminsdk-fbsvc-d0e05ccb04.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
 
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
     // Failsafe: Automatically add 'mailto:' if it's missing from your environment variables
@@ -89,29 +97,54 @@ io.on('connection', (socket) => {
             if (data.targetPhone) {
                 io.to(data.targetPhone).emit('notifyMessage', newMsg);
 
-                // --- NEW: FIRE NATIVE ANDROID PUSH NOTIFICATION ---
+                // --- NEW: FIRE NATIVE ANDROID/IOS PUSH NOTIFICATION ---
                 try {
                     const targetUser = await User.findOne({ phone: data.targetPhone });
-                    // Check if they have a subscription AND haven't muted chat messages
-                    if (targetUser && targetUser.pushSubscription && targetUser.notifyChatMessages !== false) {
+                    // Check if they have a subscription OR an FCM token AND haven't muted chat messages
+                    if (targetUser && targetUser.notifyChatMessages !== false) {
                         const senderUser = await User.findOne({ phone: data.senderPhone });
                         const senderName = senderUser ? senderUser.name.split(' ')[0] : 'Someone';
 
-                        // Create the text that will show on the lock screen
-                        const payload = JSON.stringify({
+                        const payloadData = {
                             title: `New message from ${senderName}`,
-                            desc: data.text,
-                            // NEW: Hidden data to tell the app exactly which chat to open
+                            body: data.text,
                             type: 'chat',
                             taskId: data.taskId,
                             senderPhone: data.senderPhone
-                        });
+                        };
 
-                        // Send it to Google's push servers!
-                        await webpush.sendNotification(targetUser.pushSubscription, payload);
+                        // 1. Send via Web Push if subscription exists
+                        if (targetUser.pushSubscription) {
+                            const payload = JSON.stringify({
+                                title: payloadData.title,
+                                desc: payloadData.body,
+                                type: payloadData.type,
+                                taskId: payloadData.taskId,
+                                senderPhone: payloadData.senderPhone
+                            });
+                            await webpush.sendNotification(targetUser.pushSubscription, payload);
+                        }
+
+                        // 2. Send via FCM if token exists
+                        if (targetUser.fcmToken) {
+                            const message = {
+                                notification: {
+                                    title: payloadData.title,
+                                    body: payloadData.body,
+                                },
+                                data: {
+                                    type: payloadData.type,
+                                    taskId: payloadData.taskId,
+                                    senderPhone: payloadData.senderPhone,
+                                    click_action: 'FLUTTER_NOTIFICATION_CLICK'
+                                },
+                                token: targetUser.fcmToken,
+                            };
+                            await admin.messaging().send(message);
+                        }
                     }
                 } catch (pushErr) {
-                    console.error("Native push failed (maybe user revoked permission):", pushErr.statusCode);
+                    console.error("Native push failed:", pushErr);
                 }
             }
         } catch (err) { console.error("Message save error", err); }
@@ -171,13 +204,17 @@ app.post('/api/signup', async (req, res) => {
     }
 });
 
-// --- NEW ROUTE: Save Android Push Subscription ---
+// --- NEW ROUTE: Save Android/iOS Push Subscription or FCM Token ---
 app.post('/api/subscribe', async (req, res) => {
-    const { phone, subscription } = req.body;
+    const { phone, subscription, fcmToken } = req.body;
     try {
+        const updateData = {};
+        if (subscription) updateData.pushSubscription = subscription;
+        if (fcmToken) updateData.fcmToken = fcmToken;
+
         await User.findOneAndUpdate(
             { phone: phone },
-            { $set: { pushSubscription: subscription } }
+            { $set: updateData }
         );
         res.status(201).json({ message: "Device registered for push notifications!" });
     } catch (err) {
@@ -329,18 +366,13 @@ app.post('/api/tasks', async (req, res) => {
             const posterUser = await User.findOne({ phone: postedBy });
             const posterName = posterUser ? posterUser.name.split(' ')[0] : 'Someone';
 
-            // Find all users EXCEPT the poster who have a push subscription AND haven't muted New Tasks
-            // --- NEW: GEOSPATIAL PUSH NOTIFICATIONS ---
-            // Draw a 5km (5000 meters) circle around the new task
             const notificationRadius = 5000;
 
-            // Find all users EXCEPT the poster who have notifications ON, 
-            // AND are physically standing within 5km of the task!
             const subscribedUsers = await User.find({
                 phone: { $ne: postedBy },
-                pushSubscription: { $ne: null },
+                $or: [{ pushSubscription: { $ne: null } }, { fcmToken: { $ne: null } }],
                 notifyNewTasks: { $ne: false },
-                availability: { $ne: 'busy' }, // Skip users who are busy
+                availability: { $ne: 'busy' },
                 location: {
                     $near: {
                         $geometry: {
@@ -352,20 +384,39 @@ app.post('/api/tasks', async (req, res) => {
                 }
             });
 
-            // --- UPDATED: ADD TYPE FOR DEEP LINKING ---
-            const payload = JSON.stringify({
+            const payloadData = {
                 title: `New Task Near You 📍`,
-                desc: `${posterName} needs help: "${title}" for ₹${reward}`,
-                type: 'task' // NEW: Tells the Service Worker how to route this tap!
-            });
-            // Fire off notifications to everyone in the background
-            const pushPromises = subscribedUsers.map(user => {
-                return webpush.sendNotification(user.pushSubscription, payload).catch(e => {
-                    // Fail silently for individual expired subscriptions
-                });
+                body: `${posterName} needs help: "${title}" for ₹${reward}`,
+                type: 'task'
+            };
+
+            const pushPromises = subscribedUsers.flatMap(user => {
+                const promises = [];
+                if (user.pushSubscription) {
+                    const payload = JSON.stringify({
+                        title: payloadData.title,
+                        desc: payloadData.body,
+                        type: payloadData.type
+                    });
+                    promises.push(webpush.sendNotification(user.pushSubscription, payload).catch(() => {}));
+                }
+                if (user.fcmToken) {
+                    const message = {
+                        notification: {
+                            title: payloadData.title,
+                            body: payloadData.body,
+                        },
+                        data: {
+                            type: payloadData.type,
+                            click_action: 'FLUTTER_NOTIFICATION_CLICK'
+                        },
+                        token: user.fcmToken,
+                    };
+                    promises.push(admin.messaging().send(message).catch(() => {}));
+                }
+                return promises;
             });
 
-            // We don't use 'await' here so the task posts instantly without waiting for Google's servers
             Promise.all(pushPromises);
 
         } catch (pushErr) {
@@ -446,16 +497,45 @@ app.post("/api/tasks/accept", async (req, res) => {
             const helperUser = await User.findOne({ phone: helperPhone });
             const helperName = helperUser ? helperUser.name.split(' ')[0] : 'Someone';
 
-            if (posterUser && posterUser.pushSubscription) {
-                const payload = JSON.stringify({
+            if (posterUser) {
+                const payloadData = {
                     title: 'Task Accepted! 🤝',
-                    desc: `${helperName} accepted your task: "${task.title}". Tap to chat!`
-                });
-                // Send it to Google's push servers!
-                await webpush.sendNotification(posterUser.pushSubscription, payload);
+                    body: `${helperName} accepted your task: "${task.title}". Tap to chat!`,
+                    type: 'chat',
+                    taskId: task._id.toString(),
+                    senderPhone: helperPhone
+                };
+
+                if (posterUser.pushSubscription) {
+                    const payload = JSON.stringify({
+                        title: payloadData.title,
+                        desc: payloadData.body,
+                        type: payloadData.type,
+                        taskId: payloadData.taskId,
+                        senderPhone: payloadData.senderPhone
+                    });
+                    await webpush.sendNotification(posterUser.pushSubscription, payload).catch(() => {});
+                }
+
+                if (posterUser.fcmToken) {
+                    const message = {
+                        notification: {
+                            title: payloadData.title,
+                            body: payloadData.body,
+                        },
+                        data: {
+                            type: payloadData.type,
+                            taskId: payloadData.taskId,
+                            senderPhone: payloadData.senderPhone,
+                            click_action: 'FLUTTER_NOTIFICATION_CLICK'
+                        },
+                        token: posterUser.fcmToken,
+                    };
+                    await admin.messaging().send(message).catch(() => {});
+                }
             }
         } catch (pushErr) {
-            console.error("Task accept push failed:", pushErr.statusCode);
+            console.error("Task accept push failed:", pushErr);
         }
 
         res.json({ message: "Task accepted!" });
@@ -485,18 +565,45 @@ app.post("/api/tasks/helper-done", async (req, res) => {
             helperName
         });
 
-        // 2. Web push to poster
+        // 2. Web push and Native push to poster
         try {
             const posterUser = await User.findOne({ phone: task.postedBy });
-            if (posterUser && posterUser.pushSubscription) {
-                const payload = JSON.stringify({
+            if (posterUser) {
+                const payloadData = {
                     title: `✅ ${helperName} says they're done!`,
-                    desc: `"${task.title}" is ready for your review — confirm & rate to close it out.`
-                });
-                await webpush.sendNotification(posterUser.pushSubscription, payload);
+                    body: `"${task.title}" is ready for your review — confirm & rate to close it out.`,
+                    type: 'task',
+                    taskId: task._id.toString()
+                };
+
+                if (posterUser.pushSubscription) {
+                    const payload = JSON.stringify({
+                        title: payloadData.title,
+                        desc: payloadData.body,
+                        type: payloadData.type,
+                        taskId: payloadData.taskId
+                    });
+                    await webpush.sendNotification(posterUser.pushSubscription, payload).catch(() => {});
+                }
+
+                if (posterUser.fcmToken) {
+                    const message = {
+                        notification: {
+                            title: payloadData.title,
+                            body: payloadData.body,
+                        },
+                        data: {
+                            type: payloadData.type,
+                            taskId: payloadData.taskId,
+                            click_action: 'FLUTTER_NOTIFICATION_CLICK'
+                        },
+                        token: posterUser.fcmToken,
+                    };
+                    await admin.messaging().send(message).catch(() => {});
+                }
             }
         } catch (pushErr) {
-            console.error("helper-done push failed:", pushErr.statusCode);
+            console.error("helper-done push failed:", pushErr);
         }
 
         res.json({ message: "Helper marked done, poster notified." });
@@ -562,17 +669,44 @@ app.post("/api/tasks/complete", async (req, res) => {
         // 1b. Immediately remove the task card from the POSTER's screen only
         io.to(ratedBy).emit('posterTaskDone', { taskId });
 
-        // 2. Send web push to helper if subscribed
+        // 2. Send web and native push to helper if subscribed
         try {
-            if (helper && helper.pushSubscription) {
-                const pushPayload = JSON.stringify({
+            if (helper) {
+                const payloadData = {
                     title: `${starEmoji} ${posterFirstName} confirmed you're done!`,
-                    desc: `"${task.title}" is officially closed. You earned ${rating}⭐ — great work!`
-                });
-                await webpush.sendNotification(helper.pushSubscription, pushPayload);
+                    body: `"${task.title}" is officially closed. You earned ${rating} stars — great work!`,
+                    type: 'task',
+                    taskId: task._id.toString()
+                };
+
+                if (helper.pushSubscription) {
+                    const pushPayload = JSON.stringify({
+                        title: payloadData.title,
+                        desc: payloadData.body,
+                        type: payloadData.type,
+                        taskId: payloadData.taskId
+                    });
+                    await webpush.sendNotification(helper.pushSubscription, pushPayload).catch(() => {});
+                }
+
+                if (helper.fcmToken) {
+                    const message = {
+                        notification: {
+                            title: payloadData.title,
+                            body: payloadData.body,
+                        },
+                        data: {
+                            type: payloadData.type,
+                            taskId: payloadData.taskId,
+                            click_action: 'FLUTTER_NOTIFICATION_CLICK'
+                        },
+                        token: helper.fcmToken,
+                    };
+                    await admin.messaging().send(message).catch(() => {});
+                }
             }
         } catch (pushErr) {
-            console.error("Completion push failed:", pushErr.statusCode);
+            console.error("Completion push failed:", pushErr);
         }
 
         // 4. Also notify the helper's client to remove the card after 10 mins

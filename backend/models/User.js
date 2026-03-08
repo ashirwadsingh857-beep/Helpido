@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema({
     otpExpiry: { type: Date, default: null },
     availability: { type: String, default: 'free' },
     pushSubscription: { type: Object, default: null },
+    fcmToken: { type: String, default: null },
     notifyNewTasks: { type: Boolean, default: true },
     notifyChatMessages: { type: Boolean, default: true },
 
