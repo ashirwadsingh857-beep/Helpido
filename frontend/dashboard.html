@@ -1475,7 +1475,7 @@
 
             try {
                 // Now safely build the URL knowing GPS is guaranteed
-                const fetchUrl = `${API_URL}/tasks?lat=${userLat}&lng=${userLng}&radius=${currentRadius}`;
+                const fetchUrl = `${API_URL}/tasks?lat=${userLat}&lng=${userLng}&radius=${currentRadius}&phone=${myPhone}`;
                 const res = await fetch(fetchUrl);
                 const allTasks = await res.json();
 
@@ -2220,13 +2220,22 @@
             // Start slide out animation
             if (card) card.classList.add('slide-out-left');
 
-            setTimeout(() => {
-                // Add to local storage dismiss list
+            setTimeout(async () => {
+                // Add to local storage dismiss list (as fallback)
                 let dismissedTasks = JSON.parse(localStorage.getItem('dismissed_tasks') || "[]");
                 if (!dismissedTasks.includes(taskId)) {
                     dismissedTasks.push(taskId);
                     localStorage.setItem('dismissed_tasks', JSON.stringify(dismissedTasks));
                 }
+
+                // Sync with server for persistence across logins
+                try {
+                    await fetch(`${API_URL}/users/dismiss`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ phone: myPhone, taskId: taskId })
+                    });
+                } catch (e) { console.warn("Server-side dismissal failed", e); }
 
                 showToast("Task dismissed.");
                 loadTasks(); // Refresh feed to close the gap
@@ -2688,7 +2697,7 @@
             } catch (err) {
                 showToast("Network Error", "error");
             }
-        } function restoreDismissedTask(taskId) {
+        } async function restoreDismissedTask(taskId) {
             closeHistory();
 
             let dismissedTasksList = JSON.parse(localStorage.getItem('dismissed_tasks') || "[]");
@@ -2698,6 +2707,15 @@
             let history = JSON.parse(localStorage.getItem('helpido_history') || "[]");
             history = history.filter(t => String(t.id) !== String(taskId));
             localStorage.setItem('helpido_history', JSON.stringify(history));
+
+            // Sync with server to remove from persistent blackist
+            try {
+                await fetch(`${API_URL}/users/restore`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: myPhone, taskId: taskId })
+                });
+            } catch (e) { console.warn("Server-side restoration failed", e); }
 
             const feed = document.getElementById('task-feed');
             if (feed) feed.innerHTML = '';

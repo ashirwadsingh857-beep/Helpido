@@ -251,6 +251,34 @@ app.post('/api/users/notifications', async (req, res) => {
         console.error("Notif Update Error:", err);
         res.status(500).json({ message: "Error updating preferences" });
     }
+});
+
+// --- NEW ROUTE: Dismiss a Task (Server-side Persistence) ---
+app.post('/api/users/dismiss', async (req, res) => {
+    const { phone, taskId } = req.body;
+    try {
+        await User.updateOne(
+            { phone },
+            { $addToSet: { dismissedTasks: taskId } } // Avoid duplicates
+        );
+        res.json({ message: "Task dismissed successfully" });
+    } catch (err) {
+        res.status(500).json({ message: "Error dismissing task" });
+    }
+});
+
+// --- NEW ROUTE: Restore a Dismissed Task ---
+app.post('/api/users/restore', async (req, res) => {
+    const { phone, taskId } = req.body;
+    try {
+        await User.updateOne(
+            { phone },
+            { $pull: { dismissedTasks: taskId } }
+        );
+        res.json({ message: "Task restored successfully" });
+    } catch (err) {
+        res.status(500).json({ message: "Error restoring task" });
+    }
 });// --- NEW ROUTE: Update User's Real-Time Location ---
 app.post('/api/users/location', async (req, res) => {
     const { phone, lat, lng } = req.body;
@@ -370,6 +398,15 @@ app.get("/api/tasks", async (req, res) => {
                 $maxDistance: radiusInMeters
             }
         };
+
+        // --- NEW: SERVER-SIDE DISMISSAL FILTERING ---
+        const phone = req.query.phone;
+        if (phone) {
+            const user = await User.findOne({ phone }, 'dismissedTasks');
+            if (user && user.dismissedTasks && user.dismissedTasks.length > 0) {
+                query._id = { $nin: user.dismissedTasks };
+            }
+        }
 
         // Fetch using the geospatial index (Automatically sorts closest to farthest)
         const tasks = await Task.find(query).lean();
