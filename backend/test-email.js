@@ -14,14 +14,13 @@ const testMail = async () => {
             html: `
                 <div style="background-color: #f4f7f6; padding: 40px 10px; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; text-align: center;">
                     <div style="max-width: 480px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.05); border: 1px solid #e0e0e0;">
-                        <div style="background: linear-gradient(135deg, #FF5722 0%, #FF9800 100%); padding: 40px 20px;">
-                            <img src="https://helpido.onrender.com/asset/512.png" alt="Helpido Logo" style="width: 80px; height: 80px; border-radius: 18px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); margin-bottom: 15px; border: 3px solid #ffffff;">
-                            <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: 800; letter-spacing: -0.5px;">Helpido</h1>
+                        <div style="background: linear-gradient(135deg, #FF5722 0%, #FF9800 100%); padding: 60px 20px; text-align: center;">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 38px; font-weight: 800; letter-spacing: -1.5px;">Helpido</h1>
                         </div>
                         <div style="padding: 40px 30px; text-align: center;">
                             <h2 style="color: #1e272e;">Artistic Email Test</h2>
-                            <p style="color: #636e72;">If you see this, your logo and new design are working!</p>
-                            <div style="font-size: 32px; font-weight: 900; color: #FF5722; letter-spacing: 10px;">1234</div>
+                            <p style="color: #636e72;">Text-based logo test (No more massive image files!)</p>
+                            <div style="font-size: 48px; font-weight: 900; color: #FF5722; letter-spacing: 12px;">1234</div>
                         </div>
                     </div>
                 </div>

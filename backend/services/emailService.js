@@ -13,30 +13,30 @@ const sendOTP = async (email, otp) => {
             subject: 'Your Helpido Verification Code',
             html: `
                 <div style="background-color: #f4f7f6; padding: 40px 10px; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; text-align: center;">
-                    <div style="max-width: 480px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.05); border: 1px solid #e0e0e0;">
+                    <div style="max-width: 480px; margin: 0 auto; background: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.08); border: 1px solid #e1e8e7;">
                         
-                        <!-- Artistic Header -->
-                        <div style="background: linear-gradient(135deg, #FF5722 0%, #FF9800 100%); padding: 40px 20px; position: relative;">
-                            <img src="https://helpido.onrender.com/asset/512.png" alt="Helpido Logo" style="width: 80px; height: 80px; border-radius: 18px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); margin-bottom: 15px; border: 3px solid #ffffff;">
-                            <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: 800; letter-spacing: -0.5px;">Helpido</h1>
-                            <p style="color: rgba(255,255,255,0.9); margin: 5px 0 0; font-size: 14px; font-weight: 500;">Real-time help, exactly where you stand.</p>
+                        <!-- Artistic Minimalist Header -->
+                        <div style="background: linear-gradient(135deg, #FF5722 0%, #FF9800 100%); padding: 60px 20px; text-align: center;">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 38px; font-weight: 800; letter-spacing: -1.5px;">Helpido</h1>
+                            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0; font-size: 15px; font-weight: 500; letter-spacing: 0.5px;">Real-time help, exactly where you stand.</p>
                         </div>
 
                         <!-- Content Body -->
-                        <div style="padding: 45px 35px; color: #2d3436;">
-                            <h2 style="margin: 0 0 15px; font-size: 22px; font-weight: 700; color: #1e272e;">Verification Code</h2>
-                            <p style="font-size: 16px; color: #636e72; line-height: 1.6; margin-bottom: 30px;">
-                                Someone is trying to log in to your Helpido account. Use the unique code below to complete the verification.
+                        <div style="padding: 50px 40px; color: #2d3436;">
+                            <div style="text-transform: uppercase; color: #FF5722; font-size: 13px; font-weight: 700; letter-spacing: 2px; margin-bottom: 10px;">Security Core</div>
+                            <h2 style="margin: 0 0 20px; font-size: 24px; font-weight: 800; color: #1e272e;">Verification Code</h2>
+                            <p style="font-size: 16px; color: #636e72; line-height: 1.7; margin-bottom: 35px;">
+                                Someone is trying to sign in to your Helpido account. Please use the secure authorization code below.
                             </p>
 
                             <!-- Unique OTP Display -->
-                            <div style="background: #fff8f6; border: 2px solid #ffede8; border-radius: 16px; padding: 25px; display: inline-block;">
-                                <div style="font-size: 42px; font-weight: 900; color: #FF5722; letter-spacing: 12px; margin-left: 12px;">${otp}</div>
+                            <div style="background: #fff9f7; border: 2px solid #ffede8; border-radius: 20px; padding: 30px; display: inline-block; min-width: 200px;">
+                                <div style="font-size: 48px; font-weight: 900; color: #FF5722; letter-spacing: 14px; margin-left: 14px;">${otp}</div>
                             </div>
 
-                            <p style="margin-top: 35px; font-size: 13px; color: #b2bec3; line-height: 1.5;">
-                                This code is valid for 10 minutes.<br>
-                                If you didn't request this, you can safely ignore this email.
+                            <p style="margin-top: 40px; font-size: 13px; color: #b2bec3; line-height: 1.6;">
+                                This secure code is valid for 10 minutes.<br>
+                                Didn't request this? Please ignore this message.
                             </p>
                         </div>
 

@@ -74,6 +74,30 @@
             height: auto !important;
             /* Prevent it from stretching */
         }
+
+        .error-text {
+            color: #d32f2f;
+            font-size: 0.85rem;
+            margin-top: -12px;
+            margin-bottom: 12px;
+            text-align: left;
+            font-weight: 500;
+            display: none;
+            /* Hidden by default */
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 
@@ -102,6 +126,7 @@
             <div id="login-section" class="form-group">
                 <input type="tel" id="login-phone" class="input-field" placeholder="10-digit Mobile Number"
                     maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
+                <div id="login-error" class="error-text"></div>
                 <button type="button" class="btn" onclick="requestOTP()">Get OTP</button>
                 <p class="toggle-text" style="margin-top:15px; color:#757575;">
                     New here? <span onclick="switchMode('signup')"
@@ -115,6 +140,7 @@
                 <input type="tel" id="reg-phone" class="input-field" placeholder="10-digit Mobile Number" maxlength="10"
                     oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
                 <input type="email" id="reg-email" class="input-field" placeholder="Email Address">
+                <div id="signup-error" class="error-text"></div>
                 <button type="button" class="btn" onclick="registerUser()">Create Account</button>
                 <p class="toggle-text" style="margin-top:15px; color:#757575;">
                     Already registered? <span onclick="switchMode('login')"
@@ -126,14 +152,13 @@
                 <p id="otp-message" style="margin-bottom:15px; color:#555; font-size:0.95rem; line-height:1.4;"></p>
                 <input type="number" id="otp-input" class="input-field" placeholder="Enter 4-digit OTP"
                     oninput="this.value = this.value.slice(0, 4);">
+                <div id="otp-error" class="error-text"></div>
                 <button type="button" class="btn" onclick="verifyOTP()">Verify & Enter</button>
                 <button type="button" class="text-btn" onclick="switchMode('login')" style="margin-top:15px;">Change
                     Number</button>
             </div>
         </div>
     </main>
-
-    <div id="toast" class="toast"></div>
 
     <script>
         const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -148,22 +173,25 @@
             window.location.replace('/dashboard.html');
         }
 
-        let toastTimer;
-        function showToast(message, type = "success") {
-            const toast = document.getElementById("toast");
-            toast.innerText = message;
-            toast.className = `toast show ${type}`;
+        function showError(id, message) {
+            const errDiv = document.getElementById(id);
+            if (errDiv) {
+                errDiv.innerText = message;
+                errDiv.style.display = 'block';
+            }
+        }
 
-            if (toastTimer) clearTimeout(toastTimer);
-
-            // If it's an error, let it stay longer (10s) so the user can read it
-            const duration = type === "error" ? 10000 : 5000;
-            toastTimer = setTimeout(() => { toast.className = "toast"; }, duration);
+        function clearErrors() {
+            document.querySelectorAll('.error-text').forEach(div => {
+                div.innerText = '';
+                div.style.display = 'none';
+            });
         }
 
         // ... rest of your code ...
 
         function switchMode(mode) {
+            clearErrors();
             document.getElementById('login-section').style.display = 'none';
             document.getElementById('signup-section').style.display = 'none';
             document.getElementById('otp-section').style.display = 'none';
@@ -179,17 +207,21 @@
         }
 
         async function registerUser() {
+            clearErrors();
             try {
                 const name = document.getElementById('reg-name').value.trim();
                 const address = document.getElementById('reg-address').value.trim();
                 const phone = document.getElementById('reg-phone').value;
                 const email = document.getElementById('reg-email').value.trim();
 
-                if (!name || !address || !phone || !email) return showToast("Please fill all fields", "error");
-                if (phone.length !== 10) return showToast("Please enter a valid 10-digit number", "error");
-                if (!email.includes('@')) return showToast("Please enter a valid email address", "error");
+                if (!name || !address || !phone || !email) return showError("signup-error", "Please fill all fields");
+                if (phone.length !== 10) return showError("signup-error", "Please enter a valid 10-digit number");
+                if (!email.includes('@')) return showError("signup-error", "Please enter a valid email address");
 
-                showToast("Creating account...", "success");
+                const btn = document.querySelector('#signup-section .btn');
+                const originalText = btn.innerText;
+                btn.innerText = "Please wait...";
+                btn.disabled = true;
 
                 const res = await fetch(`${API_URL}/signup`, {
                     method: 'POST',
@@ -198,30 +230,33 @@
                 });
                 const data = await res.json();
 
+                btn.innerText = originalText;
+                btn.disabled = false;
+
                 if (res.ok) {
-                    showToast(data.message, "success");
                     document.getElementById('login-phone').value = phone;
-                    document.getElementById('reg-name').value = '';
-                    document.getElementById('reg-address').value = '';
-                    document.getElementById('reg-phone').value = '';
-                    document.getElementById('reg-email').value = '';
                     switchMode('login');
+                    // Optional: Show specialized welcome message or just switch
                 } else {
-                    showToast(data.message, "error");
+                    showError("signup-error", data.message || "User already exists");
                 }
             } catch (err) {
-                showToast("Network Error: Check internet/Render", "error");
+                showError("signup-error", "Network Error: Check internet connection");
             }
         }
 
         async function requestOTP() {
+            clearErrors();
             try {
                 const phone = document.getElementById('login-phone').value;
 
-                if (!phone) return showToast("Enter your mobile number", "error");
-                if (phone.length !== 10) return showToast("Please enter a valid 10-digit number", "error");
+                if (!phone) return showError("login-error", "Enter your mobile number");
+                if (phone.length !== 10) return showError("login-error", "Please enter a valid 10-digit number");
 
-                showToast("Connecting to server...", "success");
+                const btn = document.querySelector('#login-section .btn');
+                const originalText = btn.innerText;
+                btn.innerText = "Please wait...";
+                btn.disabled = true;
 
                 const res = await fetch(`${API_URL}/login/step1`, {
                     method: 'POST',
@@ -229,7 +264,9 @@
                     body: JSON.stringify({ phone })
                 });
                 const data = await res.json();
-                console.log("Login Step 1 Response:", data);
+
+                btn.innerText = originalText;
+                btn.disabled = false;
 
                 if (res.ok) {
                     activePhone = phone;
@@ -243,23 +280,25 @@
 
                     switchMode('otp');
                 } else {
-                    console.error("Step 1 Failed:", data.message || "Unknown error");
-                    showToast(data.message || "User profile incomplete or not found", "error");
+                    showError("login-error", data.message || "User not found! Please sign up.");
                 }
             } catch (err) {
-                console.error("Request OTP Error:", err);
-                showToast(`Connection Error: ${err.message}`, "error");
+                showError("login-error", "Connection Error: Check internet connection");
             }
         }
 
         async function verifyOTP() {
+            clearErrors();
             try {
                 const otp = document.getElementById('otp-input').value;
                 const phone = activePhone || document.getElementById('login-phone').value;
 
-                if (!otp || otp.length !== 4) return showToast("Please enter the 4-digit code", "error");
+                if (!otp || otp.length !== 4) return showError("otp-error", "Please enter the 4-digit code");
 
-                showToast("Verifying...", "success");
+                const btn = document.querySelector('#otp-section .btn');
+                const originalText = btn.innerText;
+                btn.innerText = "Verifying...";
+                btn.disabled = true;
 
                 const res = await fetch(`${API_URL}/login/step2`, {
                     method: 'POST',
@@ -269,24 +308,22 @@
                 const data = await res.json();
 
                 if (res.ok) {
-                    // 1. Save credentials safely
                     localStorage.setItem('helpido_user', data.userId);
                     localStorage.setItem('helpido_phone', phone.toString());
-
-                    // 2. Flag this as a fresh login so the dashboard auto-shows the install prompt
                     localStorage.setItem('helpido_new_install', 'true');
 
-                    // 3. Show success toast and automatically jump after a short delay
-                    showToast("Login Successful! Loading Dashboard...", "success");
+                    btn.innerText = "Accepted!";
                     setTimeout(() => {
                         window.location.href = '/dashboard.html';
-                    }, 800);
+                    }, 500);
 
                 } else {
-                    showToast(data.message || "Invalid Code", "error");
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                    showError("otp-error", data.message || "Invalid Code");
                 }
             } catch (err) {
-                showToast("Network Error: Could not reach backend", "error");
+                showError("otp-error", "Network Error: Could not reach backend");
             }
         }
 
