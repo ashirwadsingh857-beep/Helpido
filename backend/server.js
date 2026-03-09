@@ -58,7 +58,6 @@ const { Server } = require("socket.io");
 
 const Task = require("./models/Task.js");
 const User = require("./models/User.js");
-const emailService = require("./services/emailService.js");
 
 const app = express();
 app.use(express.json());
