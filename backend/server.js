@@ -200,21 +200,25 @@ app.post('/api/signup', async (req, res) => {
     try {
         const existingUser = await User.findOne({ phone });
 
-        // If user exists and already has an email, block re-registration
-        if (existingUser && existingUser.email) {
-            return res.status(400).json({ message: "Phone number is already registered!" });
+        // If user exists and already has a VALID email, block re-registration
+        if (existingUser && existingUser.email && existingUser.email.includes('@')) {
+            console.warn(`Signup block: User ${phone} already has a valid email: ${existingUser.email}`);
+            return res.status(400).json({ message: "Phone number is already registered with an email!" });
         }
 
         const existingEmail = await User.findOne({ email });
-        if (existingEmail) return res.status(400).json({ message: "Email is already registered!" });
+        if (existingEmail && (!existingUser || existingEmail._id.toString() !== existingUser._id.toString())) {
+            return res.status(400).json({ message: "This email is already in use by another account!" });
+        }
 
         if (existingUser) {
+            console.log(`Updating existing user ${phone} with new email: ${email}`);
             // Update existing user record (Preserves history, ratings, etc.)
-            existingUser.name = name;
-            existingUser.address = address;
+            existingUser.name = name || existingUser.name;
+            existingUser.address = address || existingUser.address;
             existingUser.email = email;
             await existingUser.save();
-            return res.status(200).json({ message: "Profile updated successfully! You can now login." });
+            return res.status(200).json({ message: "Email added successfully! You can now login." });
         }
 
         // Standard new user creation
