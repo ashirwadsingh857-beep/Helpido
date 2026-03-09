@@ -9,13 +9,7 @@ const sendOTP = async (email, otp) => {
         const SENDER_NAME = 'Helpido';
 
         if (!BREVO_API_KEY) {
-            console.error('DEBUG: BREVO_API_KEY is empty or undefined.');
             throw new Error('BREVO_API_KEY is missing in environment variables');
-        }
-
-        console.log(`DEBUG: Using API Key with length: ${BREVO_API_KEY.length}`);
-        if (BREVO_API_KEY.length < 50) {
-            console.warn('DEBUG WARNING: API Key seems too short (Expected ~64 characters).');
         }
 
         const response = await fetch('https://api.brevo.com/v3/smtp/email', {
