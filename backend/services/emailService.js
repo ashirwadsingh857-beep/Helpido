@@ -1,6 +1,13 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
+console.log("Initializing Email Service...");
+if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.error("❌ EMAIL_USER or EMAIL_PASS missing from environment variables!");
+} else {
+    console.log(`✅ Email credentials loaded for user: ${process.env.EMAIL_USER}`);
+}
+
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
