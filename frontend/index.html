@@ -133,7 +133,9 @@
     <div id="toast" class="toast"></div>
 
     <script>
-        const API_URL = 'https://helpido.onrender.com/api';
+        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:3000/api'
+            : '/api';
         let activePhone = "";
 
         // --- NEW: Auto-Skip Login ---
@@ -213,6 +215,7 @@
                     body: JSON.stringify({ phone })
                 });
                 const data = await res.json();
+                console.log("Login Step 1 Response:", data);
 
                 if (res.ok) {
                     activePhone = phone;

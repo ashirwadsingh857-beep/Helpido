@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config({ path: path.join(__dirname, ".env") });
 const Message = require("./models/Message.js");
+const emailService = require("./services/emailService.js");
 
 // --- NEW: WEB PUSH SETUP ---
 const webpush = require("web-push");
