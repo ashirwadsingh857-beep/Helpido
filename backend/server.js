@@ -247,7 +247,9 @@ app.post('/api/subscribe', async (req, res) => {
 });
 
 app.post('/api/login/step1', async (req, res) => {
+    console.log("--- Login Step 1 Request Received ---");
     const { phone } = req.body;
+    console.log(`Phone: ${phone}`);
     try {
         const user = await User.findOne({ phone });
         if (!user) return res.status(404).json({ message: "User not found! Please sign up." });

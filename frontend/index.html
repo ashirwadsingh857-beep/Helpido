@@ -145,11 +145,17 @@
             window.location.replace('/dashboard.html');
         }
 
+        let toastTimer;
         function showToast(message, type = "success") {
             const toast = document.getElementById("toast");
             toast.innerText = message;
             toast.className = `toast show ${type}`;
-            setTimeout(() => { toast.className = "toast"; }, 5000);
+
+            if (toastTimer) clearTimeout(toastTimer);
+
+            // If it's an error, let it stay longer (10s) so the user can read it
+            const duration = type === "error" ? 10000 : 5000;
+            toastTimer = setTimeout(() => { toast.className = "toast"; }, duration);
         }
 
         // ... rest of your code ...
@@ -219,13 +225,15 @@
 
                 if (res.ok) {
                     activePhone = phone;
-                    showToast(`OTP sent to your email! OTP: ${data.otp}`, "success");
+                    showToast(`OTP ready! Check your email.`, "success");
                     switchMode('otp');
                 } else {
-                    showToast(data.message, "error");
+                    console.error("Step 1 Failed:", data.message || "Unknown error");
+                    showToast(data.message || "User profile incomplete or not found", "error");
                 }
             } catch (err) {
-                showToast("Network Error: Server might be asleep", "error");
+                console.error("Request OTP Error:", err);
+                showToast(`Connection Error: ${err.message}`, "error");
             }
         }
 
