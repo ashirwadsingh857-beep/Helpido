@@ -846,7 +846,7 @@
     <div id="app-notification" class="app-notification">
         <div class="app-notif-icon" id="app-notif-icon">🔔</div>
         <div class="app-notif-text">
-            <h4 id="app-notif-title">Title</h4>
+            <h4 id="app-notif-title"></h4>
             <p id="app-notif-desc">Message details...</p>
         </div>
     </div>
@@ -2006,14 +2006,18 @@
                 const message = icon;
                 const type = title || 'success';
                 icon = type === 'error' ? '❌' : '🔔';
-                title = type === 'error' ? 'Alert' : 'Notification';
+                title = ''; // Removed redundant "Notification" or "Alert" text
                 desc = message;
             }
 
             const notif = document.getElementById('app-notification');
             if (!notif) return;
+
+            const titleEl = document.getElementById('app-notif-title');
+            titleEl.innerText = title;
+            titleEl.style.display = title ? 'block' : 'none'; // Hide if empty
+
             document.getElementById('app-notif-icon').innerText = icon;
-            document.getElementById('app-notif-title').innerText = title;
             document.getElementById('app-notif-desc').innerText = desc;
 
             notif.onclick = () => {
@@ -2386,7 +2390,6 @@
             });
 
             if (res.ok) {
-                showAppNotification("Task posted to your neighborhood!", "success");
                 closeModal();
                 loadTasks();
                 document.getElementById('task-title').value = "";
