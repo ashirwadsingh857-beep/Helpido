@@ -80,6 +80,10 @@
 <body>
     <main class="app-container">
         <header class="header fade-in-up">
+            <div id="otp-alert-bar"
+                style="display: none; background: #FFF3E0; border: 1px solid #FFE0B2; color: #E65100; padding: 10px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; font-weight: 500;">
+                <span id="otp-alert-text"></span>
+            </div>
             <h1>Helpido</h1>
             <p style="
     font-size: 1.15rem; 
@@ -119,8 +123,7 @@
             </div>
 
             <div id="otp-section" class="form-group" style="display: none;">
-                <p style="margin-bottom:10px; color:#757575; font-size:0.9rem;">Check the popup for your 4-digit code.
-                </p>
+                <p id="otp-message" style="margin-bottom:15px; color:#555; font-size:0.95rem; line-height:1.4;"></p>
                 <input type="number" id="otp-input" class="input-field" placeholder="Enter 4-digit OTP"
                     oninput="this.value = this.value.slice(0, 4);">
                 <button type="button" class="btn" onclick="verifyOTP()">Verify & Enter</button>
@@ -164,6 +167,11 @@
             document.getElementById('login-section').style.display = 'none';
             document.getElementById('signup-section').style.display = 'none';
             document.getElementById('otp-section').style.display = 'none';
+
+            // Hide the alert bar by default when switching modes
+            if (mode !== 'otp') {
+                document.getElementById('otp-alert-bar').style.display = 'none';
+            }
 
             if (mode === 'login') document.getElementById('login-section').style.display = 'block';
             if (mode === 'signup') document.getElementById('signup-section').style.display = 'block';
@@ -225,7 +233,14 @@
 
                 if (res.ok) {
                     activePhone = phone;
-                    showToast(`OTP ready! Check your email.`, "success");
+                    // --- NEW: PREMIUM NOTIFICATION BAR ---
+                    document.getElementById('otp-alert-text').innerHTML = `OTP sent to <strong>${data.email}</strong>. Check your inbox.`;
+                    document.getElementById('otp-alert-bar').style.display = 'block';
+
+                    // Clear the smaller inline message
+                    const inlineMsg = document.getElementById('otp-message');
+                    if (inlineMsg) inlineMsg.innerText = "Check your inbox for your 4-digit code.";
+
                     switchMode('otp');
                 } else {
                     console.error("Step 1 Failed:", data.message || "Unknown error");

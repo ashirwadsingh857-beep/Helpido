@@ -268,7 +268,11 @@ app.post('/api/login/step1', async (req, res) => {
             .then(() => console.log(`Background Success: OTP sent to ${user.email}`))
             .catch((emailErr) => console.error("Background Email Service Error:", emailErr));
 
-        res.json({ message: "OTP sent to your registered email address.", otp });
+        res.json({
+            message: "OTP sent to your registered email address.",
+            otp,
+            email: user.email
+        });
     } catch (err) {
         console.error("Login Step 1 Error:", err);
         res.status(500).json({ message: "Server error" });
