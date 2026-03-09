@@ -10,11 +10,31 @@ const webpush = require("web-push");
 const admin = require("firebase-admin");
 
 // --- NEW: FIREBASE ADMIN SETUP ---
-const serviceAccount = require("./helpido-1610f-firebase-adminsdk-fbsvc-d0e05ccb04.json");
+let firebaseServiceAccount;
 
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-});
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    try {
+        firebaseServiceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    } catch (err) {
+        console.error("Failed to parse FIREBASE_SERVICE_ACCOUNT env var:", err);
+    }
+}
+
+if (!firebaseServiceAccount) {
+    try {
+        firebaseServiceAccount = require("./helpido-1610f-firebase-adminsdk-fbsvc-d0e05ccb04.json");
+    } catch (err) {
+        console.warn("⚠️ Firebase service account JSON not found. Pushes might fail if env var is also missing.");
+    }
+}
+
+if (firebaseServiceAccount) {
+    admin.initializeApp({
+        credential: admin.credential.cert(firebaseServiceAccount)
+    });
+} else {
+    console.error("❌ Firebase Admin could not be initialized: No credentials found.");
+}
 
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
     // Failsafe: Automatically add 'mailto:' if it's missing from your environment variables
