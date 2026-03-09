@@ -2,7 +2,7 @@ const path = require("path");
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-require("dotenv").config();
+require("dotenv").config({ path: path.join(__dirname, ".env") });
 const Message = require("./models/Message.js");
 
 // --- NEW: WEB PUSH SETUP ---
@@ -13,7 +13,7 @@ const admin = require("firebase-admin");
 const serviceAccount = require("./helpido-1610f-firebase-adminsdk-fbsvc-d0e05ccb04.json");
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+    credential: admin.credential.cert(serviceAccount)
 });
 
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
@@ -37,6 +37,7 @@ const { Server } = require("socket.io");
 
 const Task = require("./models/Task.js");
 const User = require("./models/User.js");
+const emailService = require("./services/emailService.js");
 
 const app = express();
 app.use(express.json());
@@ -174,6 +175,21 @@ io.on('connection', (socket) => {
 
 // --- NEW API ROUTE: Get Chat History ---
 // Add this right above your /* ---------------- AUTH ROUTES ---------------- */
+app.post('/api/signup', async (req, res) => {
+    const { phone, name, address, email } = req.body;
+    try {
+        const existingUser = await User.findOne({ phone });
+        if (existingUser) return res.status(400).json({ message: "Phone number is already registered!" });
+        const existingEmail = await User.findOne({ email });
+        if (existingEmail) return res.status(400).json({ message: "Email is already registered!" });
+        const newUser = new User({ phone, name, address, email });
+        await newUser.save();
+        res.status(201).json({ message: "Account created! You can now login." });
+    } catch (err) {
+        res.status(400).json({ message: `DB Error: ${err.message}` });
+    }
+});
+
 app.get('/api/chat/:taskId', async (req, res) => {
     try {
         const messages = await Message.find({ taskId: req.params.taskId }).sort({ createdAt: 1 });
@@ -190,19 +206,6 @@ mongoose.connect(process.env.MONGO_URI)
     })
     .catch((err) => console.error("Mongo Error:", err));
 
-/* ---------------- AUTH ROUTES ---------------- */
-app.post('/api/signup', async (req, res) => {
-    const { phone, name, address } = req.body;
-    try {
-        const existingUser = await User.findOne({ phone });
-        if (existingUser) return res.status(400).json({ message: "Phone number is already registered!" });
-        const newUser = new User({ phone, name, address });
-        await newUser.save();
-        res.status(201).json({ message: "Account created! You can now login." });
-    } catch (err) {
-        res.status(400).json({ message: `DB Error: ${err.message}` });
-    }
-});
 
 // --- NEW ROUTE: Save Android/iOS Push Subscription or FCM Token ---
 app.post('/api/subscribe', async (req, res) => {
@@ -230,8 +233,15 @@ app.post('/api/login/step1', async (req, res) => {
         if (!user) return res.status(404).json({ message: "User not found! Please sign up." });
         const otp = Math.floor(1000 + Math.random() * 9000).toString();
         await User.updateOne({ phone }, { $set: { otp } });
-        res.json({ message: "OTP generated", otp });
-    } catch (err) { res.status(500).json({ message: "Server error" }); }
+
+        // Send OTP via Email
+        await emailService.sendOTP(user.email, otp);
+
+        res.json({ message: "OTP sent to your registered email address.", otp }); // Keeping otp for debug/demo if needed
+    } catch (err) {
+        console.error("Login Step 1 Error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
 });
 
 app.post('/api/login/step2', async (req, res) => {
@@ -398,7 +408,7 @@ app.post('/api/tasks', async (req, res) => {
                         desc: payloadData.body,
                         type: payloadData.type
                     });
-                    promises.push(webpush.sendNotification(user.pushSubscription, payload).catch(() => {}));
+                    promises.push(webpush.sendNotification(user.pushSubscription, payload).catch(() => { }));
                 }
                 if (user.fcmToken) {
                     const message = {
@@ -412,7 +422,7 @@ app.post('/api/tasks', async (req, res) => {
                         },
                         token: user.fcmToken,
                     };
-                    promises.push(admin.messaging().send(message).catch(() => {}));
+                    promises.push(admin.messaging().send(message).catch(() => { }));
                 }
                 return promises;
             });
@@ -514,7 +524,7 @@ app.post("/api/tasks/accept", async (req, res) => {
                         taskId: payloadData.taskId,
                         senderPhone: payloadData.senderPhone
                     });
-                    await webpush.sendNotification(posterUser.pushSubscription, payload).catch(() => {});
+                    await webpush.sendNotification(posterUser.pushSubscription, payload).catch(() => { });
                 }
 
                 if (posterUser.fcmToken) {
@@ -531,7 +541,7 @@ app.post("/api/tasks/accept", async (req, res) => {
                         },
                         token: posterUser.fcmToken,
                     };
-                    await admin.messaging().send(message).catch(() => {});
+                    await admin.messaging().send(message).catch(() => { });
                 }
             }
         } catch (pushErr) {
@@ -583,7 +593,7 @@ app.post("/api/tasks/helper-done", async (req, res) => {
                         type: payloadData.type,
                         taskId: payloadData.taskId
                     });
-                    await webpush.sendNotification(posterUser.pushSubscription, payload).catch(() => {});
+                    await webpush.sendNotification(posterUser.pushSubscription, payload).catch(() => { });
                 }
 
                 if (posterUser.fcmToken) {
@@ -599,7 +609,7 @@ app.post("/api/tasks/helper-done", async (req, res) => {
                         },
                         token: posterUser.fcmToken,
                     };
-                    await admin.messaging().send(message).catch(() => {});
+                    await admin.messaging().send(message).catch(() => { });
                 }
             }
         } catch (pushErr) {
@@ -686,7 +696,7 @@ app.post("/api/tasks/complete", async (req, res) => {
                         type: payloadData.type,
                         taskId: payloadData.taskId
                     });
-                    await webpush.sendNotification(helper.pushSubscription, pushPayload).catch(() => {});
+                    await webpush.sendNotification(helper.pushSubscription, pushPayload).catch(() => { });
                 }
 
                 if (helper.fcmToken) {
@@ -702,7 +712,7 @@ app.post("/api/tasks/complete", async (req, res) => {
                         },
                         token: helper.fcmToken,
                     };
-                    await admin.messaging().send(message).catch(() => {});
+                    await admin.messaging().send(message).catch(() => { });
                 }
             }
         } catch (pushErr) {

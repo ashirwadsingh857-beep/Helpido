@@ -110,6 +110,7 @@
                 <input type="text" id="reg-address" class="input-field" placeholder="Address (e.g., Datta Mandir)">
                 <input type="tel" id="reg-phone" class="input-field" placeholder="10-digit Mobile Number" maxlength="10"
                     oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
+                <input type="email" id="reg-email" class="input-field" placeholder="Email Address">
                 <button type="button" class="btn" onclick="registerUser()">Create Account</button>
                 <p class="toggle-text" style="margin-top:15px; color:#757575;">
                     Already registered? <span onclick="switchMode('login')"
@@ -166,16 +167,18 @@
                 const name = document.getElementById('reg-name').value.trim();
                 const address = document.getElementById('reg-address').value.trim();
                 const phone = document.getElementById('reg-phone').value;
+                const email = document.getElementById('reg-email').value.trim();
 
-                if (!name || !address || !phone) return showToast("Please fill all fields", "error");
+                if (!name || !address || !phone || !email) return showToast("Please fill all fields", "error");
                 if (phone.length !== 10) return showToast("Please enter a valid 10-digit number", "error");
+                if (!email.includes('@')) return showToast("Please enter a valid email address", "error");
 
                 showToast("Creating account...", "success");
 
                 const res = await fetch(`${API_URL}/signup`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, address, phone })
+                    body: JSON.stringify({ name, address, phone, email })
                 });
                 const data = await res.json();
 
@@ -185,6 +188,7 @@
                     document.getElementById('reg-name').value = '';
                     document.getElementById('reg-address').value = '';
                     document.getElementById('reg-phone').value = '';
+                    document.getElementById('reg-email').value = '';
                     switchMode('login');
                 } else {
                     showToast(data.message, "error");
@@ -212,7 +216,7 @@
 
                 if (res.ok) {
                     activePhone = phone;
-                    showToast(`OTP: ${data.otp}`, "success");
+                    showToast(`OTP sent to your email! OTP: ${data.otp}`, "success");
                     switchMode('otp');
                 } else {
                     showToast(data.message, "error");
