@@ -1242,6 +1242,11 @@
                 globalSocket.on('receiveMessage', (msg) => {
                     if (currentChatTaskId === msg.taskId) {
                         appendMessageUI(msg);
+                        // NEW FIX: If the message arrived while I was already looking at the chat,
+                        // tell the server (and the sender) that I have "seen" it immediately.
+                        if (msg.senderPhone !== myPhone) {
+                            globalSocket.emit('markSeen', { taskId: msg.taskId, viewerPhone: myPhone });
+                        }
                     }
                 });
 
