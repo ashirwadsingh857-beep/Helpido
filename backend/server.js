@@ -199,9 +199,25 @@ app.post('/api/signup', async (req, res) => {
     const { phone, name, address, email } = req.body;
     try {
         const existingUser = await User.findOne({ phone });
-        if (existingUser) return res.status(400).json({ message: "Phone number is already registered!" });
+
+        // If user exists and already has an email, block re-registration
+        if (existingUser && existingUser.email) {
+            return res.status(400).json({ message: "Phone number is already registered!" });
+        }
+
         const existingEmail = await User.findOne({ email });
         if (existingEmail) return res.status(400).json({ message: "Email is already registered!" });
+
+        if (existingUser) {
+            // Update existing user record (Preserves history, ratings, etc.)
+            existingUser.name = name;
+            existingUser.address = address;
+            existingUser.email = email;
+            await existingUser.save();
+            return res.status(200).json({ message: "Profile updated successfully! You can now login." });
+        }
+
+        // Standard new user creation
         const newUser = new User({ phone, name, address, email });
         await newUser.save();
         res.status(201).json({ message: "Account created! You can now login." });
@@ -671,7 +687,11 @@ app.post("/api/tasks/complete", async (req, res) => {
         const task = await Task.findById(taskId);
         if (!task) return res.status(404).json({ message: "Task not found" });
         if (task.postedBy !== ratedBy) return res.status(403).json({ message: "Only the poster can mark this done" });
-        if (task.status !== 'accepted') return res.status(400).json({ message: "Task is not in accepted state" });
+
+        // FIX: Allow completion if it is 'accepted' OR already 'completed' (avoids repeat-click errors)
+        if (task.status !== 'accepted' && task.status !== 'completed') {
+            return res.status(400).json({ message: "Task is not in a valid state for completion" });
+        }
 
         const helperPhone = task.helperPhone;
 

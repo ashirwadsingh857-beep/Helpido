@@ -67,36 +67,7 @@
         /* Smooth Tab Content Entrance (Now managed by shared style.css) */
         /* Removed duplicate fadeSlideUp animation definition here */
 
-        /* =========================================
-           1. CORE LAYOUT & MOBILE FIXES
-           ========================================= */
-        // --- NEW: FLUTTER BRIDGE FOR FCM TOKEN ---
-        window.receiveFlutterFCMToken=function(token) {
-            if ( !token) return;
-            console.log("FCM Token received from Flutter: " + token);
 
-            // Send the token to the backend subscribe endpoint
-            const phoneToUpdate=localStorage.getItem('helpido_phone');
-            if ( !phoneToUpdate) return;
-
-            fetch(`$ {
-                    API_URL
-                }
-
-                /subscribe`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-
-                ,
-                body: JSON.stringify({
-                    phone: phoneToUpdate, fcmToken: token
-                })
-        }) .then(res=> res.json()) .then(data=> console.log("FCM Token saved to server")) .catch(err=> console.error("Error saving FCM Token:", err));
-        }
-
-        ;
 
         html {
             height: 100%;
@@ -178,33 +149,6 @@
         /* =========================================
            3. TOAST & IN-APP NOTIFICATIONS
            ========================================= */
-        .toast {
-            visibility: hidden;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s, transform 0.3s;
-            position: fixed;
-            bottom: 120px;
-            left: 50%;
-            transform: translateX(-50%) translateY(20px);
-            z-index: 20000 !important;
-            background: #333;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 25px;
-            font-size: 0.9rem;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            width: max-content;
-            max-width: 80%;
-        }
-
-        .toast.show {
-            visibility: visible;
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
-
         .app-notification {
             position: fixed;
             bottom: 110px;
@@ -1043,7 +987,25 @@
             <p>Profile</p>
         </div>
     </nav>
-    <div id="toast" class="toast"></div>
+    <div id="email-required-modal" class="modal-overlay hidden" style="z-index: 30000 !important;">
+        <div class="modal-content" style="text-align: center; max-width: 360px;">
+            <div style="font-size: 3.5rem; margin-bottom: 20px;">📧</div>
+            <h2 style="margin-bottom: 12px; color: #202124;">Email Required</h2>
+            <p style="color: #5F6368; font-size: 0.95rem; line-height: 1.6; margin-bottom: 24px;">
+                To keep your account secure and enable features like password recovery, please add your email address.
+            </p>
+            <div
+                style="background: #FFF3E0; border: 1px solid #FFE0B2; border-radius: 12px; padding: 12px; margin-bottom: 24px;">
+                <p style="color: #E65100; font-size: 0.85rem; font-weight: 600; margin: 0;">
+                    ⚠️ You will need to re-verify your info.
+                </p>
+            </div>
+            <button class="btn" onclick="forceEmailUpdate()"
+                style="width: 100%; margin-bottom: 12px; font-weight: 700;">
+                Update Email Now
+            </button>
+        </div>
+    </div>
 
     <script>
 
@@ -1075,6 +1037,30 @@
 
         // CRITICAL FIX: Restored the missing core variables!
         const API_URL = 'https://helpido.onrender.com/api';
+        // --- NEW: FLUTTER BRIDGE FOR FCM TOKEN ---
+        window.receiveFlutterFCMToken = function (token) {
+            if (!token) return;
+            console.log("FCM Token received from Flutter: " + token);
+
+            // Send the token to the backend subscribe endpoint
+            const phoneToUpdate = localStorage.getItem('helpido_phone');
+            if (!phoneToUpdate) return;
+
+            fetch(`${API_URL}/subscribe`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    phone: phoneToUpdate,
+                    fcmToken: token
+                })
+            })
+                .then(res => res.json())
+                .then(data => console.log("FCM Token saved to server"))
+                .catch(err => console.error("Error saving FCM Token:", err));
+        };
+
         const myPhone = localStorage.getItem('helpido_phone');
 
         // --- NEW: PUSH NOTIFICATION SETUP ---
@@ -1251,7 +1237,7 @@
                     // Close chat if this task's chat is open
                     if (currentChatTaskId && currentChatTaskId === taskId) {
                         closeChat();
-                        showToast('💬 This task was removed. Chat closed.', 'error');
+                        showAppNotification('💬 This task was removed. Chat closed.', 'error');
                     }
 
                     const feedCard = document.getElementById(`feed-card-${taskId}`);
@@ -1369,7 +1355,7 @@
                         `"${data.taskTitle}" is ready — tap to confirm & rate.`,
                         () => { switchTab('tasks'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
                     );
-                    showToast(`✅ ${data.helperName} marked "${data.taskTitle}" done — confirm to close it!`);
+                    showAppNotification(`✅ ${data.helperName} marked "${data.taskTitle}" done — confirm to close it!`);
                 });
 
                 // (taskRemoved chat-close logic is handled in the combined listener above)
@@ -1459,6 +1445,14 @@
                 const main = document.getElementById('main-dash');
                 if (splash) splash.classList.add('hide');
                 if (main) main.classList.add('unblur');
+
+                // NEW: Mandatory Email Check
+                if (user && !user.email) {
+                    document.getElementById('email-required-modal').classList.remove('hidden');
+                    // Store current user data for pre-filling the signup form
+                    sessionStorage.setItem('helpido_prefill_name', user.name || '');
+                    sessionStorage.setItem('helpido_prefill_address', user.address || '');
+                }
             }
         }
         // NEW: Global cache to securely store names and prevent API spam
@@ -2029,19 +2023,27 @@
            4. SYSTEM & UI UTILITIES
            ========================================= */
         function showAppNotification(icon, title, desc, onClickCallback = null) {
+            // BACKWARD COMPATIBILITY: If called as showAppNotification(message, type)
+            if (arguments.length <= 2 && typeof icon === 'string' && (!title || title === 'success' || title === 'error')) {
+                const message = icon;
+                const type = title || 'success';
+                icon = type === 'error' ? '❌' : '🔔';
+                title = type === 'error' ? 'Alert' : 'Notification';
+                desc = message;
+            }
+
             const notif = document.getElementById('app-notification');
+            if (!notif) return;
             document.getElementById('app-notif-icon').innerText = icon;
             document.getElementById('app-notif-title').innerText = title;
             document.getElementById('app-notif-desc').innerText = desc;
 
             notif.onclick = () => {
                 notif.classList.remove('show');
-
                 // Aggressively close all floating windows
                 closeChat();
                 closeHistory();
                 closeModal();
-
                 // Route user
                 if (onClickCallback) onClickCallback();
             };
@@ -2051,10 +2053,14 @@
             notifTimeout = setTimeout(() => { notif.classList.remove('show'); }, 4000);
         }
 
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById("toast");
-            toast.innerText = message; toast.className = `toast show ${type}`;
-            setTimeout(() => { toast.className = "toast"; }, 3000);
+        function forceEmailUpdate() {
+            // Data is already stored in sessionStorage from loadProfile()
+            const phone = localStorage.getItem('helpido_phone');
+            sessionStorage.setItem('helpido_prefill_phone', phone);
+
+            // Clear current login state but KEEP the prefill data
+            localStorage.removeItem('helpido_phone');
+            window.location.replace('/index.html?mode=signup&prefill=true');
         }
 
         // --- UPGRADED: SMOOTH NATIVE TAB SWITCHING ---
@@ -2139,7 +2145,7 @@
                     body: JSON.stringify({ phone: myPhone, availability: currentStatus })
                 });
             } catch (err) {
-                showToast("Failed to save status", "error");
+                showAppNotification("Failed to save status", "error");
                 currentStatus = currentStatus === 'free' ? 'busy' : 'free';
                 updateStatusUI();
                 if (activeTab === 'home') loadTasks();
@@ -2175,14 +2181,14 @@
                         waitDiv.textContent = '⏳ Waiting for poster to confirm...';
                         card.appendChild(waitDiv);
                     }
-                    showToast('✅ Poster notified! Waiting for their confirmation.');
+                    showAppNotification('✅ Poster notified! Waiting for their confirmation.');
                 } else {
                     if (doneBtn) { doneBtn.disabled = false; doneBtn.textContent = '✅ Mark as Done'; }
-                    showToast('Could not signal completion. Try again.', 'error');
+                    showAppNotification('Could not signal completion. Try again.', 'error');
                 }
             } catch (err) {
                 if (doneBtn) { doneBtn.disabled = false; doneBtn.textContent = '✅ Mark as Done'; }
-                showToast('Network error', 'error');
+                showAppNotification('Network error', 'error');
             }
         }
 
@@ -2200,12 +2206,12 @@
                     const data = await res.json();
 
                     if (res.ok) {
-                        showToast("Task Accepted! Check 'Tasks' tab."); loadTasks(); loadMyTasks();
+                        showAppNotification("Task Accepted! Check 'Tasks' tab."); loadTasks(); loadMyTasks();
                     } else {
-                        showToast(data.message || "Could not accept", "error");
+                        showAppNotification(data.message || "Could not accept", "error");
                         if (card) card.classList.remove('slide-out-left');
                     }
-                } catch (err) { showToast("Network Error", "error"); if (card) card.classList.remove('slide-out-left'); }
+                } catch (err) { showAppNotification("Network Error", "error"); if (card) card.classList.remove('slide-out-left'); }
             }, 350);
         }
 
@@ -2225,12 +2231,12 @@
                                 if (titleEl) taskTitle = titleEl.childNodes[0].nodeValue.trim();
                             }
                             saveToHistory(taskId, taskTitle, 'deleted');
-                            showToast("Task wiped from database!");
+                            showAppNotification("Task wiped from database!");
                         } else {
                             if (card) card.classList.remove('slide-out-left');
-                            showToast("Could not delete task", "error");
+                            showAppNotification("Could not delete task", "error");
                         }
-                    } catch (err) { showToast("Network error", "error"); if (card) card.classList.remove('slide-out-left'); }
+                    } catch (err) { showAppNotification("Network error", "error"); if (card) card.classList.remove('slide-out-left'); }
                 }, 350);
             });
         }
@@ -2265,7 +2271,7 @@
                     });
                 } catch (e) { console.warn("Server-side dismissal failed", e); }
 
-                showToast("Task dismissed.");
+                showAppNotification("Task dismissed.");
                 loadTasks(); // Refresh feed to close the gap
             }, 350);
         }
@@ -2296,14 +2302,14 @@
                                 droppedTasks.push(taskId);
                                 localStorage.setItem('dropped_tasks', JSON.stringify(droppedTasks));
                             }
-                            showToast("Task dropped and hidden.");
+                            showAppNotification("Task dropped and hidden.");
                             loadTasks();
                             loadMyTasks();
                         } else {
                             if (card) card.classList.remove('slide-out-left');
-                            showToast("Could not drop task", "error");
+                            showAppNotification("Could not drop task", "error");
                         }
-                    } catch (err) { showToast("Network error", "error"); if (card) card.classList.remove('slide-out-left'); }
+                    } catch (err) { showAppNotification("Network error", "error"); if (card) card.classList.remove('slide-out-left'); }
                 }, 350);
             });
         }
@@ -2354,7 +2360,7 @@
 
         async function submitRating() {
             if (!pendingRatingTaskId) return;
-            if (selectedStarValue === 0) return showToast('Please pick a star rating!', 'error');
+            if (selectedStarValue === 0) return showAppNotification('Please pick a star rating!', 'error');
 
             const btn = document.getElementById('submit-rating-btn');
             btn.disabled = true;
@@ -2370,13 +2376,13 @@
 
                 if (res.ok) {
                     closeRatingModal();
-                    showToast(`✅ Task done! You gave ${selectedStarValue}⭐`, 'success');
+                    showAppNotification(`✅ Task done! You gave ${selectedStarValue}⭐`, 'success');
                     loadMyTasks();
                 } else {
-                    showToast(data.message || 'Could not mark done', 'error');
+                    showAppNotification(data.message || 'Could not mark done', 'error');
                 }
             } catch (err) {
-                showToast('Network error', 'error');
+                showAppNotification('Network error', 'error');
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Submit ⭐';
@@ -2388,7 +2394,7 @@
             const description = document.getElementById('task-desc').value;
             const reward = parseInt(document.getElementById('task-reward').value) || 0;
 
-            if (!title || !description) return showToast("Please fill all fields!", "error");
+            if (!title || !description) return showAppNotification("Please fill all fields!", "error");
 
             // --- NEW: GEOSPATIAL VALIDATION ---
             if (userLat === null || userLng === null) {
@@ -2412,14 +2418,14 @@
             });
 
             if (res.ok) {
-                showToast("Task posted to your neighborhood!", "success");
+                showAppNotification("Task posted to your neighborhood!", "success");
                 closeModal();
                 loadTasks();
                 document.getElementById('task-title').value = "";
                 document.getElementById('task-desc').value = "";
                 document.getElementById('task-reward').value = "";
             } else {
-                showToast("Failed to post task.", "error");
+                showAppNotification("Failed to post task.", "error");
             }
         }
         /* =========================================
@@ -2670,7 +2676,7 @@
                 dismissedFeed.innerHTML = '';
 
                 document.getElementById('clear-history-btn').style.display = 'none';
-                showToast("Task history cleared!");
+                showAppNotification("Task history cleared!");
             });
         } function reuploadTask(taskId, title) {
             closeHistory();
@@ -2681,11 +2687,11 @@
 
             openModal();
             document.getElementById('task-title').value = title;
-            showToast("Fill in the details to repost!", "success");
+            showAppNotification("Fill in the details to repost!", "success");
         }
         async function reacceptTask(taskId) {
             closeHistory();
-            showToast("Re-accepting task...");
+            showAppNotification("Re-accepting task...");
 
             try {
                 // Ping the server FIRST
@@ -2704,7 +2710,7 @@
                     history = history.filter(t => String(t.id) !== String(taskId));
                     localStorage.setItem('helpido_history', JSON.stringify(history));
 
-                    showToast("Task Re-accepted! Check 'Tasks' tab.");
+                    showAppNotification("Task Re-accepted! Check 'Tasks' tab.");
 
                     const reqFeed = document.getElementById('my-jobs-feed');
                     if (reqFeed) reqFeed.innerHTML = ''; // Force HTML redraw
@@ -2720,10 +2726,10 @@
                         const data = await res.json();
                         if (data.message) errorMessage = data.message;
                     } catch (e) { } // Fallback if server sends plain text
-                    showToast(errorMessage, "error");
+                    showAppNotification(errorMessage, "error");
                 }
             } catch (err) {
-                showToast("Network Error", "error");
+                showAppNotification("Network Error", "error");
             }
         } async function restoreDismissedTask(taskId) {
             closeHistory();
@@ -2754,7 +2760,7 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
             loadTasks();
-            showToast("Task restored to Home feed.");
+            showAppNotification("Task restored to Home feed.");
         }
 
         // --- PWA INSTALLATION LOGIC ---
@@ -2806,7 +2812,7 @@
         window.addEventListener('appinstalled', () => {
             document.getElementById('install-btn').style.display = 'none';
             deferredPrompt = null;
-            showToast("App installed successfully! 🎉", "success");
+            showAppNotification("App installed successfully! 🎉", "success");
         });
 
         // --- NEW: SYNC LOCATION WITH BACKEND ---
@@ -2842,7 +2848,7 @@
                         userLat = position.coords.latitude;
                         userLng = position.coords.longitude;
 
-                        showToast("Location access granted!", "success");
+                        showAppNotification("Location access granted!", "success");
                         syncLocationWithServer(userLat, userLng);
 
                         // Hide the button permanently
@@ -2854,19 +2860,19 @@
                     },
                     (error) => {
                         console.warn("Location denied or unavailable", error);
-                        showToast("Please allow location in browser settings!", "error");
+                        showAppNotification("Please allow location in browser settings!", "error");
                     },
                     { enableHighAccuracy: true }
                 );
             } else {
-                showToast("Geolocation is not supported by this browser.", "error");
+                showAppNotification("Geolocation is not supported by this browser.", "error");
             }
         }
 
         // --- NEW: PUSH NOTIFICATION LOGIC ---
         async function subscribeToPush() {
             if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-                showToast("Push notifications not supported on this browser.", "error");
+                showAppNotification("Push notifications not supported on this browser.", "error");
                 return;
             }
 
@@ -2874,7 +2880,7 @@
                 // 1. Ask Android for permission
                 const permission = await Notification.requestPermission();
                 if (permission !== 'granted') {
-                    showToast("Notification permission denied.", "error");
+                    showAppNotification("Notification permission denied.", "error");
                     return;
                 }
 
@@ -2898,14 +2904,14 @@
                 });
 
                 if (res.ok) {
-                    showToast("Notifications enabled successfully!", "success");
+                    showAppNotification("Notifications enabled successfully!", "success");
                     document.getElementById('notif-btn').style.display = 'none'; // Hide the button
                 } else {
-                    showToast("Failed to save notification settings.", "error");
+                    showAppNotification("Failed to save notification settings.", "error");
                 }
             } catch (err) {
                 console.error("Push subscription error: ", err);
-                showToast("Error enabling notifications.", "error");
+                showAppNotification("Error enabling notifications.", "error");
             }
         }
 
@@ -2917,7 +2923,7 @@
                 const phoneToUpdate = typeof myPhone !== 'undefined' ? myPhone : localStorage.getItem('helpido_phone');
 
                 if (!phoneToUpdate) {
-                    return showToast("Error: Phone number missing.", "error");
+                    return showAppNotification("Error: Phone number missing.", "error");
                 }
 
                 const res = await fetch(`${API_URL}/users/notifications`, {
@@ -2927,7 +2933,7 @@
                 });
 
                 if (res.ok) {
-                    showToast("Preferences saved securely!", "success");
+                    showAppNotification("Preferences saved securely!", "success");
 
                     // NEW: Notify Flutter via JavaScript Bridge
                     if (window.flutter_inappwebview) {
@@ -2937,13 +2943,13 @@
                         });
                     }
                 } else {
-                    showToast("Failed to save to database. Try refreshing.", "error");
+                    showAppNotification("Failed to save to database. Try refreshing.", "error");
                     // If it failed, flip the toggle back visually so the user isn't tricked
                     document.getElementById(type === 'notifyNewTasks' ? 'toggle-new-tasks' : 'toggle-chat-msgs').checked = !value;
                 }
             } catch (e) {
                 console.error(e);
-                showToast("Network error. Could not save.", "error");
+                showAppNotification("Network error. Could not save.", "error");
                 // Flip back visually on error
                 document.getElementById(type === 'notifyNewTasks' ? 'toggle-new-tasks' : 'toggle-chat-msgs').checked = !value;
             }
@@ -2975,7 +2981,7 @@
             });
 
             closeRadiusModal();
-            showToast(`Filtering tasks within ${text}`);
+            showAppNotification(`Filtering tasks within ${text}`);
 
             // Reload the feed with the new radius!
             loadTasks();

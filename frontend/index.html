@@ -173,6 +173,33 @@
             window.location.replace('/dashboard.html');
         }
 
+        window.onload = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const mode = urlParams.get('mode');
+            const isPrefill = urlParams.get('prefill') === 'true';
+
+            if (mode) switchMode(mode);
+
+            if (isPrefill) {
+                const name = sessionStorage.getItem('helpido_prefill_name');
+                const address = sessionStorage.getItem('helpido_prefill_address');
+                const phone = sessionStorage.getItem('helpido_prefill_phone');
+
+                if (name) document.getElementById('reg-name').value = name;
+                if (address) document.getElementById('reg-address').value = address;
+                if (phone) document.getElementById('reg-phone').value = phone;
+
+                // Show a small helpful message
+                showError("signup-error", "Please add your email to continue.");
+                document.getElementById('signup-error').style.color = '#1a73e8'; // Blue for guidance, not error
+            }
+
+            // Cleanup session storage to avoid accidental pre-fills later
+            sessionStorage.removeItem('helpido_prefill_name');
+            sessionStorage.removeItem('helpido_prefill_address');
+            sessionStorage.removeItem('helpido_prefill_phone');
+        };
+
         function showError(id, message) {
             const errDiv = document.getElementById(id);
             if (errDiv) {
