@@ -1032,11 +1032,15 @@
         }
 
 
-        // --- PRODUCTION OVERRIDE: MUTE ALL CONSOLE LOGS ---
-        console.log = function () { };
+        // --- STOCHASTIC GRADIENT BEAUTIFICATION: Mute logs ONLY in production ---
+        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            console.log = function () { };
+        }
 
-        // CRITICAL FIX: Restored the missing core variables!
-        const API_URL = 'https://helpido.onrender.com/api';
+        // CRITICAL FIX: Dynamic API URL for Local/Production parity!
+        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:3000/api'
+            : 'https://helpido.onrender.com/api';
         // --- NEW: FLUTTER BRIDGE FOR FCM TOKEN ---
         window.receiveFlutterFCMToken = function (token) {
             if (!token) return;
@@ -1401,10 +1405,11 @@
         }
 
         async function loadProfile() {
+            let user = null;
             try {
                 const res = await fetch(`${API_URL}/users/${myPhone}`);
                 if (res.ok) {
-                    const user = await res.json();
+                    user = await res.json();
                     const firstName = user.name.split(' ')[0];
 
                     document.getElementById('splash-greeting').innerText = `Hi, ${firstName} 👋`;
@@ -1448,10 +1453,14 @@
 
                 // NEW: Mandatory Email Check
                 if (user && !user.email) {
-                    document.getElementById('email-required-modal').classList.remove('hidden');
-                    // Store current user data for pre-filling the signup form
-                    sessionStorage.setItem('helpido_prefill_name', user.name || '');
-                    sessionStorage.setItem('helpido_prefill_address', user.address || '');
+                    console.log("Mandatory Email Check: No email found, showing modal.");
+                    const modal = document.getElementById('email-required-modal');
+                    if (modal) {
+                        modal.classList.remove('hidden');
+                        // Store current user data for pre-filling the signup form
+                        sessionStorage.setItem('helpido_prefill_name', user.name || '');
+                        sessionStorage.setItem('helpido_prefill_address', user.address || '');
+                    }
                 }
             }
         }
