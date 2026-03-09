@@ -262,21 +262,13 @@ app.post('/api/login/step1', async (req, res) => {
         const otp = Math.floor(1000 + Math.random() * 9000).toString();
         await User.updateOne({ phone }, { $set: { otp } });
 
-        // Send OTP via Email
-        console.log(`Attempting to send OTP to ${user.email}...`);
-        try {
-            await emailService.sendOTP(user.email, otp);
-            console.log(`Success: OTP sent to ${user.email}`);
-            res.json({ message: "OTP sent to your registered email address.", otp });
-        } catch (emailErr) {
-            console.error("Email Service Error:", emailErr);
-            // We still return the OTP in the response so the user isn't blocked during testing
-            res.status(200).json({
-                message: "Email failed to send, but here is your OTP for testing.",
-                otp,
-                debugError: emailErr.message
-            });
-        }
+        // Send OTP via Email in the background (Don't await it to avoid blocking UI)
+        console.log(`Preparing to send OTP to ${user.email}...`);
+        emailService.sendOTP(user.email, otp)
+            .then(() => console.log(`Background Success: OTP sent to ${user.email}`))
+            .catch((emailErr) => console.error("Background Email Service Error:", emailErr));
+
+        res.json({ message: "OTP sent to your registered email address.", otp });
     } catch (err) {
         console.error("Login Step 1 Error:", err);
         res.status(500).json({ message: "Server error" });
