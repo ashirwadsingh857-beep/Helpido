@@ -987,25 +987,6 @@
             <p>Profile</p>
         </div>
     </nav>
-    <div id="email-required-modal" class="modal-overlay hidden" style="z-index: 30000 !important;">
-        <div class="modal-content" style="text-align: center; max-width: 360px;">
-            <div style="font-size: 3.5rem; margin-bottom: 20px;">📧</div>
-            <h2 style="margin-bottom: 12px; color: #202124;">Email Required</h2>
-            <p style="color: #5F6368; font-size: 0.95rem; line-height: 1.6; margin-bottom: 24px;">
-                To keep your account secure and enable features like password recovery, please add your email address.
-            </p>
-            <div
-                style="background: #FFF3E0; border: 1px solid #FFE0B2; border-radius: 12px; padding: 12px; margin-bottom: 24px;">
-                <p style="color: #E65100; font-size: 0.85rem; font-weight: 600; margin: 0;">
-                    ⚠️ You will need to re-verify your info.
-                </p>
-            </div>
-            <button class="btn" onclick="forceEmailUpdate()"
-                style="width: 100%; margin-bottom: 12px; font-weight: 700;">
-                Update Email Now
-            </button>
-        </div>
-    </div>
 
     <script>
 
@@ -1450,18 +1431,6 @@
                 const main = document.getElementById('main-dash');
                 if (splash) splash.classList.add('hide');
                 if (main) main.classList.add('unblur');
-
-                // NEW: Mandatory Email Check
-                if (user && !user.email) {
-                    console.log("Mandatory Email Check: No email found, showing modal.");
-                    const modal = document.getElementById('email-required-modal');
-                    if (modal) {
-                        modal.classList.remove('hidden');
-                        // Store current user data for pre-filling the signup form
-                        sessionStorage.setItem('helpido_prefill_name', user.name || '');
-                        sessionStorage.setItem('helpido_prefill_address', user.address || '');
-                    }
-                }
             }
         }
         // NEW: Global cache to securely store names and prevent API spam
@@ -2060,16 +2029,6 @@
             notif.classList.add('show');
             clearTimeout(notifTimeout);
             notifTimeout = setTimeout(() => { notif.classList.remove('show'); }, 4000);
-        }
-
-        function forceEmailUpdate() {
-            // Data is already stored in sessionStorage from loadProfile()
-            const phone = localStorage.getItem('helpido_phone');
-            sessionStorage.setItem('helpido_prefill_phone', phone);
-
-            // Clear current login state but KEEP the prefill data
-            localStorage.removeItem('helpido_phone');
-            window.location.replace('/index.html?mode=signup&prefill=true');
         }
 
         // --- UPGRADED: SMOOTH NATIVE TAB SWITCHING ---
