@@ -15,6 +15,7 @@
     padding: 0;
     box-sizing: border-box;
     font-family: 'Outfit', -apple-system, sans-serif;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
