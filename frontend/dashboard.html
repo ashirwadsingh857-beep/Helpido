@@ -362,8 +362,10 @@
             }
         }
 
+        html.no-scroll,
         body.no-scroll {
             overflow: hidden !important;
+            height: 100% !important;
         }
 
         .msg-bubble {
@@ -542,7 +544,6 @@
             transform: scale(0) !important;
         }
 
-        /* --- 7. MODALS --- */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -553,7 +554,8 @@
             z-index: 4000;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
+            padding-top: 15vh;
             opacity: 1;
             visibility: visible;
             transition: opacity 0.3s;
@@ -1905,6 +1907,7 @@
 
         async function openChat(taskId, targetPhone) {
             document.body.classList.add('no-scroll');
+            document.documentElement.classList.add('no-scroll');
             currentChatTaskId = taskId;
             currentChatTargetPhone = targetPhone;
             document.getElementById('chat-header-title').innerText = `Loading...`;
@@ -1970,6 +1973,7 @@
         function closeChat() {
             if (document.getElementById('history-modal').classList.contains('hidden')) {
                 document.body.classList.remove('no-scroll');
+                document.documentElement.classList.remove('no-scroll');
             }
 
             const chatModal = document.getElementById('chat-modal');
@@ -2495,10 +2499,12 @@
 
         function openModal() {
             document.body.classList.add('no-scroll');
+            document.documentElement.classList.add('no-scroll');
             document.getElementById('create-modal').classList.remove('hidden');
         }
         function closeModal() {
             document.body.classList.remove('no-scroll');
+            document.documentElement.classList.remove('no-scroll');
             document.getElementById('create-modal').classList.add('hidden');
         }
         function logout() { localStorage.removeItem('helpido_phone'); window.location.href = 'index.html'; }
@@ -2612,6 +2618,7 @@
 
         function openHistory() {
             document.body.classList.add('no-scroll');
+            document.documentElement.classList.add('no-scroll');
 
             const historyModal = document.getElementById('history-modal');
 
@@ -2703,6 +2710,7 @@
         }
         function closeHistory() {
             document.body.classList.remove('no-scroll');
+            document.documentElement.classList.remove('no-scroll');
 
             const historyModal = document.getElementById('history-modal');
             historyModal.classList.remove('active');
@@ -3011,11 +3019,13 @@
         // --- UPGRADED: CUSTOM RADIUS MODAL LOGIC ---
         function openRadiusModal() {
             document.body.classList.add('no-scroll');
+            document.documentElement.classList.add('no-scroll');
             document.getElementById('radius-modal').classList.remove('hidden');
         }
 
         function closeRadiusModal() {
             document.body.classList.remove('no-scroll');
+            document.documentElement.classList.remove('no-scroll');
             document.getElementById('radius-modal').classList.add('hidden');
         }
 
