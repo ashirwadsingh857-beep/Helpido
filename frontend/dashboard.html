@@ -283,7 +283,7 @@
             right: 0 !important;
             bottom: 0 !important;
             height: auto !important;
-            background: rgba(0, 0, 0, 0.35);
+            background: rgba(0, 0, 0, 0.65);
             backdrop-filter: blur(5px);
             -webkit-backdrop-filter: blur(5px);
             z-index: 10000 !important;
@@ -550,12 +550,11 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.65);
             z-index: 4000;
             display: flex;
             justify-content: center;
-            align-items: flex-start;
-            padding-top: 15vh;
+            align-items: center;
             opacity: 1;
             visibility: visible;
             transition: opacity 0.3s;
@@ -946,7 +945,7 @@
         </div>
     </div>
 
-    <div id="create-modal" class="modal-overlay hidden">
+    <div id="create-modal" class="modal-overlay hidden" onclick="if(event.target === this) closeModal()">
         <div class="modal-content">
             <h3 style="margin-bottom: 16px; color: var(--text-dark);">Ask for Help</h3>
             <input type="text" id="task-title" placeholder="What do you need?" required>
@@ -1023,7 +1022,7 @@
         </div>
     </div>
 
-    <div id="confirm-modal" class="modal-overlay hidden">
+    <div id="confirm-modal" class="modal-overlay hidden" onclick="if(event.target === this) closeConfirm()">
         <div class="modal-content" style="text-align: center; max-width: 320px;">
             <div style="font-size: 2.5rem; margin-bottom: 10px;">⚠️</div>
             <h3 id="confirm-title" style="margin-bottom: 10px; color: var(--text-dark);">Are you sure?</h3>
@@ -1040,7 +1039,7 @@
     </div>
 
     <!-- ===== RATING MODAL ===== -->
-    <div id="rating-modal" class="modal-overlay hidden">
+    <div id="rating-modal" class="modal-overlay hidden" onclick="if(event.target === this) closeRatingModal()">
         <div class="modal-content" style="text-align:center; max-width:320px;">
             <div style="font-size:2.5rem; margin-bottom:8px;">🌟</div>
             <h3 style="margin-bottom:6px; color:#202124;">Task Completed!</h3>
