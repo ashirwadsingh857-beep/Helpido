@@ -150,18 +150,6 @@
             font-weight: 700;
         }
 
-        .nav-item.active::before {
-             content: '';
-             position: absolute;
-             top: 0;
-             bottom: 0;
-             left: 0;
-             right: 0;
-             background-color: #FFF0E5;
-             border-radius: 40px;
-             z-index: -1;
-        }
-
         .nav-item.active span {
              background: #E0F2F1;
              border-radius: 50%;
@@ -326,21 +314,20 @@
             max-width: 500px;
             margin: 0 auto;
             height: auto;
-            /* NEW: starts small */
-            max-height: 65dvh;
-            /* NEW: grows up to max size */
+            max-height: 65vh; /* stable unit */
             border-radius: 24px 24px 0 0;
             display: flex;
             flex-direction: column;
             overflow: hidden;
             box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
 
-            /* NEW: Start pushed down off screen */
+            /* Start pushed down off screen */
             transform: translateY(100%);
-            transition: transform 0.5s cubic-bezier(0.32, 1.15, 0.25, 1), max-height 0.3s ease-out;
+            /* REMOVED max-height transition to prevent jitter when keyboard opens */
+            transition: transform 0.4s cubic-bezier(0.32, 1.15, 0.25, 1);
         }
 
-        /* NEW: The state when the modal is open (Slide up to normal position) */
+        /* The state when the modal is open (Slide up to normal position) */
         .chat-overlay.active .chat-drawer {
             transform: translateY(0);
         }
@@ -560,8 +547,8 @@
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100dvh;
+            right: 0;
+            bottom: 0;
             background: rgba(0, 0, 0, 0.5);
             z-index: 4000;
             display: flex;
@@ -972,7 +959,7 @@
     </div>
 
     <div id="chat-modal" class="chat-overlay hidden" onclick="if(event.target === this) closeChat()">
-        <div class="chat-drawer" style="height: 100%; max-height: 85dvh; display: flex; flex-direction: column;">
+        <div class="chat-drawer" style="height: 100%; max-height: 85%; display: flex; flex-direction: column;">
             <div class="chat-header">
                 <h3 id="chat-header-title" style="margin: 0; font-size: 1.2rem; color: #333;">Task Chat</h3>
                 <button onclick="closeChat()"
@@ -1962,20 +1949,11 @@
                 const chatInputWrapper = document.getElementById('chat-input-wrapper');
 
                 // --- NEW WEBVIEW KEYBOARD FIX ---
-                // Removing real-time visualViewport resizing (the cause of the jitter).
-                // Instead, focus uses a clean timeout bump, and we rely on absolute 
-                // bottom spacing and scrolling to let the native soft-keyboard lift the DOM.
                 if (chatInput) {
-                    // Mobile Safari & Chrome DOM lift adjustments
                     chatInput.addEventListener('focus', () => {
                         setTimeout(() => {
-                           window.scrollTo(0, 0); // Lock body backing
                            if (msgBox) msgBox.scrollTop = msgBox.scrollHeight;
                         }, 300); // 300ms gives keyboard time to deploy
-                    });
-                    
-                    chatInput.addEventListener('blur', () => {
-                        window.scrollTo(0, 0);
                     });
                 }
                 
