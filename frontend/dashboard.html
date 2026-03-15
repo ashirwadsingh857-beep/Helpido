@@ -110,31 +110,29 @@
            ========================================= */
         .bottom-nav {
             position: fixed !important;
-            bottom: 0 !important;
+            bottom: 20px !important;
             left: 50% !important;
             transform: translateX(-50%) !important;
-            width: 100%;
-            max-width: 500px;
+            width: 90%;
+            max-width: 450px;
             z-index: 9000 !important;
             height: auto;
-            /* Changed from 70px/80px to auto to accommodate safe area */
-            min-height: 80px;
+            min-height: 70px;
             display: flex;
             align-items: center;
             justify-content: space-around;
             padding-top: 8px;
-            padding-bottom: calc(8px + env(safe-area-inset-bottom));
-            background: rgba(255, 255, 255, 0.9);
-            /* Slightly more opaque */
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-top: 1px solid rgba(0, 0, 0, 0.05);
-            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.03);
+            padding-bottom: 8px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-top: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
         }
 
         .nav-item {
             flex: 1;
-            /* Removed height: 100% to let padding define the pill */
             padding: 8px 12px;
             display: flex;
             flex-direction: column;
@@ -143,7 +141,33 @@
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
             border-radius: 20px;
-            /* Smoother pill shape */
+            color: #5F6368;
+            position: relative;
+        }
+        
+        .nav-item.active {
+            color: #FF5722;
+            font-weight: 700;
+        }
+
+        .nav-item.active::before {
+             content: '';
+             position: absolute;
+             top: 0;
+             bottom: 0;
+             left: 0;
+             right: 0;
+             background-color: #FFF0E5;
+             border-radius: 40px;
+             z-index: -1;
+        }
+
+        .nav-item.active span {
+             background: #E0F2F1;
+             border-radius: 50%;
+             padding: 8px;
+             box-shadow: 0 4px 10px rgba(0, 229, 255, 0.2);
+             margin-bottom: 4px;
         }
 
         /* =========================================
@@ -468,25 +492,61 @@
         }
 
         /* --- 6. FLOATING ACTION BUTTON --- */
-        .fab-btn {
+        .fab-wrapper {
             position: fixed !important;
             bottom: 115px !important;
             right: 20px !important;
-            width: 56px;
-            height: 56px;
+            width: 60px;
+            height: 60px;
+            z-index: 9500 !important;
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(0.8);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1.6);
+                opacity: 0;
+            }
+        }
+
+        .fab-btn {
+            position: relative;
+            width: 100%;
+            height: 100%;
             border-radius: 50%;
-            background-color: #FF5722;
+            background: linear-gradient(135deg, #FF8A00, #FF3D00);
             color: white;
-            font-size: 28px;
+            font-size: 32px;
             border: none;
-            box-shadow: 0 4px 12px rgba(255, 87, 34, 0.4);
+            box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4);
             cursor: pointer;
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 9500 !important;
             -webkit-tap-highlight-color: transparent;
             transition: transform 0.2s, opacity 0.2s;
+            z-index: 2;
+        }
+
+        /* The Concentric Glowing Rings */
+        .fab-btn::before, .fab-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 50%;
+            background: rgba(255, 138, 0, 0.4);
+            z-index: -1;
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+
+        .fab-btn::after {
+            animation-delay: 1s;
         }
 
         .fab-btn.hide-fab {
@@ -519,12 +579,58 @@
         }
 
         .dash-header {
-            background: linear-gradient(135deg, var(--primary), #FF7043);
+            background: linear-gradient(135deg, #FF9A44 0%, #A18CD1 100%);
             padding: calc(20px + env(safe-area-inset-top)) 24px 24px 24px;
             margin-top: 0;
             margin-bottom: 24px;
             border-radius: 0 0 24px 24px;
-            box-shadow: 0 4px 15px rgba(255, 87, 34, 0.2);
+            box-shadow: 0 8px 25px rgba(161, 140, 209, 0.3);
+            color: white;
+        }
+        
+        .header-profile-wrap {
+            display: flex;
+            align-items: center;
+            /* Placeholder wrapper, if we need it later */
+        }
+        
+        .header-text h2 {
+            margin: 0 0 4px 0;
+            font-size: 1.3rem;
+            color: white;
+            font-weight: 700;
+        }
+        .header-text p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.9);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .status-button-premium {
+             background: rgba(0,0,0,0.6) !important;
+             color: white !important;
+             border: 1px solid rgba(255,255,255,0.2) !important;
+             border-radius: 20px !important;
+             padding: 6px 16px !important;
+             font-size: 0.85rem !important;
+             font-weight: 600 !important;
+             backdrop-filter: blur(10px);
+             display: flex;
+             align-items: center;
+             gap: 6px;
+             box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+        }
+        
+        .status-dot-neon {
+             width: 10px;
+             height: 10px;
+             background-color: #00E676;
+             border-radius: 50%;
+             box-shadow: 0 0 8px #00E676, 0 0 12px #00E676;
+             display: inline-block;
         }
 
         .modal-content {
@@ -704,8 +810,8 @@
                         <h2 id="greeting-name">Hi, Neighbor 👋</h2>
                         <p id="home-address">📍 Local Area</p>
                     </div>
-                    <button id="availability-btn" class="status-btn free" onclick="toggleAvailability()"
-                        style="margin-top: 0; white-space: nowrap;">🟢 Free</button>
+                    <button id="availability-btn" class="status-btn status-button-premium free" onclick="toggleAvailability()"
+                        style="margin-top: 0; white-space: nowrap;"><span class="status-dot-neon"></span> Free</button>
                 </div>
             </header>
             <div style="display: flex; justify-content: space-between; align-items: center; padding-right: 20px;">
@@ -866,14 +972,14 @@
     </div>
 
     <div id="chat-modal" class="chat-overlay hidden" onclick="if(event.target === this) closeChat()">
-        <div class="chat-drawer">
+        <div class="chat-drawer" style="height: 100%; max-height: 85dvh; display: flex; flex-direction: column;">
             <div class="chat-header">
                 <h3 id="chat-header-title" style="margin: 0; font-size: 1.2rem; color: #333;">Task Chat</h3>
                 <button onclick="closeChat()"
                     style="background: none; border: none; font-size: 1.5rem; color: #999; cursor: pointer;">&times;</button>
             </div>
-            <div id="chat-messages" class="chat-messages"></div>
-            <div class="chat-input-area">
+            <div id="chat-messages" class="chat-messages" style="flex: 1; overflow-y: auto; overscroll-behavior: auto; padding-bottom: 20px;"></div>
+            <div class="chat-input-area" id="chat-input-wrapper">
                 <input type="text" id="chat-input" placeholder="Message..." autocomplete="off" enterkeyhint="send"
                     oninput="document.getElementById('chat-send-btn').style.background = this.value.trim() ? '#FF5722' : '#E0E0E0';"
                     onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); sendChatMessage(); }">
@@ -975,7 +1081,9 @@
         </button>
     </div>
 
-    <button class="fab-btn" onclick="openModal()">+</button>
+    <div class="fab-wrapper">
+        <button class="fab-btn" onclick="openModal()">+</button>
+    </div>
     <nav class="bottom-nav">
         <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><span>🏠</span>
             <p>Home</p>
@@ -1851,38 +1959,29 @@
 
                 // Auto-focus input so keyboard opens immediately
                 const chatInput = document.getElementById('chat-input');
-                setTimeout(() => chatInput && chatInput.focus(), 100);
+                const chatInputWrapper = document.getElementById('chat-input-wrapper');
 
-                // Resize chat drawer when keyboard opens/closes so messages stay above keyboard
-                const chatDrawer = document.querySelector('.chat-drawer');
-                const vpHandler = () => {
-                    if (!chatDrawer || document.getElementById('chat-modal').classList.contains('hidden')) return;
-
-                    // If the visual viewport is significantly smaller than the window, the keyboard is open
-                    // Usually the keyboard takes up > 25% of the screen.
-                    const isKeyboardOpen = window.visualViewport.height < window.innerHeight * 0.75;
-
-                    if (isKeyboardOpen) {
-                        chatDrawer.style.maxHeight = `${window.visualViewport.height}px`;
-                    } else {
-                        // Keyboard closed — return to default max height so background is visible
-                        chatDrawer.style.maxHeight = `65dvh`;
-                    }
-
-                    const mb = document.getElementById('chat-messages');
-                    if (mb) mb.scrollTop = mb.scrollHeight;
-                };
-                if (window.visualViewport) {
-                    window.visualViewport.removeEventListener('resize', chatDrawer._vpHandler);
-                    chatDrawer._vpHandler = vpHandler;
-                    window.visualViewport.addEventListener('resize', vpHandler);
-                    vpHandler(); // run once immediately
+                // --- NEW WEBVIEW KEYBOARD FIX ---
+                // Removing real-time visualViewport resizing (the cause of the jitter).
+                // Instead, focus uses a clean timeout bump, and we rely on absolute 
+                // bottom spacing and scrolling to let the native soft-keyboard lift the DOM.
+                if (chatInput) {
+                    // Mobile Safari & Chrome DOM lift adjustments
+                    chatInput.addEventListener('focus', () => {
+                        setTimeout(() => {
+                           window.scrollTo(0, 0); // Lock body backing
+                           if (msgBox) msgBox.scrollTop = msgBox.scrollHeight;
+                        }, 300); // 300ms gives keyboard time to deploy
+                    });
+                    
+                    chatInput.addEventListener('blur', () => {
+                        window.scrollTo(0, 0);
+                    });
                 }
-
-                // Tapping the messages area dismisses keyboard — intentional gesture
+                
+                // Keep the manual dismissal
                 msgBox.addEventListener('touchstart', () => {
-                    const inp = document.getElementById('chat-input');
-                    if (inp) inp.blur();
+                    if (chatInput) chatInput.blur();
                 }, { passive: true, once: false });
 
             } catch (err) { msgBox.innerHTML = '<p style="color:red; text-align:center;">Failed to load chat.</p>'; }
