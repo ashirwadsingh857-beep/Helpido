@@ -27,6 +27,12 @@
     --chat-area-bg:      #F9F9F9;
     --section-bg:        #F8F9FA;
     --switch-bg:         #ccc;
+
+    /* Rating Card (Light) */
+    --rating-card-bg:     linear-gradient(135deg, #FFF8E1, #FFF3CD);
+    --rating-card-border: #FFE082;
+    --rating-card-header: #795548;
+    --rating-card-text:   #5D4037;
 }
 
 /* =========================================
@@ -54,6 +60,12 @@
     --msg-received-text: #E0E0E0;
     --chat-area-bg:      #161616;
     --section-bg:        #111111;
+
+    /* Rating Card (Dark) */
+    --rating-card-bg:     linear-gradient(135deg, #2D1B00, #3E2723);
+    --rating-card-border: #5D4037;
+    --rating-card-header: #FFE082;
+    --rating-card-text:   #FFECB3;
 }
 
 body.dark-mode {

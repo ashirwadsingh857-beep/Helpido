@@ -880,13 +880,13 @@
 
                     <!-- Rating Display -->
                     <div id="profile-rating-card"
-                        style="background:linear-gradient(135deg,#FFF8E1,#FFF3CD); border:1px solid #FFE082; border-radius:14px; padding:16px; margin-bottom:20px; text-align:center;">
+                        style="background:var(--rating-card-bg); border:1px solid var(--rating-card-border); border-radius:14px; padding:16px; margin-bottom:20px; text-align:center;">
                         <p
-                            style="font-size:0.78rem; color:#795548; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">
+                            style="font-size:0.78rem; color:var(--rating-card-header); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">
                             Your Helper Rating</p>
                         <div id="profile-star-display" style="font-size:1.8rem; letter-spacing:4px; margin-bottom:4px;">
                             ☆☆☆☆☆</div>
-                        <p id="profile-rating-text" style="font-size:0.9rem; color:#5D4037; font-weight:600; margin:0;">
+                        <p id="profile-rating-text" style="font-size:0.9rem; color:var(--rating-card-text); font-weight:600; margin:0;">
                             No ratings yet</p>
                     </div>
 
@@ -905,7 +905,7 @@
 
                         <div
                             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                            <span style="font-size: 0.95rem; color: #333; font-weight: 500;">New Task Alerts</span>
+                            <span style="font-size: 0.95rem; color: var(--text-primary); font-weight: 500;">New Task Alerts</span>
                             <label class="switch">
                                 <input type="checkbox" id="toggle-new-tasks"
                                     onchange="updateNotifPref('notifyNewTasks', this.checked)">
@@ -914,7 +914,7 @@
                         </div>
 
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="font-size: 0.95rem; color: #333; font-weight: 500;">Chat Message Alerts</span>
+                            <span style="font-size: 0.95rem; color: var(--text-primary); font-weight: 500;">Chat Message Alerts</span>
                             <label class="switch">
                                 <input type="checkbox" id="toggle-chat-msgs"
                                     onchange="updateNotifPref('notifyChatMessages', this.checked)">
@@ -971,7 +971,7 @@
             <textarea id="task-desc" rows="3" placeholder="Provide some details..." required></textarea>
             <input type="number" id="task-reward" placeholder="Reward amount (₹)" required>
             <div class="modal-actions" style="display: flex; justify-content: space-between; margin-top: 10px;">
-                <button class="text-btn" onclick="closeModal()" style="color: #757575;">Cancel</button>
+                <button class="text-btn" onclick="closeModal()" style="color: var(--text-secondary);">Cancel</button>
                 <button class="btn" onclick="postHelpRequest()" style="width: auto; padding: 10px 20px;">Post
                     Request</button>
             </div>
@@ -981,9 +981,9 @@
     <div id="chat-modal" class="chat-overlay hidden" onclick="if(event.target === this) closeChat()">
         <div class="chat-drawer" style="height: 100%; max-height: 85%; display: flex; flex-direction: column;">
             <div class="chat-header">
-                <h3 id="chat-header-title" style="margin: 0; font-size: 1.2rem; color: #333;">Task Chat</h3>
+                <h3 id="chat-header-title" style="margin: 0; font-size: 1.2rem; color: var(--text-primary);">Task Chat</h3>
                 <button onclick="closeChat()"
-                    style="background: none; border: none; font-size: 1.5rem; color: #999; cursor: pointer;">&times;</button>
+                    style="background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer;">&times;</button>
             </div>
             <div id="chat-messages" class="chat-messages" style="flex: 1; overflow-y: auto; overscroll-behavior: auto; padding-bottom: 20px;"></div>
             <div class="chat-input-area" id="chat-input-wrapper">
@@ -1545,6 +1545,12 @@
 
                     // Sync tab infection UI (non-animated reload)
                     if (isDarkModeRequested) {
+                        // Ensure the CURRENT active tab is infected if dark mode is on
+                        if (!infectedTabs.has(activeTab)) {
+                            infectedTabs.add(activeTab);
+                            saveInfectionState();
+                        }
+                        
                         infectedTabs.forEach(tab => {
                             applyDarkToTabUI(tab); 
                         });
@@ -2237,6 +2243,10 @@
             if (tabName === 'home') { loadTasks(); }
             if (tabName === 'tasks') { loadMyTasks(); }
 
+            // --- DYNAMIC GLOBAL THEME SYNC ---
+            // Sync the nav and background to the current tab's infection status
+            syncGlobalTheme(infectedTabs.has(tabName));
+
             // 2. TRIGGER INFECTION AFTER PAINT
             if (isDarkModeRequested && !infectedTabs.has(tabName)) {
                 // Double RequestAnimationFrame ensures the browser has painted the Light version 
@@ -2253,7 +2263,7 @@
             const tabEl = document.getElementById(`${tabName}-view`);
             const navItem = document.getElementById('nav-profile'); // Spread source
             if (!tabEl || !navItem || !document.startViewTransition) {
-                if (tabEl) { tabEl.classList.add('dark-mode'); infectedTabs.add(tabName); saveInfectionState(); }
+                applyDarkToTabUI(tabName);
                 return;
             }
 
@@ -2266,6 +2276,7 @@
 
             document.startViewTransition(() => {
                 tabEl.classList.add('dark-mode');
+                syncGlobalTheme(true); // Sync nav and outer areas during reveal
                 infectedTabs.add(tabName);
                 saveInfectionState();
                 
@@ -3268,9 +3279,8 @@
             infectedTabs.add(tabName);
             saveInfectionState();
 
-            // Set the body background color directly so the "white bars" around 
-            // the centered mobile container turn dark immediately in the transition.
-            document.body.style.backgroundColor = '#111111';
+            // Sync nav and outer backgrounds to dark
+            syncGlobalTheme(true);
             
             // Infection Spread to ALL major Modals/Overlays immediately
             const allModals = [
@@ -3296,7 +3306,7 @@
 
         function removeAllDarkUI() {
             document.body.classList.remove('dark-mode');
-            document.body.style.backgroundColor = ''; // Reset to default CSS
+            syncGlobalTheme(false);
             document.querySelectorAll('.dark-mode').forEach(el => el.classList.remove('dark-mode'));
             const nav = document.querySelector('.bottom-nav');
             if (nav) nav.classList.remove('dark-mode');
@@ -3308,6 +3318,23 @@
             const icon = document.getElementById('dark-mode-icon');
             if (checkbox) checkbox.checked = false;
             if (icon) icon.textContent = '🌙';
+        }
+
+        function syncGlobalTheme(isDark) {
+            const darkBg = '#111111';
+            const lightBg = '#F5F5F5';
+            const targetColor = isDark ? darkBg : lightBg;
+
+            document.body.style.backgroundColor = targetColor;
+            document.documentElement.style.backgroundColor = targetColor;
+            const mainDash = document.getElementById('main-dash');
+            if (mainDash) mainDash.style.backgroundColor = targetColor;
+
+            const nav = document.querySelector('.bottom-nav');
+            if (nav) {
+                if (isDark) nav.classList.add('dark-mode');
+                else nav.classList.remove('dark-mode');
+            }
         }
 
         // Execute every 30 seconds to keep the UI fresh without taxing the CPU
