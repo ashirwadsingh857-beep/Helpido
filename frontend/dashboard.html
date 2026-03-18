@@ -672,6 +672,10 @@
             z-index: 11600 !important;
         }
 
+        #radius-modal {
+            z-index: 11700 !important;
+        }
+
         #app-notification {
             z-index: 12000 !important;
         }
@@ -807,7 +811,7 @@
 
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <span style="font-size: 0.8rem; color: #757575; font-weight: 600;">Radius:</span>
-                    <div id="radius-btn" class="radius-btn" onclick="openRadiusModal()">
+                    <div id="radius-btn" class="radius-btn" onclick="openRadiusModal(); event.stopPropagation();">
                         <span id="radius-display-text">100 m</span>
                         <span style="font-size: 0.7rem; color: var(--primary);">▼</span>
                     </div>
