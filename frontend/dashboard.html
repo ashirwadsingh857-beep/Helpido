@@ -3268,8 +3268,9 @@
             infectedTabs.add(tabName);
             saveInfectionState();
 
-            // DO NOT infect main-dash here! It turns everything dark prematurely.
-            // Only infect the whole body once all 3 tabs are visited.
+            // Set the body background color directly so the "white bars" around 
+            // the centered mobile container turn dark immediately in the transition.
+            document.body.style.backgroundColor = '#111111';
             
             // Infection Spread to ALL major Modals/Overlays immediately
             const allModals = [
@@ -3295,6 +3296,7 @@
 
         function removeAllDarkUI() {
             document.body.classList.remove('dark-mode');
+            document.body.style.backgroundColor = ''; // Reset to default CSS
             document.querySelectorAll('.dark-mode').forEach(el => el.classList.remove('dark-mode'));
             const nav = document.querySelector('.bottom-nav');
             if (nav) nav.classList.remove('dark-mode');
