@@ -216,6 +216,18 @@ body.dark-mode .radius-option.selected {
     color: #FF5722 !important;
 }
 
+/* Radius modal: override inline bg/text on the 'Select Radius' header */
+body.dark-mode #radius-modal .modal-content {
+    background: var(--bg-elevated) !important;
+}
+body.dark-mode #radius-modal .modal-content > div:first-child {
+    background: var(--bg-input) !important;
+    border-bottom-color: var(--border-color) !important;
+}
+body.dark-mode #radius-modal .modal-content > div:first-child h3 {
+    color: var(--text-primary) !important;
+}
+
 /* Dark mode toggle button */
 .dark-mode-toggle-btn {
     display: flex;
