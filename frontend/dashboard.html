@@ -1532,11 +1532,42 @@
             } catch (err) {
                 console.error("Profile load failed", err);
             } finally {
-                // CRITICAL FIX: Instant transition — no more artificial delay!
                 const splash = document.getElementById('splash-screen');
+                const splashGreeting = document.getElementById('splash-greeting');
                 const main = document.getElementById('main-dash');
-                if (splash) splash.classList.add('hide');
+                const targetEl = document.getElementById('greeting-name');
+
+                // 1. Unblur the dashboard FIRST (it animates in behind the splash)
                 if (main) main.classList.add('unblur');
+
+                // 2. Hold the splash for 1.1s so the user can read the greeting, THEN fly
+                setTimeout(() => {
+                    if (!splashGreeting || !targetEl || !splash) {
+                        if (splash) splash.classList.add('hide');
+                        return;
+                    }
+
+                    // 3. Measure where the splash text IS vs where the header text IS
+                    const splashRect = splashGreeting.getBoundingClientRect();
+                    const targetRect = targetEl.getBoundingClientRect();
+
+                    // 4. Calculate deltas (from top-left of splash text to top-left of header text)
+                    const dx = targetRect.left - splashRect.left;
+                    const dy = targetRect.top - splashRect.top;
+
+                    // 5. Calculate scale ratio from measured heights
+                    const scaleRatio = targetRect.height / splashRect.height;
+
+                    // 6. Apply the transform — CSS transition animates the hero fly smoothly
+                    splashGreeting.style.transformOrigin = 'top left';
+                    splashGreeting.style.transform = `translate(${dx}px, ${dy}px) scale(${scaleRatio})`;
+                    splashGreeting.style.opacity = '0.85';
+
+                    // 7. After the text has landed (~700ms), fade the splash overlay away
+                    setTimeout(() => {
+                        if (splash) splash.classList.add('hide');
+                    }, 680);
+                }, 1100);
             }
         }
         // NEW: Global cache to securely store names and prevent API spam

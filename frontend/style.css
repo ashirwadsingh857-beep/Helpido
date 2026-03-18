@@ -985,34 +985,36 @@ input[type="number"] {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: var(--bg-light);
-    z-index: 9999;
+    background: linear-gradient(135deg, #FF9A44 0%, #A18CD1 100%);
+    z-index: 99999;
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: opacity 0.6s ease 0.6s;
-    /* Fades out after the text moves */
     pointer-events: none;
+    /* Fade out AFTER text has landed — driven by .hide class */
+    transition: opacity 0.35s ease;
+    opacity: 1;
 }
 
+/* HERO element — JS will translate & scale this to the header position */
 .splash-greeting {
     font-size: 2.5rem;
     font-weight: 800;
-    color: var(--primary-color);
+    color: #ffffff;
     letter-spacing: -1px;
-    transform: translateY(0) scale(1);
-    transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.5s ease 0.4s;
+    transform-origin: top left;
+    will-change: transform, color, opacity;
+    /* Smooth transition for the JS-driven hero fly */
+    transition:
+        transform 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+        color 0.5s ease,
+        opacity 0.3s ease;
 }
 
-/* When the JS triggers the 'hide' class, it moves the text and fades the overlay */
+/* Step 2: After text lands, quickly fade the overlay away */
 .splash-screen.hide {
     opacity: 0;
-}
-
-.splash-screen.hide .splash-greeting {
-    transform: translateY(-40vh) scale(0.5);
-    /* Creates the illusion of moving into the header */
-    opacity: 0;
+    pointer-events: none;
 }
 
 /* The Dashboard starts blurred and zoomed out */
@@ -1020,7 +1022,7 @@ input[type="number"] {
     filter: blur(20px);
     transform: scale(0.92);
     opacity: 0;
-    transition: filter 1s ease 0.4s, transform 1s cubic-bezier(0.25, 1, 0.5, 1) 0.4s, opacity 0.8s ease 0.4s;
+    transition: filter 0.9s ease 0.1s, transform 0.9s cubic-bezier(0.25, 1, 0.5, 1) 0.1s, opacity 0.7s ease 0.1s;
 }
 
 /* When the JS triggers 'unblur', it snaps into focus */

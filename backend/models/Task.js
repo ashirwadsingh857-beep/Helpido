@@ -10,8 +10,6 @@ const taskSchema = new mongoose.Schema({
     helperMarkedDone: { type: Boolean, default: false },
     isPrioritized: { type: Boolean, default: false },
 
-
-    
     // NEW: Geospatial Location Data for Radius Filtering
     location: {
         type: { type: String, enum: ['Point'], default: 'Point' },
