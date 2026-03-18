@@ -32,7 +32,7 @@
 /* =========================================
    DARK MODE OVERRIDE TOKENS
    ========================================= */
-body.dark-mode {
+.dark-mode {
     --bg-app:            #111111;
     --bg-card:           #1E1E1E;
     --bg-elevated:       #252525;
@@ -54,178 +54,259 @@ body.dark-mode {
     --msg-received-text: #E0E0E0;
     --chat-area-bg:      #161616;
     --section-bg:        #111111;
+}
+
+body.dark-mode {
     background-color: var(--bg-app);
     color: var(--text-primary);
 }
 
+/* Splash screen dark variant */
+.splash-screen.dark-mode {
+    background: linear-gradient(135deg, #111111 0%, #2D1B4D 100%) !important;
+}
+
+/* Wallet badge themed */
+.dark-mode .wallet-badge {
+    background-color: #3E2723 !important;
+    color: #FF7043 !important;
+}
+
 /* Dark mode: card borders, backgrounds */
-body.dark-mode .task-card {
+.dark-mode .task-card {
     background: var(--bg-card) !important;
     border-color: var(--border-color) !important;
     box-shadow: 0 2px 12px var(--shadow-card) !important;
 }
-body.dark-mode .task-card h4,
-body.dark-mode .task-card p,
-body.dark-mode .task-card span.task-desc {
+.dark-mode .task-card h4,
+.dark-mode .task-card p,
+.dark-mode .task-card span.task-desc {
     color: var(--text-primary);
 }
-body.dark-mode .task-desc { color: var(--text-secondary) !important; }
-body.dark-mode .section-title { color: var(--text-primary) !important; }
+.dark-mode .task-desc { color: var(--text-secondary) !important; }
+.dark-mode .section-title { color: var(--text-primary) !important; }
 
 /* Bottom nav */
-body.dark-mode .bottom-nav {
+.dark-mode .bottom-nav,
+.bottom-nav.dark-mode {
     background: var(--nav-bg) !important;
     border-top-color: var(--border-color) !important;
     box-shadow: 0 -4px 20px rgba(0,0,0,0.4) !important;
 }
-body.dark-mode .nav-item { color: var(--text-secondary) !important; }
-body.dark-mode .nav-item.active { color: #FF5722 !important; }
-body.dark-mode .nav-item p { color: var(--text-secondary) !important; }
-body.dark-mode .nav-item.active p { color: #FF5722 !important; }
+.dark-mode .nav-item,
+.bottom-nav.dark-mode .nav-item { color: var(--text-secondary) !important; }
+.dark-mode .nav-item.active,
+.bottom-nav.dark-mode .nav-item.active { color: #FF5722 !important; }
+.dark-mode .nav-item p,
+.bottom-nav.dark-mode .nav-item p { color: var(--text-secondary) !important; }
+.dark-mode .nav-item.active p,
+.bottom-nav.dark-mode .nav-item.active p { color: #FF5722 !important; }
 
 /* Chat + history drawers */
-body.dark-mode .chat-drawer,
-body.dark-mode #history-modal .chat-drawer {
+.dark-mode .chat-drawer,
+.dark-mode #history-modal .chat-drawer {
     background: var(--drawer-bg) !important;
 }
-body.dark-mode .chat-header {
+.dark-mode .chat-header {
     border-bottom-color: var(--border-color) !important;
     background: var(--drawer-bg) !important;
 }
-body.dark-mode .chat-header h3,
-body.dark-mode #chat-header-title { color: var(--text-primary) !important; }
-body.dark-mode .chat-messages { background: var(--chat-area-bg) !important; }
-body.dark-mode .msg-received {
+.dark-mode .chat-header h3,
+.dark-mode #chat-header-title { color: var(--text-primary) !important; }
+.dark-mode .chat-messages { background: var(--chat-area-bg) !important; }
+.dark-mode .msg-received {
     background: var(--msg-received-bg) !important;
     color: var(--msg-received-text) !important;
 }
-body.dark-mode .chat-input-area {
+.dark-mode .chat-input-area {
     background: var(--drawer-bg) !important;
     border-top-color: var(--border-color) !important;
 }
-body.dark-mode .chat-input-area input {
+.dark-mode .chat-input-area input {
     background: var(--bg-input) !important;
     border-color: var(--border-color) !important;
     color: var(--text-primary) !important;
 }
 
 /* Modals */
-body.dark-mode .modal-content {
+.dark-mode .modal-content {
     background: var(--bg-elevated) !important;
     color: var(--text-primary) !important;
 }
-body.dark-mode .modal-content h3 { color: var(--text-primary) !important; }
-body.dark-mode .modal-content input,
-body.dark-mode .modal-content textarea {
+.dark-mode .modal-content h3 { color: var(--text-primary) !important; }
+.dark-mode .modal-content input,
+.dark-mode .modal-content textarea {
     background: var(--bg-input) !important;
     border-color: var(--border-color) !important;
     color: var(--text-primary) !important;
 }
-body.dark-mode .modal-content label { color: var(--text-primary) !important; }
+.dark-mode .modal-content label { color: var(--text-primary) !important; }
 
 /* Dropdown menus */
-body.dark-mode .dropdown-menu {
+.dark-mode .dropdown-menu {
     background: var(--dropdown-bg) !important;
     border-color: var(--border-color) !important;
     box-shadow: 0 8px 24px rgba(0,0,0,0.5) !important;
 }
-body.dark-mode .dropdown-item {
+.dark-mode .dropdown-item {
     color: var(--text-primary) !important;
     border-bottom-color: var(--border-color) !important;
 }
-body.dark-mode .dropdown-item:active { background: var(--bg-input) !important; }
-body.dark-mode .menu-btn { color: var(--text-secondary) !important; }
+.dark-mode .dropdown-item:active { background: var(--bg-input) !important; }
+.dark-mode .menu-btn { color: var(--text-secondary) !important; }
 
 /* Skeleton loaders */
-body.dark-mode .skeleton-element {
+.dark-mode .skeleton-element {
     background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-shine) 50%, var(--skeleton-base) 75%) !important;
     background-size: 200% 100% !important;
 }
 
 /* Profile tab surfaces */
-body.dark-mode #profile-view .task-card {
+.dark-mode #profile-view .task-card {
     background: var(--bg-card) !important;
 }
-body.dark-mode #profile-name { color: var(--text-primary) !important; }
-body.dark-mode #profile-phone { color: var(--text-secondary) !important; }
-body.dark-mode #profile-rating-card {
+.dark-mode #profile-name { color: var(--text-primary) !important; }
+.dark-mode #profile-phone { color: var(--text-secondary) !important; }
+.dark-mode #profile-rating-card {
     background: linear-gradient(135deg, #2A2214, #201A0C) !important;
     border-color: #4A3C00 !important;
 }
-body.dark-mode #profile-address { color: #FF7043 !important; }
+.dark-mode #profile-address { color: #FF7043 !important; }
 
 /* Notification pref / settings rows */
-body.dark-mode .profile-settings-row span {
+.dark-mode .profile-settings-row span {
     color: var(--text-primary) !important;
 }
 
 /* History items */
-body.dark-mode #history-deleted-feed > div,
-body.dark-mode #history-dropped-feed > div,
-body.dark-mode #history-dismissed-feed > div {
+.dark-mode #history-deleted-feed > div,
+.dark-mode #history-dropped-feed > div,
+.dark-mode #history-dismissed-feed > div {
     background: var(--bg-card) !important;
     color: var(--text-primary) !important;
 }
 
 /* Feed section backgrounds */
-body.dark-mode .feed-section,
-body.dark-mode #home-view,
-body.dark-mode #tasks-view,
-body.dark-mode #profile-view {
+.dark-mode.feed-section,
+.dark-mode#home-view,
+.dark-mode#tasks-view,
+.dark-mode#profile-view {
     background-color: var(--bg-app) !important;
 }
-body.dark-mode .app-container {
+.dark-mode.app-container,
+.dark-mode .app-container {
     background-color: var(--bg-app) !important;
 }
 
 /* Status buttons */
-body.dark-mode .status-btn.free {
+.dark-mode .status-btn.free {
     background: #1A2A1A !important;
     border-color: #2E4A2E !important;
     color: #66BB6A !important;
 }
-body.dark-mode .status-btn.busy {
+.dark-mode .status-btn.busy {
     background: #2A1A1A !important;
     color: #FF5252 !important;
 }
 
 /* App notification toast */
-body.dark-mode .app-notification {
+.dark-mode .app-notification {
     background: var(--bg-elevated) !important;
     border-color: var(--border-color) !important;
     box-shadow: 0 8px 24px rgba(0,0,0,0.5) !important;
 }
-body.dark-mode .app-notif-text h4 { color: var(--text-primary) !important; }
-body.dark-mode .app-notif-text p { color: var(--text-secondary) !important; }
+.dark-mode .app-notif-text h4 { color: var(--text-primary) !important; }
+.dark-mode .app-notif-text p { color: var(--text-secondary) !important; }
 
 /* Radius button */
-body.dark-mode .radius-btn {
+.dark-mode .radius-btn {
     background: var(--bg-elevated) !important;
     border-color: var(--border-color) !important;
     color: var(--text-primary) !important;
 }
 
 /* Radius modal options */
-body.dark-mode .radius-option {
+.dark-mode .radius-option {
     background: var(--bg-elevated) !important;
     border-bottom-color: var(--border-color) !important;
     color: var(--text-primary) !important;
 }
-body.dark-mode .radius-option.selected {
+.dark-mode .radius-option.selected {
     background: #2A1A10 !important;
     color: #FF5722 !important;
 }
 
 /* Radius modal: override inline bg/text on the 'Select Radius' header */
-body.dark-mode #radius-modal .modal-content {
+.dark-mode #radius-modal .modal-content {
     background: var(--bg-elevated) !important;
 }
-body.dark-mode #radius-modal .modal-content > div:first-child {
+.dark-mode #radius-modal .modal-content > div:first-child {
     background: var(--bg-input) !important;
     border-bottom-color: var(--border-color) !important;
 }
-body.dark-mode #radius-modal .modal-content > div:first-child h3 {
+.dark-mode #radius-modal .modal-content > div:first-child h3 {
     color: var(--text-primary) !important;
+}
+
+/* === VIEW TRANSITION ANIMATIONS (Telegram Circle Style) === */
+::view-transition-group(root) {
+    animation-duration: 0.8s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+::view-transition-image-pair(root) {
+    isolation: isolate;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+    /* Critical: disable default cross-fade and blend modes */
+    animation-duration: inherit;
+    animation-timing-function: inherit;
+    animation-delay: 0s;
+    animation-direction: normal;
+    animation-fill-mode: both;
+    mix-blend-mode: normal;
+    opacity: 1 !important;
+    height: 100%;
+}
+
+/* Infection Reveal (OFF -> ON) */
+::view-transition-new(root) {
+    animation-name: reveal-circular;
+    z-index: 100;
+}
+::view-transition-old(root) {
+    animation-name: none;
+    z-index: -1;
+}
+
+@keyframes reveal-circular {
+    from {
+        clip-path: circle(0% at var(--click-x, 50%) var(--click-y, 50%));
+    }
+    to {
+        clip-path: circle(150% at var(--click-x, 50%) var(--click-y, 50%));
+    }
+}
+
+/* Global Retraction (ON -> OFF) */
+.retracting::view-transition-old(root) {
+    animation-name: retract-circular;
+    z-index: 100;
+}
+.retracting::view-transition-new(root) {
+    animation-name: none;
+    z-index: -1;
+}
+
+@keyframes retract-circular {
+    from {
+        clip-path: circle(150% at var(--click-x, 50%) var(--click-y, 50%));
+    }
+    to {
+        clip-path: circle(0% at var(--click-x, 50%) var(--click-y, 50%));
+    }
 }
 
 /* Dark mode toggle button */
@@ -479,9 +560,11 @@ body {
 
 /* Feed & Task Cards */
 .feed-section {
+    background-color: var(--white);
     padding: 0 24px;
     padding-bottom: 120px;
     /* Ensures the last card isn't hidden by the nav */
+    transition: background-color 0.3s;
 }
 
 .section-title {
@@ -1326,9 +1409,7 @@ input[type="number"] {
     }
 }
 
-.feed-section:not(.hidden) {
-    animation: fadeInTab 0.2s ease-out forwards;
-}
+/* Tab view opacity management handled by View Transition API */
 
 /* 4. Modal Pop In */
 @keyframes popIn {
@@ -1359,12 +1440,22 @@ input[type="number"] {
 }
 
 .skeleton-element {
-    background: #e0e0e0;
-    /* The shimmering gradient */
-    background: linear-gradient(90deg, #e0e0e0 25%, #f5f5f5 50%, #e0e0e0 75%);
+    background: var(--skeleton-base);
+    background: linear-gradient(
+        90deg, 
+        var(--skeleton-base) 25%, 
+        var(--skeleton-shine) 50%, 
+        var(--skeleton-base) 75%
+    );
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite linear;
     border-radius: 4px;
+}
+
+.dark-mode .skeleton-element {
+    background: #2c2c2c;
+    background: linear-gradient(90deg, #2c2c2c 25%, #3d3d3d 50%, #2c2c2c 75%);
+    background-size: 200% 100%;
 }
 
 @keyframes shimmer {
@@ -1400,6 +1491,9 @@ input[type="number"] {
     bottom: 0;
     background-color: #ccc;
     transition: .4s;
+}
+.dark-mode .slider {
+    background-color: #444;
 }
 
 .slider:before {

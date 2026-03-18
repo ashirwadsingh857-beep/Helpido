@@ -924,7 +924,7 @@
                     </div>
 
                     <!-- Dark Mode Toggle -->
-                    <div class="dark-mode-toggle-btn" onclick="toggleDarkMode()">
+                    <div class="dark-mode-toggle-btn" onclick="toggleDarkMode(event)">
                         <div style="display:flex; align-items:center; gap:10px;">
                             <span id="dark-mode-icon" style="font-size:1.3rem;">🌙</span>
                             <div style="text-align:left;">
@@ -932,8 +932,8 @@
                                 <p style="margin:0; font-size:0.78rem; color:var(--text-secondary);">Switch to a darker look</p>
                             </div>
                         </div>
-                        <label class="switch" onclick="event.stopPropagation()">
-                            <input type="checkbox" id="toggle-dark-mode" onchange="toggleDarkMode()">
+                        <label class="switch" style="pointer-events: none;">
+                            <input type="checkbox" id="toggle-dark-mode">
                             <span class="slider round"></span>
                         </label>
                     </div>
@@ -1103,7 +1103,11 @@
     <script>
         // === DARK MODE: Restore ASAP to prevent flash of light mode ===
         if (localStorage.getItem('helpido_dark_mode') === '1') {
-            document.body.classList.add('dark-mode');
+            const savedInfected = JSON.parse(localStorage.getItem('helpido_infected_tabs') || "[]");
+            if (savedInfected.length >= 3) {
+                document.body.classList.add('dark-mode');
+            }
+            // Note: Scoped dark-mode classes are applied in loadProfile() or switchTab()
         }
 
         function timeAgo(dateParam) {
@@ -1183,6 +1187,10 @@
         let isStatusToggling = false; // LOCK to prevent rapid-click lag
         let isInitialHomeLoad = true;
         let isInitialTasksLoad = true;
+
+        // --- DARK MODE INFECTION STATE ---
+        let isDarkModeRequested = localStorage.getItem('helpido_dark_mode') === '1';
+        let infectedTabs = new Set(JSON.parse(localStorage.getItem('helpido_infected_tabs') || "[]"));
 
         // --- NEW: GEOSPATIAL STATE ---
         let currentRadius = 0.1; // Default to 100 meters (0.1 km) for small societies
@@ -1534,6 +1542,15 @@
                     if (dmCheckbox) dmCheckbox.checked = isDarkActive;
                     if (dmIcon) dmIcon.textContent = isDarkActive ? '☀️' : '🌙';
                     if (user.availability) { currentStatus = user.availability; updateStatusUI(); }
+
+                    // Sync tab infection UI (non-animated reload)
+                    if (isDarkModeRequested) {
+                        infectedTabs.forEach(tab => {
+                            applyDarkToTabUI(tab); 
+                        });
+                        // If everything is already infected, ensure body is dark too
+                        if (infectedTabs.size >= 3) document.body.classList.add('dark-mode');
+                    }
 
                     // Populate rating card on Profile tab
                     const starDisplay = document.getElementById('profile-star-display');
@@ -2181,45 +2198,86 @@
         }
 
         // --- UPGRADED: SMOOTH NATIVE TAB SWITCHING ---
+        // --- UPGRADED: SMOOTH NATIVE TAB SWITCHING ---
         function switchTab(tabName) {
             // Prevent re-animating if already on the same tab
             if (activeTab === tabName) return;
 
+            const oldTab = activeTab;
             activeTab = tabName;
 
-            // 1. Hide all tabs and remove animation classes
+            // Highlight the nav icon immediately for responsiveness
+            ['home', 'tasks', 'profile'].forEach(tab => {
+                const nav = document.getElementById(`nav-${tab}`);
+                if (nav) nav.classList.remove('active');
+            });
+            const activeNav = document.getElementById(`nav-${tabName}`);
+            if (activeNav) activeNav.classList.add('active');
+
+            // 1. Instant Switch (No transition here to avoid visual stress)
             ['home', 'tasks', 'profile'].forEach(tab => {
                 const el = document.getElementById(`${tab}-view`);
-                el.classList.add('hidden');
-                el.classList.remove('tab-content');
-                document.getElementById(`nav-${tab}`).classList.remove('active');
+                if (el) el.classList.add('hidden');
             });
-
-            // 2. Show the active tab
+            
             const activeEl = document.getElementById(`${tabName}-view`);
-            activeEl.classList.remove('hidden');
-
-            // 3. Force browser reflow to perfectly trigger the crossfade animation
-            void activeEl.offsetWidth;
-            activeEl.classList.add('tab-content');
-
-            // 4. Highlight the nav icon
-            document.getElementById(`nav-${tabName}`).classList.add('active');
+            if (activeEl) activeEl.classList.remove('hidden');
 
             const fab = document.querySelector('.fab-btn');
             const historyBtn = document.getElementById('history-btn-container');
 
-            // ... (Keep the rest of your switchTab function below this line!) ...
             if (tabName === 'profile') {
-                fab.classList.add('hide-fab');
+                if (fab) fab.classList.add('hide-fab');
                 if (historyBtn) historyBtn.style.display = 'block';
             } else {
-                fab.classList.remove('hide-fab');
+                if (fab) fab.classList.remove('hide-fab');
                 if (historyBtn) historyBtn.style.display = 'none';
             }
 
             if (tabName === 'home') { loadTasks(); }
             if (tabName === 'tasks') { loadMyTasks(); }
+
+            // 2. TRIGGER INFECTION AFTER PAINT
+            if (isDarkModeRequested && !infectedTabs.has(tabName)) {
+                // Double RequestAnimationFrame ensures the browser has painted the Light version 
+                // so the View Transition captures a proper "Old" snapshot.
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        spreadInfectionToTab(tabName);
+                    });
+                });
+            }
+        }
+
+        function spreadInfectionToTab(tabName) {
+            const tabEl = document.getElementById(`${tabName}-view`);
+            const navItem = document.getElementById('nav-profile'); // Spread source
+            if (!tabEl || !navItem || !document.startViewTransition) {
+                if (tabEl) { tabEl.classList.add('dark-mode'); infectedTabs.add(tabName); saveInfectionState(); }
+                return;
+            }
+
+            const rect = navItem.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+            
+            document.documentElement.style.setProperty('--click-x', x + 'px');
+            document.documentElement.style.setProperty('--click-y', y + 'px');
+
+            document.startViewTransition(() => {
+                tabEl.classList.add('dark-mode');
+                infectedTabs.add(tabName);
+                saveInfectionState();
+                
+                // If this switch just made the whole app dark
+                if (infectedTabs.size >= 3) {
+                    document.body.classList.add('dark-mode');
+                }
+            });
+        }
+
+        function saveInfectionState() {
+            localStorage.setItem('helpido_infected_tabs', JSON.stringify(Array.from(infectedTabs)));
         }
 
         function toggleMenu(menuId, event) {
@@ -3158,14 +3216,96 @@
             });
         }
 
-        // --- DARK MODE TOGGLE ---
-        function toggleDarkMode() {
-            const isDark = document.body.classList.toggle('dark-mode');
+        // --- DARK MODE TOGGLE (INFECTION STYLE) ---
+        function toggleDarkMode(e) {
+            const isTransitionSupported = !!document.startViewTransition;
+
+            if (!isDarkModeRequested) {
+                // START INFECTION (ON)
+                isDarkModeRequested = true;
+                const profileView = document.getElementById('profile-view');
+                
+                if (isTransitionSupported && e) {
+                    document.documentElement.style.setProperty('--click-x', e.clientX + 'px');
+                    document.documentElement.style.setProperty('--click-y', e.clientY + 'px');
+                    
+                    document.startViewTransition(() => {
+                        applyDarkToTabUI('profile');
+                    });
+                } else {
+                    applyDarkToTabUI('profile');
+                }
+            } else {
+                // GLOBAL RETRACTION (OFF)
+                isDarkModeRequested = false;
+                
+                if (isTransitionSupported) {
+                    // Start from center of screen or button
+                    const x = e ? e.clientX : window.innerWidth / 2;
+                    const y = e ? e.clientY : window.innerHeight / 2;
+                    document.documentElement.style.setProperty('--click-x', x + 'px');
+                    document.documentElement.style.setProperty('--click-y', y + 'px');
+                    document.documentElement.classList.add('retracting');
+
+                    const transition = document.startViewTransition(() => {
+                        removeAllDarkUI();
+                    });
+
+                    transition.finished.finally(() => {
+                        document.documentElement.classList.remove('retracting');
+                    });
+                } else {
+                    removeAllDarkUI();
+                }
+            }
+            
+            localStorage.setItem('helpido_dark_mode', isDarkModeRequested ? '1' : '0');
+        }
+
+        function applyDarkToTabUI(tabName) {
+            const el = document.getElementById(`${tabName}-view`);
+            if (el) el.classList.add('dark-mode');
+            infectedTabs.add(tabName);
+            saveInfectionState();
+
+            // DO NOT infect main-dash here! It turns everything dark prematurely.
+            // Only infect the whole body once all 3 tabs are visited.
+            
+            // Infection Spread to ALL major Modals/Overlays immediately
+            const allModals = [
+                'history-modal', 'create-modal', 'chat-modal', 
+                'radius-modal', 'confirm-modal', 'rating-modal',
+                'splash-screen'
+            ];
+            allModals.forEach(id => {
+                const m = document.getElementById(id);
+                if (m) m.classList.add('dark-mode');
+            });
+            
+            // Immediately turn the nav dark on first infection
+            const nav = document.querySelector('.bottom-nav');
+            if (nav) nav.classList.add('dark-mode');
+            
+            // Sync toggle UI
             const checkbox = document.getElementById('toggle-dark-mode');
             const icon = document.getElementById('dark-mode-icon');
-            if (checkbox) checkbox.checked = isDark;
-            if (icon) icon.textContent = isDark ? '☀️' : '🌙';
-            localStorage.setItem('helpido_dark_mode', isDark ? '1' : '0');
+            if (checkbox) checkbox.checked = true;
+            if (icon) icon.textContent = '☀️';
+        }
+
+        function removeAllDarkUI() {
+            document.body.classList.remove('dark-mode');
+            document.querySelectorAll('.dark-mode').forEach(el => el.classList.remove('dark-mode'));
+            const nav = document.querySelector('.bottom-nav');
+            if (nav) nav.classList.remove('dark-mode');
+            
+            infectedTabs.clear();
+            saveInfectionState();
+            
+            const checkbox = document.getElementById('toggle-dark-mode');
+            const icon = document.getElementById('dark-mode-icon');
+            if (checkbox) checkbox.checked = false;
+            if (icon) icon.textContent = '🌙';
         }
 
         // Execute every 30 seconds to keep the UI fresh without taxing the CPU
