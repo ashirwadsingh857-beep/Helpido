@@ -1,14 +1,237 @@
 /* Base Resets and Variables */
 :root {
     --primary-color: #FF5722;
-    /* A warm, active color */
     --primary-hover: #E64A19;
     --text-dark: #212121;
     --text-muted: #757575;
     --bg-light: #F5F5F5;
     --white: #FFFFFF;
     --border-radius: 12px;
+
+    /* === SEMANTIC THEME TOKENS === */
+    --bg-app:            #F8F9FA;
+    --bg-card:           #FFFFFF;
+    --bg-elevated:       #FFFFFF;
+    --bg-input:          #F0F0F0;
+    --text-primary:      #202124;
+    --text-secondary:    #5F6368;
+    --border-color:      #EEEEEE;
+    --nav-bg:            rgba(255, 255, 255, 0.95);
+    --drawer-bg:         #FFFFFF;
+    --dropdown-bg:       #FFFFFF;
+    --skeleton-base:     #E0E0E0;
+    --skeleton-shine:    #F5F5F5;
+    --shadow-card:       rgba(0, 0, 0, 0.06);
+    --msg-received-bg:   #E0E0E0;
+    --msg-received-text: #333333;
+    --chat-area-bg:      #F9F9F9;
+    --section-bg:        #F8F9FA;
+    --switch-bg:         #ccc;
 }
+
+/* =========================================
+   DARK MODE OVERRIDE TOKENS
+   ========================================= */
+body.dark-mode {
+    --bg-app:            #111111;
+    --bg-card:           #1E1E1E;
+    --bg-elevated:       #252525;
+    --bg-input:          #2C2C2C;
+    --text-dark:         #F1F1F1;
+    --text-muted:        #9A9A9A;
+    --text-primary:      #F1F1F1;
+    --text-secondary:    #9A9A9A;
+    --white:             #1E1E1E;
+    --bg-light:          #181818;
+    --border-color:      #2E2E2E;
+    --nav-bg:            rgba(18, 18, 18, 0.97);
+    --drawer-bg:         #1A1A1A;
+    --dropdown-bg:       #252525;
+    --skeleton-base:     #2A2A2A;
+    --skeleton-shine:    #333333;
+    --shadow-card:       rgba(0, 0, 0, 0.5);
+    --msg-received-bg:   #2A2A2A;
+    --msg-received-text: #E0E0E0;
+    --chat-area-bg:      #161616;
+    --section-bg:        #111111;
+    background-color: var(--bg-app);
+    color: var(--text-primary);
+}
+
+/* Dark mode: card borders, backgrounds */
+body.dark-mode .task-card {
+    background: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+    box-shadow: 0 2px 12px var(--shadow-card) !important;
+}
+body.dark-mode .task-card h4,
+body.dark-mode .task-card p,
+body.dark-mode .task-card span.task-desc {
+    color: var(--text-primary);
+}
+body.dark-mode .task-desc { color: var(--text-secondary) !important; }
+body.dark-mode .section-title { color: var(--text-primary) !important; }
+
+/* Bottom nav */
+body.dark-mode .bottom-nav {
+    background: var(--nav-bg) !important;
+    border-top-color: var(--border-color) !important;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.4) !important;
+}
+body.dark-mode .nav-item { color: var(--text-secondary) !important; }
+body.dark-mode .nav-item.active { color: #FF5722 !important; }
+body.dark-mode .nav-item p { color: var(--text-secondary) !important; }
+body.dark-mode .nav-item.active p { color: #FF5722 !important; }
+
+/* Chat + history drawers */
+body.dark-mode .chat-drawer,
+body.dark-mode #history-modal .chat-drawer {
+    background: var(--drawer-bg) !important;
+}
+body.dark-mode .chat-header {
+    border-bottom-color: var(--border-color) !important;
+    background: var(--drawer-bg) !important;
+}
+body.dark-mode .chat-header h3,
+body.dark-mode #chat-header-title { color: var(--text-primary) !important; }
+body.dark-mode .chat-messages { background: var(--chat-area-bg) !important; }
+body.dark-mode .msg-received {
+    background: var(--msg-received-bg) !important;
+    color: var(--msg-received-text) !important;
+}
+body.dark-mode .chat-input-area {
+    background: var(--drawer-bg) !important;
+    border-top-color: var(--border-color) !important;
+}
+body.dark-mode .chat-input-area input {
+    background: var(--bg-input) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Modals */
+body.dark-mode .modal-content {
+    background: var(--bg-elevated) !important;
+    color: var(--text-primary) !important;
+}
+body.dark-mode .modal-content h3 { color: var(--text-primary) !important; }
+body.dark-mode .modal-content input,
+body.dark-mode .modal-content textarea {
+    background: var(--bg-input) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+body.dark-mode .modal-content label { color: var(--text-primary) !important; }
+
+/* Dropdown menus */
+body.dark-mode .dropdown-menu {
+    background: var(--dropdown-bg) !important;
+    border-color: var(--border-color) !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5) !important;
+}
+body.dark-mode .dropdown-item {
+    color: var(--text-primary) !important;
+    border-bottom-color: var(--border-color) !important;
+}
+body.dark-mode .dropdown-item:active { background: var(--bg-input) !important; }
+body.dark-mode .menu-btn { color: var(--text-secondary) !important; }
+
+/* Skeleton loaders */
+body.dark-mode .skeleton-element {
+    background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-shine) 50%, var(--skeleton-base) 75%) !important;
+    background-size: 200% 100% !important;
+}
+
+/* Profile tab surfaces */
+body.dark-mode #profile-view .task-card {
+    background: var(--bg-card) !important;
+}
+body.dark-mode #profile-name { color: var(--text-primary) !important; }
+body.dark-mode #profile-phone { color: var(--text-secondary) !important; }
+body.dark-mode #profile-rating-card {
+    background: linear-gradient(135deg, #2A2214, #201A0C) !important;
+    border-color: #4A3C00 !important;
+}
+body.dark-mode #profile-address { color: #FF7043 !important; }
+
+/* Notification pref / settings rows */
+body.dark-mode .profile-settings-row span {
+    color: var(--text-primary) !important;
+}
+
+/* History items */
+body.dark-mode #history-deleted-feed > div,
+body.dark-mode #history-dropped-feed > div,
+body.dark-mode #history-dismissed-feed > div {
+    background: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Feed section backgrounds */
+body.dark-mode .feed-section,
+body.dark-mode #home-view,
+body.dark-mode #tasks-view,
+body.dark-mode #profile-view {
+    background-color: var(--bg-app) !important;
+}
+body.dark-mode .app-container {
+    background-color: var(--bg-app) !important;
+}
+
+/* Status buttons */
+body.dark-mode .status-btn.free {
+    background: #1A2A1A !important;
+    border-color: #2E4A2E !important;
+    color: #66BB6A !important;
+}
+body.dark-mode .status-btn.busy {
+    background: #2A1A1A !important;
+    color: #FF5252 !important;
+}
+
+/* App notification toast */
+body.dark-mode .app-notification {
+    background: var(--bg-elevated) !important;
+    border-color: var(--border-color) !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5) !important;
+}
+body.dark-mode .app-notif-text h4 { color: var(--text-primary) !important; }
+body.dark-mode .app-notif-text p { color: var(--text-secondary) !important; }
+
+/* Radius button */
+body.dark-mode .radius-btn {
+    background: var(--bg-elevated) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Radius modal options */
+body.dark-mode .radius-option {
+    background: var(--bg-elevated) !important;
+    border-bottom-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+body.dark-mode .radius-option.selected {
+    background: #2A1A10 !important;
+    color: #FF5722 !important;
+}
+
+/* Dark mode toggle button */
+.dark-mode-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.3s, border-color 0.3s;
+    -webkit-tap-highlight-color: transparent;
+}
+.dark-mode-toggle-btn:active { opacity: 0.75; }
 
 * {
     margin: 0;
@@ -462,6 +685,11 @@ body {
     justify-content: center;
     align-items: center;
     z-index: 100;
+}
+
+.modal-content {
+    background-color: var(--bg-elevated);
+    color: var(--text-primary);
 }
 
 .modal-content {

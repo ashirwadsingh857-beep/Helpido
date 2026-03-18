@@ -923,6 +923,21 @@
                         </div>
                     </div>
 
+                    <!-- Dark Mode Toggle -->
+                    <div class="dark-mode-toggle-btn" onclick="toggleDarkMode()">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span id="dark-mode-icon" style="font-size:1.3rem;">🌙</span>
+                            <div style="text-align:left;">
+                                <p style="margin:0; font-size:0.95rem; font-weight:600; color:var(--text-primary);">Dark Mode</p>
+                                <p style="margin:0; font-size:0.78rem; color:var(--text-secondary);">Switch to a darker look</p>
+                            </div>
+                        </div>
+                        <label class="switch" onclick="event.stopPropagation()">
+                            <input type="checkbox" id="toggle-dark-mode" onchange="toggleDarkMode()">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
                     <button id="notif-btn" class="btn"
                         style="background-color: #4CAF50; margin-bottom: 12px; display: none;"
                         onclick="subscribeToPush()">🔔 Enable Notifications</button>
@@ -1089,6 +1104,10 @@
     </nav>
 
     <script>
+        // === DARK MODE: Restore ASAP to prevent flash of light mode ===
+        if (localStorage.getItem('helpido_dark_mode') === '1') {
+            document.body.classList.add('dark-mode');
+        }
 
         function timeAgo(dateParam) {
             if (!dateParam) return null;
@@ -1509,6 +1528,13 @@
                     // NEW: Set Toggle states (default to true if undefined)
                     document.getElementById('toggle-new-tasks').checked = user.notifyNewTasks !== false;
                     document.getElementById('toggle-chat-msgs').checked = user.notifyChatMessages !== false;
+
+                    // Sync dark mode toggle checkbox with current state
+                    const dmCheckbox = document.getElementById('toggle-dark-mode');
+                    const dmIcon = document.getElementById('dark-mode-icon');
+                    const isDarkActive = document.body.classList.contains('dark-mode');
+                    if (dmCheckbox) dmCheckbox.checked = isDarkActive;
+                    if (dmIcon) dmIcon.textContent = isDarkActive ? '☀️' : '🌙';
                     if (user.availability) { currentStatus = user.availability; updateStatusUI(); }
 
                     // Populate rating card on Profile tab
@@ -3117,6 +3143,16 @@
                     label.innerText = `${prefix} ${timeAgo(timestamp)}`;
                 }
             });
+        }
+
+        // --- DARK MODE TOGGLE ---
+        function toggleDarkMode() {
+            const isDark = document.body.classList.toggle('dark-mode');
+            const checkbox = document.getElementById('toggle-dark-mode');
+            const icon = document.getElementById('dark-mode-icon');
+            if (checkbox) checkbox.checked = isDark;
+            if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+            localStorage.setItem('helpido_dark_mode', isDark ? '1' : '0');
         }
 
         // Execute every 30 seconds to keep the UI fresh without taxing the CPU
