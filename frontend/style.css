@@ -346,8 +346,29 @@ body.dark-mode {
     -webkit-tap-highlight-color: transparent;
 }
 
-body {
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+    /* Ensure the system background is dark in dark mode */
     background-color: var(--bg-light);
+}
+
+/* Custom Scrollbar Theming */
+::-webkit-scrollbar {
+    width: 5px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #D1D1D1;
+    border-radius: 10px;
+}
+.dark-mode ::-webkit-scrollbar-thumb {
+    background: #333333;
+}
+
+body {
     display: flex;
     justify-content: center;
     align-items: center;
