@@ -1393,8 +1393,9 @@
                 });
 
                 // Turn ticks blue when the other person reads messages
-                globalSocket.on('messagesSeen', ({ taskId: seenTaskId }) => {
+                globalSocket.on('messagesSeen', ({ taskId: seenTaskId, seenBy }) => {
                     if (seenTaskId !== currentChatTaskId) return;
+                    if (seenBy === myPhone) return; // Do not turn my own ticks blue just because I opened the chat
                     document.querySelectorAll('#chat-messages .msg-tick').forEach(tick => {
                         tick.classList.remove('sent');
                         tick.classList.add('seen');
