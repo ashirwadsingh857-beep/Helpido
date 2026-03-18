@@ -1180,6 +1180,7 @@
         }
 
         let currentStatus = 'free';
+        let isStatusToggling = false; // LOCK to prevent rapid-click lag
         let isInitialHomeLoad = true;
         let isInitialTasksLoad = true;
 
@@ -2251,13 +2252,22 @@
            5. TASK ACTIONS
            ========================================= */
         async function toggleAvailability() {
+            if (isStatusToggling) return; // Ignore if already in flight
+            isStatusToggling = true;
+
+            const btn = document.getElementById('availability-btn');
+            if (btn) btn.style.opacity = '0.6'; // Visual feedback of "busy/locking"
+
             currentStatus = currentStatus === 'free' ? 'busy' : 'free';
             updateStatusUI();
+
             // Instantly reflect status in the feed (busy = break screen, free = reload tasks)
             if (activeTab === 'home') loadTasks();
+
             try {
                 await fetch(`${API_URL}/users/status`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ phone: myPhone, availability: currentStatus })
                 });
             } catch (err) {
@@ -2265,6 +2275,12 @@
                 currentStatus = currentStatus === 'free' ? 'busy' : 'free';
                 updateStatusUI();
                 if (activeTab === 'home') loadTasks();
+            } finally {
+                // Add a small 400ms cooldown after the request finishes to prevent jittery double-clicks
+                setTimeout(() => {
+                    isStatusToggling = false;
+                    if (btn) btn.style.opacity = '1';
+                }, 400);
             }
         }
 
