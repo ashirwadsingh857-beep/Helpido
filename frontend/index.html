@@ -210,7 +210,14 @@
 
             if (mode === 'login') document.getElementById('login-section').style.display = 'block';
             if (mode === 'signup') document.getElementById('signup-section').style.display = 'block';
-            if (mode === 'otp') document.getElementById('otp-section').style.display = 'block';
+            if (mode === 'otp') {
+                document.getElementById('otp-section').style.display = 'block';
+                // Automatically focus OTP input to trigger mobile keyboard
+                setTimeout(() => {
+                    const otpInput = document.getElementById('otp-input');
+                    if (otpInput) otpInput.focus();
+                }, 50);
+            }
         }
 
         async function registerUser() {
