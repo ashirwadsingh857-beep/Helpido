@@ -74,7 +74,7 @@ body.dark-mode {
 }
 
 /* Splash screen dark variant */
-.splash-screen.dark-mode {
+.dark-mode .splash-screen {
     background: linear-gradient(135deg, #111111 0%, #2D1B4D 100%) !important;
 }
 
@@ -99,20 +99,15 @@ body.dark-mode {
 .dark-mode .section-title { color: var(--text-primary) !important; }
 
 /* Bottom nav */
-.dark-mode .bottom-nav,
-.bottom-nav.dark-mode {
+.dark-mode .bottom-nav {
     background: var(--nav-bg) !important;
     border-top-color: var(--border-color) !important;
     box-shadow: 0 -4px 20px rgba(0,0,0,0.4) !important;
 }
-.dark-mode .nav-item,
-.bottom-nav.dark-mode .nav-item { color: var(--text-secondary) !important; }
-.dark-mode .nav-item.active,
-.bottom-nav.dark-mode .nav-item.active { color: #FF5722 !important; }
-.dark-mode .nav-item p,
-.bottom-nav.dark-mode .nav-item p { color: var(--text-secondary) !important; }
-.dark-mode .nav-item.active p,
-.bottom-nav.dark-mode .nav-item.active p { color: #FF5722 !important; }
+.dark-mode .bottom-nav .nav-item { color: var(--text-secondary) !important; }
+.dark-mode .bottom-nav .nav-item.active { color: #FF5722 !important; }
+.dark-mode .bottom-nav .nav-item p { color: var(--text-secondary) !important; }
+.dark-mode .bottom-nav .nav-item.active p { color: #FF5722 !important; }
 
 /* Chat + history drawers */
 .dark-mode .chat-drawer,
@@ -199,10 +194,10 @@ body.dark-mode {
 }
 
 /* Feed section backgrounds */
-.dark-mode.feed-section,
-.dark-mode#home-view,
-.dark-mode#tasks-view,
-.dark-mode#profile-view {
+.dark-mode .feed-section,
+.dark-mode #home-view,
+.dark-mode #tasks-view,
+.dark-mode #profile-view {
     background-color: var(--bg-app) !important;
 }
 .dark-mode.app-container,

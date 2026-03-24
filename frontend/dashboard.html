@@ -1188,9 +1188,8 @@
         let isInitialHomeLoad = true;
         let isInitialTasksLoad = true;
 
-        // --- DARK MODE INFECTION STATE ---
+        // --- DARK MODE STATE ---
         let isDarkModeRequested = localStorage.getItem('helpido_dark_mode') === '1';
-        let infectedTabs = new Set(JSON.parse(localStorage.getItem('helpido_infected_tabs') || "[]"));
 
         // --- NEW: GEOSPATIAL STATE ---
         let currentRadius = 0.1; // Default to 100 meters (0.1 km) for small societies
@@ -1543,19 +1542,10 @@
                     if (dmIcon) dmIcon.textContent = isDarkActive ? '☀️' : '🌙';
                     if (user.availability) { currentStatus = user.availability; updateStatusUI(); }
 
-                    // Sync tab infection UI (non-animated reload)
+                    // Sync theme on load
                     if (isDarkModeRequested) {
-                        // Ensure the CURRENT active tab is infected if dark mode is on
-                        if (!infectedTabs.has(activeTab)) {
-                            infectedTabs.add(activeTab);
-                            saveInfectionState();
-                        }
-                        
-                        infectedTabs.forEach(tab => {
-                            applyDarkToTabUI(tab); 
-                        });
-                        // If everything is already infected, ensure body is dark too
-                        if (infectedTabs.size >= 3) document.body.classList.add('dark-mode');
+                        document.body.classList.add('dark-mode');
+                        syncGlobalTheme(true);
                     }
 
                     // Populate rating card on Profile tab
@@ -2247,51 +2237,7 @@
             if (tabName === 'tasks') { loadMyTasks(); }
 
             // --- DYNAMIC GLOBAL THEME SYNC ---
-            // Sync the nav and background to the current tab's infection status
-            syncGlobalTheme(infectedTabs.has(tabName));
-
-            // 2. TRIGGER INFECTION AFTER PAINT
-            if (isDarkModeRequested && !infectedTabs.has(tabName)) {
-                // Double RequestAnimationFrame ensures the browser has painted the Light version 
-                // so the View Transition captures a proper "Old" snapshot.
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        spreadInfectionToTab(tabName);
-                    });
-                });
-            }
-        }
-
-        function spreadInfectionToTab(tabName) {
-            const tabEl = document.getElementById(`${tabName}-view`);
-            const navItem = document.getElementById('nav-profile'); // Spread source
-            if (!tabEl || !navItem || !document.startViewTransition) {
-                applyDarkToTabUI(tabName);
-                return;
-            }
-
-            const rect = navItem.getBoundingClientRect();
-            const x = rect.left + rect.width / 2;
-            const y = rect.top + rect.height / 2;
-            
-            document.documentElement.style.setProperty('--click-x', x + 'px');
-            document.documentElement.style.setProperty('--click-y', y + 'px');
-
-            document.startViewTransition(() => {
-                tabEl.classList.add('dark-mode');
-                syncGlobalTheme(true); // Sync nav and outer areas during reveal
-                infectedTabs.add(tabName);
-                saveInfectionState();
-                
-                // If this switch just made the whole app dark
-                if (infectedTabs.size >= 3) {
-                    document.body.classList.add('dark-mode');
-                }
-            });
-        }
-
-        function saveInfectionState() {
-            localStorage.setItem('helpido_infected_tabs', JSON.stringify(Array.from(infectedTabs)));
+            syncGlobalTheme(isDarkModeRequested);
         }
 
         function toggleMenu(menuId, event) {
@@ -3234,105 +3180,39 @@
         function toggleDarkMode(e) {
             const isTransitionSupported = !!document.startViewTransition;
 
-            if (!isDarkModeRequested) {
-                // START INFECTION (ON)
-                isDarkModeRequested = true;
-                const profileView = document.getElementById('profile-view');
+            const performToggle = () => {
+                isDarkModeRequested = !isDarkModeRequested;
+                document.body.classList.toggle('dark-mode', isDarkModeRequested);
+                syncGlobalTheme(isDarkModeRequested);
+                localStorage.setItem('helpido_dark_mode', isDarkModeRequested ? '1' : '0');
+            };
+
+            if (isTransitionSupported && e) {
+                document.documentElement.style.setProperty('--click-x', e.clientX + 'px');
+                document.documentElement.style.setProperty('--click-y', e.clientY + 'px');
                 
-                if (isTransitionSupported && e) {
-                    document.documentElement.style.setProperty('--click-x', e.clientX + 'px');
-                    document.documentElement.style.setProperty('--click-y', e.clientY + 'px');
-                    
-                    document.startViewTransition(() => {
-                        applyDarkToTabUI('profile');
-                    });
+                if (!isDarkModeRequested) {
+                    document.startViewTransition(performToggle);
                 } else {
-                    applyDarkToTabUI('profile');
-                }
-            } else {
-                // GLOBAL RETRACTION (OFF)
-                isDarkModeRequested = false;
-                
-                if (isTransitionSupported) {
-                    // Start from center of screen or button
-                    const x = e ? e.clientX : window.innerWidth / 2;
-                    const y = e ? e.clientY : window.innerHeight / 2;
-                    document.documentElement.style.setProperty('--click-x', x + 'px');
-                    document.documentElement.style.setProperty('--click-y', y + 'px');
                     document.documentElement.classList.add('retracting');
-
-                    const transition = document.startViewTransition(() => {
-                        removeAllDarkUI();
-                    });
-
+                    const transition = document.startViewTransition(performToggle);
                     transition.finished.finally(() => {
                         document.documentElement.classList.remove('retracting');
                     });
-                } else {
-                    removeAllDarkUI();
                 }
+            } else {
+                performToggle();
             }
-            
-            localStorage.setItem('helpido_dark_mode', isDarkModeRequested ? '1' : '0');
-        }
-
-        function applyDarkToTabUI(tabName) {
-            const el = document.getElementById(`${tabName}-view`);
-            if (el) el.classList.add('dark-mode');
-            infectedTabs.add(tabName);
-            saveInfectionState();
-
-            // Sync nav and outer backgrounds to dark
-            syncGlobalTheme(true);
-            
-            // Infection Spread to ALL major Modals/Overlays immediately
-            const allModals = [
-                'history-modal', 'create-modal', 'chat-modal', 
-                'radius-modal', 'confirm-modal', 'rating-modal',
-                'splash-screen'
-            ];
-            allModals.forEach(id => {
-                const m = document.getElementById(id);
-                if (m) m.classList.add('dark-mode');
-            });
-            
-            // Immediately turn the nav dark on first infection
-            const nav = document.querySelector('.bottom-nav');
-            if (nav) nav.classList.add('dark-mode');
-            
-            // Sync toggle UI
-            const checkbox = document.getElementById('toggle-dark-mode');
-            const icon = document.getElementById('dark-mode-icon');
-            if (checkbox) checkbox.checked = true;
-            if (icon) icon.textContent = '☀️';
-        }
-
-        function removeAllDarkUI() {
-            document.body.classList.remove('dark-mode');
-            syncGlobalTheme(false);
-            document.querySelectorAll('.dark-mode').forEach(el => el.classList.remove('dark-mode'));
-            const nav = document.querySelector('.bottom-nav');
-            if (nav) nav.classList.remove('dark-mode');
-            
-            infectedTabs.clear();
-            saveInfectionState();
-            
-            const checkbox = document.getElementById('toggle-dark-mode');
-            const icon = document.getElementById('dark-mode-icon');
-            if (checkbox) checkbox.checked = false;
-            if (icon) icon.textContent = '🌙';
         }
 
         function syncGlobalTheme(isDark) {
-            const darkBg = '#111111';
-            const lightBg = '#F5F5F5';
-            const targetColor = isDark ? darkBg : lightBg;
+            // Update Toggle UI
+            const checkbox = document.getElementById('toggle-dark-mode');
+            const icon = document.getElementById('dark-mode-icon');
+            if (checkbox) checkbox.checked = isDark;
+            if (icon) icon.textContent = isDark ? '☀️' : '🌙';
 
-            document.body.style.backgroundColor = targetColor;
-            document.documentElement.style.backgroundColor = targetColor;
-            const mainDash = document.getElementById('main-dash');
-            if (mainDash) mainDash.style.backgroundColor = targetColor;
-
+            // Sync outer areas (body background is handled via CSS variable in .dark-mode)
             const nav = document.querySelector('.bottom-nav');
             if (nav) {
                 if (isDark) nav.classList.add('dark-mode');
