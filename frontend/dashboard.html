@@ -1390,13 +1390,57 @@
             const fabLabel = document.getElementById('fab-label');
             const fabIcon = document.getElementById('fab-icon');
             const mainDash = document.getElementById('main-dash');
+            const nav = document.querySelector('.bottom-nav');
 
             if (fabLabel) fabLabel.style.display = isDesktop ? 'inline' : 'none';
             if (fabIcon) fabIcon.style.display = isDesktop ? 'none' : 'inline';
 
-            // Remove bottom padding so content isn't hidden behind bottom nav on desktop
             if (mainDash) {
                 mainDash.style.paddingBottom = isDesktop ? '40px' : '';
+                mainDash.style.marginLeft = isDesktop ? '240px' : '';
+                mainDash.style.maxWidth = isDesktop ? 'calc(100vw - 240px)' : '';
+            }
+
+            // JS inline styles always override CSS !important — use to fix sidebar position
+            if (nav) {
+                if (isDesktop) {
+                    nav.style.left = '0';
+                    nav.style.transform = 'none';
+                    nav.style.top = '0';
+                    nav.style.bottom = '0';
+                    nav.style.width = '240px';
+                    nav.style.maxWidth = '240px';
+                    nav.style.height = '100vh';
+                    nav.style.minHeight = '100vh';
+                    nav.style.borderRadius = '0';
+                    nav.style.borderTop = 'none';
+                    nav.style.flexDirection = 'column';
+                    nav.style.justifyContent = 'flex-start';
+                    nav.style.alignItems = 'stretch';
+                    nav.style.padding = '80px 16px 100px 16px';
+                    nav.style.boxShadow = '2px 0 20px rgba(0,0,0,0.05)';
+                    nav.style.borderRight = '1px solid var(--border-color, #eee)';
+                    nav.style.backdropFilter = 'blur(20px)';
+                } else {
+                    // Reset to CSS defaults for mobile/tablet
+                    nav.style.left = '';
+                    nav.style.transform = '';
+                    nav.style.top = '';
+                    nav.style.bottom = '';
+                    nav.style.width = '';
+                    nav.style.maxWidth = '';
+                    nav.style.height = '';
+                    nav.style.minHeight = '';
+                    nav.style.borderRadius = '';
+                    nav.style.borderTop = '';
+                    nav.style.flexDirection = '';
+                    nav.style.justifyContent = '';
+                    nav.style.alignItems = '';
+                    nav.style.padding = '';
+                    nav.style.boxShadow = '';
+                    nav.style.borderRight = '';
+                    nav.style.backdropFilter = '';
+                }
             }
         }
 
