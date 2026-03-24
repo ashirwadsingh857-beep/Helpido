@@ -1086,7 +1086,7 @@
     </div>
 
     <div class="fab-wrapper">
-        <button class="fab-btn" onclick="openModal()">+</button>
+        <button class="fab-btn" onclick="openModal()"><span id="fab-icon">+</span><span id="fab-label" style="display:none; font-size:1rem; font-weight:700;">Ask for Help</span></button>
     </div>
     <nav class="bottom-nav">
         <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><span>🏠</span>
@@ -1206,6 +1206,27 @@
         if (!myPhone || myPhone === "undefined" || myPhone === "null") {
             window.location.replace('/index.html');
         }
+
+        /* =========================================
+           RESPONSIVE: DESKTOP LAYOUT HELPER
+           ========================================= */
+        function applyDesktopLayout() {
+            const isDesktop = window.innerWidth >= 1200;
+            const fabLabel = document.getElementById('fab-label');
+            const fabIcon = document.getElementById('fab-icon');
+            const mainDash = document.getElementById('main-dash');
+
+            if (fabLabel) fabLabel.style.display = isDesktop ? 'inline' : 'none';
+            if (fabIcon) fabIcon.style.display = isDesktop ? 'none' : 'inline';
+
+            // Remove bottom padding so content isn't hidden behind bottom nav on desktop
+            if (mainDash) {
+                mainDash.style.paddingBottom = isDesktop ? '40px' : '';
+            }
+        }
+
+        applyDesktopLayout();
+        window.addEventListener('resize', applyDesktopLayout);
 
         /* =========================================
            1. INITIALIZATION & SOCKET EVENTS
