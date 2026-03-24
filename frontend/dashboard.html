@@ -2033,12 +2033,15 @@
                 const chatInput = document.getElementById('chat-input');
                 const chatInputWrapper = document.getElementById('chat-input-wrapper');
 
-                // --- NEW WEBVIEW KEYBOARD FIX ---
+                // --- NEW WEBVIEW KEYBOARD FIX: Instant Scroll ---
                 if (chatInput) {
                     chatInput.addEventListener('focus', () => {
-                        setTimeout(() => {
-                           if (msgBox) msgBox.scrollTop = msgBox.scrollHeight;
-                        }, 300); // 300ms gives keyboard time to deploy
+                         // Instant scroll to bottom when keyboard opens
+                         if (msgBox) msgBox.scrollTop = msgBox.scrollHeight;
+                         // Secondary check for slow-mounting keyboards
+                         requestAnimationFrame(() => {
+                             if (msgBox) msgBox.scrollTop = msgBox.scrollHeight;
+                         });
                     });
                 }
                 
@@ -3339,6 +3342,47 @@
 
         // Execute every 30 seconds to keep the UI fresh without taxing the CPU
         setInterval(refreshTimeLabels, 30000);
+    </script>
+    <script>
+        function handleViewportChange() {
+            const viewport = window.visualViewport;
+            const keyboardHeight = window.innerHeight - viewport.height;
+            const isKeyboardOpen = keyboardHeight > 100;
+
+            const chatWrapper = document.getElementById('chat-input-wrapper');
+            const chatDrawer = document.querySelector('.chat-drawer');
+            const chatMessages = document.getElementById('chat-messages');
+            const chatModal = document.getElementById('chat-modal');
+
+            if (chatWrapper && chatModal && !chatModal.classList.contains('hidden')) {
+                if (isKeyboardOpen) {
+                    chatWrapper.style.transform = `translateY(-${keyboardHeight}px)`;
+                    if (chatDrawer) chatDrawer.style.maxHeight = `${viewport.height - 60}px`;
+                } else {
+                    chatWrapper.style.transform = 'translateY(0)';
+                    if (chatDrawer) chatDrawer.style.maxHeight = '85vh';
+                }
+                if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            const createModal = document.getElementById('create-modal');
+            if (createModal && !createModal.classList.contains('hidden')) {
+                const modalContent = createModal.querySelector('.modal-content');
+                if (modalContent) {
+                    if (isKeyboardOpen) {
+                        const offset = Math.max(0, keyboardHeight / 2);
+                        modalContent.style.transform = `translateY(-${offset}px) scale(1)`;
+                    } else {
+                        modalContent.style.transform = 'translateY(0) scale(1)';
+                    }
+                }
+            }
+        }
+
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', handleViewportChange);
+            window.visualViewport.addEventListener('scroll', handleViewportChange);
+        }
     </script>
 </body>
 
