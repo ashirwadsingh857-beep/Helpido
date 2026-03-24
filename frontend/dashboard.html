@@ -222,9 +222,77 @@
             padding: 16px;
             margin-bottom: 16px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+            transition: transform 0.1s ease-out, opacity 0.1s ease-out, box-shadow 0.2s, border-radius 0.2s;
             transform-origin: center center;
             will-change: transform, opacity;
+            position: relative;
+            z-index: 1;
+            cursor: pointer;
+        }
+
+        /* EXPANDABLE CARDS CSS */
+        .task-card.expanded {
+            z-index: 100;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .expanded-drop-panel {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: #fff;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 16px 24px rgba(0, 0, 0, 0.12);
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+            transform: translateY(-8px);
+            transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
+                        opacity 0.25s ease, 
+                        transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 99;
+            cursor: default; /* Prevent pointer cursor in content area */
+        }
+        
+        .dark-mode .expanded-drop-panel {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-top: none;
+            box-shadow: 0 16px 24px rgba(0,0,0,0.5);
+            width: calc(100% + 2px);
+            left: -1px;
+        }
+
+        .task-card.expanded .expanded-drop-panel {
+            max-height: 500px;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .drop-panel-content {
+            padding: 12px 16px 20px 16px;
+            border-top: 1px dashed #eee;
+        }
+
+        .dark-mode .drop-panel-content {
+            border-top-color: #444;
+        }
+
+        .card-glass-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: transparent;
+            z-index: 90;
+            display: none;
+        }
+        .card-glass-overlay.active {
+            display: block;
         }
 
         .skeleton-card {
@@ -1448,6 +1516,37 @@
         window.addEventListener('resize', applyDesktopLayout);
 
         /* =========================================
+           EXPANDABLE CARD HELPER
+           ========================================= */
+        function toggleCardExpansion(cardEl, event) {
+            // Prevent expansion if clicking a button or menu inside the card
+            if (event && event.target.closest('button, .menu-btn, .dropdown-menu, .accept-btn, .btn')) {
+                return;
+            }
+
+            const overlay = document.getElementById('card-glass-overlay');
+            const isCurrentlyExpanded = cardEl.classList.contains('expanded');
+
+            // Close all currently expanded cards
+            document.querySelectorAll('.task-card.expanded').forEach(c => c.classList.remove('expanded'));
+
+            if (!isCurrentlyExpanded) {
+                // Expand this card
+                cardEl.classList.add('expanded');
+                if (overlay) overlay.classList.add('active');
+            } else {
+                // If it was already expanded, we just closed it above. Hide overlay.
+                if (overlay) overlay.classList.remove('active');
+            }
+        }
+
+        function closeAllExpandedCards() {
+            document.querySelectorAll('.task-card.expanded').forEach(c => c.classList.remove('expanded'));
+            const overlay = document.getElementById('card-glass-overlay');
+            if (overlay) overlay.classList.remove('active');
+        }
+
+        /* =========================================
            1. INITIALIZATION & SOCKET EVENTS
            ========================================= */
         window.onload = () => {
@@ -1932,7 +2031,7 @@
                         const breatheClass = isNew ? 'new-attention-border' : '';
 
                         return `
-    <div class="task-card ${breatheClass}" id="feed-card-${task._id}" style="${animStyle}">
+    <div class="task-card ${breatheClass}" id="feed-card-${task._id}" style="${animStyle}" onclick="toggleCardExpansion(this, event)">
         <div class="task-top" style="align-items: flex-start;">
             <div style="flex: 1;">
                 <div style="display: flex; align-items: center; gap: 8px;">
@@ -1955,17 +2054,22 @@
             </div>
         </div>
         
-        <p class="task-desc" style="margin-top: 12px; margin-bottom: 12px;">${task.description}</p>
-        
-        <div style="background: #f5f5f5; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; border-left: 3px solid #FF5722;">
-            <p id="poster-name-${task._id}" style="margin: 0; font-size: 0.9rem; font-weight: 600; color: #333;">👤 Loading name...</p>
-        </div>
-        
-        <p class="task-desc" style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-            <span class="status-badge status-${task.status}">${task.status}</span>
-        </p>
-        <div class="task-bottom" style="justify-content: flex-end;">
-            <button class="accept-btn" onclick="acceptTask('${task._id}')" style="width: 100%;">I can do it</button>
+        <!-- Dropdown panel that expands on click -->
+        <div class="expanded-drop-panel">
+            <div class="drop-panel-content">
+                <p class="task-desc" style="margin-top: 0; margin-bottom: 12px; font-size: 0.95rem; line-height: 1.5; color: var(--text-dark);">${task.description}</p>
+                
+                <div style="background: #f5f5f5; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; border-left: 3px solid #FF5722;">
+                    <p id="poster-name-${task._id}" style="margin: 0; font-size: 0.9rem; font-weight: 600; color: #333;">👤 Loading name...</p>
+                </div>
+                
+                <p class="task-desc" style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                    <span class="status-badge status-${task.status}">${task.status}</span>
+                </p>
+                <div class="task-bottom" style="justify-content: flex-end; margin-top: 16px;">
+                    <button class="accept-btn" onclick="acceptTask('${task._id}')" style="width: 100%;">I can do it</button>
+                </div>
+            </div>
         </div>
     </div>                        `;
                     }).join('');
@@ -2089,28 +2193,37 @@
 
                         //   My request card has a fixed orange border normally
                         return `
-<div class="task-card ${breatherClass}" id="req-card-${task._id}" style="border-left: 4px solid #FF5722; ${animStyle}">
+<div class="task-card ${breatherClass}" id="req-card-${task._id}" style="border-left: 4px solid #FF5722; ${animStyle}" onclick="toggleCardExpansion(this, event)">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
                 <h4 style="margin:0;">${task.title} <span style="font-size:0.8rem; color:gray; font-weight:normal;">(₹${task.reward})</span></h4>
-<p class="time-ago-label" 
-               data-timestamp="${task.createdAt}" 
-               data-prefix="Uploaded"
-               style="font-size: 0.72rem; color: #888; margin-top: 2px;">
-               Uploaded ${timeAgo(task.createdAt)}
-            </p>            
+                <p class="time-ago-label" 
+                   data-timestamp="${task.createdAt}" 
+                   data-prefix="Uploaded"
+                   style="font-size: 0.72rem; color: #888; margin-top: 2px;">
+                   Uploaded ${timeAgo(task.createdAt)}
+                </p>            
             </div>
-            <button class="menu-btn" onclick="toggleMenu('menu-req-${task._id}', event)">⋮</button>
-            <div id="menu-req-${task._id}" class="dropdown-menu">
-                <button class="dropdown-item danger" onclick="deleteMyTask('${task._id}')">Delete Request</button>
+            <div style="position: relative;">
+                <button class="menu-btn" onclick="toggleMenu('menu-req-${task._id}', event)">⋮</button>
+                <div id="menu-req-${task._id}" class="dropdown-menu">
+                    <button class="dropdown-item danger" onclick="deleteMyTask('${task._id}')">Delete Request</button>
+                </div>
             </div>
         </div>
-        <div style="margin-bottom: 8px;">
+        <div style="margin-bottom: 8px; margin-top: 8px;">
             <span class="status-badge status-${task.status}">${task.status}</span>
         </div>
-        ${helperInfoHtml}
-        ${chatBtn}
-        ${markDoneBtn}
+        
+        <!-- Dropdown panel that expands on click -->
+        <div class="expanded-drop-panel">
+            <div class="drop-panel-content">
+                <p class="task-desc" style="margin-top: 0; margin-bottom: 12px; font-size: 0.95rem; line-height: 1.5; color: var(--text-dark);">${task.description}</p>
+                ${helperInfoHtml}
+                ${chatBtn}
+                ${markDoneBtn}
+            </div>
+        </div>
     </div>                        `;
                     }).join('');
 
@@ -2151,7 +2264,7 @@
 
                         const isCompleted = task.status === 'completed';
                         return `
-<div class="task-card ${breatherClass}" id="job-card-${task._id}" style="border-left: 4px solid ${isCompleted ? '#9C27B0' : '#2E7D32'}; ${task.isPrioritized && !isCompleted ? 'background-color: #FFFDE7;' : ''} ${isCompleted ? 'background-color:#F3E5F5;' : ''} ${animStyle}">
+<div class="task-card ${breatherClass}" id="job-card-${task._id}" style="border-left: 4px solid ${isCompleted ? '#9C27B0' : '#2E7D32'}; ${task.isPrioritized && !isCompleted ? 'background-color: #FFFDE7;' : ''} ${isCompleted ? 'background-color:#F3E5F5;' : ''} ${animStyle}" onclick="toggleCardExpansion(this, event)">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
                 <h4 style="margin:0;">${task.title} ${task.isPrioritized && !isCompleted ? '<span style="color:#F57F17; font-size:0.8rem; margin-left:6px;">★ Priority</span>' : ''}</h4>
@@ -2162,21 +2275,30 @@
                 ${isCompleted ? '✅ Completed' : 'Accepted ' + timeAgo(task.updatedAt) + ' — Do it ASAP! 🚀'}
             </p>
             </div>
-            ${isCompleted ? '' : `<button class="menu-btn" onclick="toggleMenu('menu-job-${task._id}', event)">⋮</button>
+            ${isCompleted ? '' : `<div style="position: relative;">
+                <button class="menu-btn" onclick="toggleMenu('menu-job-${task._id}', event)">⋮</button>
             <div id="menu-job-${task._id}" class="dropdown-menu">
                 <button class="dropdown-item" onclick="prioritizeJob('${task._id}')">${task.isPrioritized ? 'Remove Priority' : 'Mark as Priority'}</button>
                 <button class="dropdown-item danger" onclick="removeJob('${task._id}')">Drop Task</button>
+            </div>
             </div>`}
         </div>
-        <div style="background:${isCompleted ? '#EDE7F6' : '#e3f2fd'}; padding:8px 12px; border-radius:8px; margin-bottom:10px; font-size:0.85rem; color:${isCompleted ? '#6A1B9A' : '#1565C0'}; font-weight:600;" id="poster-name-job-${task._id}">${isCompleted ? '🌟 Task marked done by poster' : '👤 Loading poster name...'}</div>
-        ${isCompleted
-                                ? `<div style="background:#EDE7F6; color:#6A1B9A; border-radius:8px; padding:10px 14px; font-size:0.9rem; font-weight:700; text-align:center;">🎉 Task Completed! This will be removed shortly.</div>`
-                                : task.helperMarkedDone
-                                    ? `<button class="btn" style="width:100%; margin:8px 0 0; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.postedBy}')">💬 Chat</button>
-                   <div id="helper-waiting-${task._id}" style="margin-top:8px; background:#FFF3E0; border:1px solid #FFE0B2; border-radius:10px; padding:12px 14px; font-size:0.88rem; color:#E65100; font-weight:600; text-align:center;">⏳ Waiting for poster to confirm...</div>`
-                                    : `<button class="btn" style="width:100%; margin:8px 0 0; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.postedBy}')">💬 Chat</button>
-                   <button class="btn" id="helper-done-btn-${task._id}" style="width:100%; margin-top:8px; background-color:#4CAF50;" onclick="helperMarkDone('${task._id}')">✅ Mark as Done</button>`
-                            }
+        
+        <!-- Dropdown panel that expands on click -->
+        <div class="expanded-drop-panel">
+            <div class="drop-panel-content">
+                <p class="task-desc" style="margin-top: 0; margin-bottom: 12px; font-size: 0.95rem; line-height: 1.5; color: var(--text-dark);">${task.description || ''}</p>
+                <div style="background:${isCompleted ? '#EDE7F6' : '#e3f2fd'}; padding:8px 12px; border-radius:8px; margin-bottom:10px; font-size:0.85rem; color:${isCompleted ? '#6A1B9A' : '#1565C0'}; font-weight:600;" id="poster-name-job-${task._id}">${isCompleted ? '🌟 Task marked done by poster' : '👤 Loading poster name...'}</div>
+                ${isCompleted
+                                        ? `<div style="background:#EDE7F6; color:#6A1B9A; border-radius:8px; padding:10px 14px; font-size:0.9rem; font-weight:700; text-align:center;">🎉 Task Completed! This will be removed shortly.</div>`
+                                        : task.helperMarkedDone
+                                            ? `<button class="btn" style="width:100%; margin:8px 0 0; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.postedBy}')">💬 Chat</button>
+                           <div id="helper-waiting-${task._id}" style="margin-top:8px; background:#FFF3E0; border:1px solid #FFE0B2; border-radius:10px; padding:12px 14px; font-size:0.88rem; color:#E65100; font-weight:600; text-align:center;">⏳ Waiting for poster to confirm...</div>`
+                                            : `<button class="btn" style="width:100%; margin:8px 0 0; background-color:#2196F3;" onclick="openChat('${task._id}', '${task.postedBy}')">💬 Chat</button>
+                           <button class="btn" id="helper-done-btn-${task._id}" style="width:100%; margin-top:8px; background-color:#4CAF50;" onclick="helperMarkDone('${task._id}')">✅ Mark as Done</button>`
+                                    }
+            </div>
+        </div>
     </div>                        `;
                     }).join('');
 
@@ -3523,6 +3645,9 @@
             window.visualViewport.addEventListener('scroll', handleViewportChange);
         }
     </script>
+    
+    <!-- ===== GLOBAL OVERLAY FOR EXPANDED CARDS ===== -->
+    <div id="card-glass-overlay" class="card-glass-overlay" onclick="closeAllExpandedCards()"></div>
 </body>
 
 </html>
