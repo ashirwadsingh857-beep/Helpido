@@ -3354,26 +3354,45 @@
             const chatMessages = document.getElementById('chat-messages');
             const chatModal = document.getElementById('chat-modal');
 
+            // 1. CHAT WINDOW OPTIMIZATION
             if (chatWrapper && chatModal && !chatModal.classList.contains('hidden')) {
+                // FORCE: Disable transitions to prevent jitter/lagging behind the keyboard
+                if (chatDrawer) chatDrawer.style.transition = 'none';
+                chatWrapper.style.transition = 'none';
+
                 if (isKeyboardOpen) {
+                    // Push the input exactly above the keyboard
                     chatWrapper.style.transform = `translateY(-${keyboardHeight}px)`;
-                    if (chatDrawer) chatDrawer.style.maxHeight = `${viewport.height - 60}px`;
+                    // Hard-set height to prevent "vh" jumps
+                    if (chatDrawer) {
+                        chatDrawer.style.maxHeight = `${viewport.height - 20}px`;
+                        chatDrawer.style.height = `${viewport.height - 20}px`;
+                    }
                 } else {
                     chatWrapper.style.transform = 'translateY(0)';
-                    if (chatDrawer) chatDrawer.style.maxHeight = '85vh';
+                    if (chatDrawer) {
+                        chatDrawer.style.transition = 'transform 0.4s cubic-bezier(0.32, 1.15, 0.25, 1)';
+                        chatDrawer.style.maxHeight = '85vh';
+                        chatDrawer.style.height = 'auto';
+                    }
+                    chatWrapper.style.transition = 'background 0.2s ease';
                 }
                 if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
             }
 
+            // 2. CREATE MODAL (ASK FOR HELP) OPTIMIZATION
             const createModal = document.getElementById('create-modal');
             if (createModal && !createModal.classList.contains('hidden')) {
                 const modalContent = createModal.querySelector('.modal-content');
                 if (modalContent) {
+                    modalContent.style.transition = 'none';
                     if (isKeyboardOpen) {
                         const offset = Math.max(0, keyboardHeight / 2);
                         modalContent.style.transform = `translateY(-${offset}px) scale(1)`;
                     } else {
                         modalContent.style.transform = 'translateY(0) scale(1)';
+                        // Restore transition when keyboard is closed
+                        modalContent.style.transition = 'transform 0.4s cubic-bezier(0.32, 1.15, 0.25, 1)';
                     }
                 }
             }
