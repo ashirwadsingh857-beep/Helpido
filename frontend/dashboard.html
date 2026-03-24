@@ -786,6 +786,181 @@
         }
 
         /* cyan-blue, same as WhatsApp */
+
+        /* ==========================================================
+           RESPONSIVE OVERRIDES — DESKTOP SIDEBAR (must be here to
+           override the !important rules above with equal specificity)
+           ========================================================== */
+        @media (min-width: 1200px) {
+            .bottom-nav {
+                /* Reset float-pill position to full-height left sidebar */
+                left: 0 !important;
+                right: auto !important;
+                top: 0 !important;
+                bottom: 0 !important;
+                transform: none !important;
+                width: 240px !important;
+                max-width: 240px !important;
+                height: 100vh !important;
+                min-height: 100vh !important;
+                border-radius: 0 !important;
+                border-top: none !important;
+                border-right: 1px solid var(--border-color) !important;
+                box-shadow: 2px 0 20px rgba(0,0,0,0.05) !important;
+                background: var(--nav-bg) !important;
+                backdrop-filter: blur(20px) !important;
+                -webkit-backdrop-filter: blur(20px) !important;
+                flex-direction: column !important;
+                justify-content: flex-start !important;
+                align-items: stretch !important;
+                padding: 80px 16px 100px 16px !important;
+                gap: 4px;
+            }
+
+            /* Sidebar brand name */
+            .bottom-nav::before {
+                content: "Helpido";
+                display: block;
+                position: absolute;
+                top: 28px;
+                left: 24px;
+                font-size: 1.6rem;
+                font-weight: 800;
+                color: var(--primary-color, #FF5722);
+                letter-spacing: -1px;
+                pointer-events: none;
+            }
+
+            .nav-item {
+                flex-direction: row !important;
+                justify-content: flex-start !important;
+                align-items: center !important;
+                gap: 14px !important;
+                padding: 13px 16px !important;
+                border-radius: 12px !important;
+                width: 100% !important;
+                font-size: 0.97rem;
+                color: var(--text-secondary, #5F6368);
+            }
+
+            .nav-item span {
+                font-size: 1.25rem !important;
+                margin-bottom: 0 !important;
+                background: none !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+            }
+
+            .nav-item p {
+                font-size: 0.95rem !important;
+                font-weight: 500;
+                display: block !important;
+                margin: 0 !important;
+                color: inherit;
+            }
+
+            .nav-item.active {
+                background: rgba(255,87,34,0.1) !important;
+                transform: none !important;
+                color: var(--primary-color, #FF5722) !important;
+            }
+
+            .nav-item.active span {
+                background: none !important;
+                padding: 0 !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                margin-bottom: 0 !important;
+            }
+
+            /* Main content offset */
+            #main-dash.app-container {
+                margin-left: 240px;
+                max-width: calc(100vw - 240px);
+            }
+
+            /* FAB moves to sidebar area */
+            .fab-wrapper {
+                position: fixed !important;
+                bottom: 24px !important;
+                left: 16px !important;
+                right: auto !important;
+                width: 208px !important;
+                height: 52px !important;
+            }
+
+            .fab-btn {
+                border-radius: 16px !important;
+                font-size: 1rem !important;
+                width: 100% !important;
+                height: 100% !important;
+            }
+
+            /* Remove pulsing rings on desktop FAB (they look odd on a pill) */
+            .fab-btn::before, .fab-btn::after {
+                display: none !important;
+                animation: none !important;
+            }
+
+            /* Chat as centered dialog */
+            .chat-overlay {
+                justify-content: center !important;
+                align-items: center !important;
+            }
+            .chat-drawer {
+                transform: scale(0.9) !important;
+                max-width: 600px !important;
+                width: 90% !important;
+                max-height: 80vh !important;
+                border-radius: 20px !important;
+                height: auto !important;
+                transition: transform 0.35s cubic-bezier(0.32, 1.15, 0.25, 1) !important;
+            }
+            .chat-overlay.active .chat-drawer {
+                transform: scale(1) !important;
+            }
+
+            /* History drawer as centered dialog */
+            #history-modal.chat-overlay {
+                justify-content: center !important;
+                align-items: center !important;
+            }
+            #history-modal .chat-drawer {
+                max-width: 640px !important;
+                width: 90% !important;
+                height: 85vh !important;
+                max-height: 85vh !important;
+                border-radius: 20px !important;
+                transform: scale(0.9) !important;
+            }
+            #history-modal.active .chat-drawer {
+                transform: scale(1) !important;
+            }
+
+            /* History button */
+            #history-btn-container {
+                left: 260px !important;
+                transform: none !important;
+                width: auto !important;
+                max-width: 400px !important;
+            }
+
+            /* 2-column task grid */
+            #task-feed {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 20px !important;
+            }
+            #my-requests-feed,
+            #my-jobs-feed {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 16px !important;
+            }
+            .task-card {
+                margin-bottom: 0 !important;
+            }
+        }
     </style>
 </head>
 
