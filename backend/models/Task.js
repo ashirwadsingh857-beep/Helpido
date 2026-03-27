@@ -10,6 +10,9 @@ const taskSchema = new mongoose.Schema({
     helperMarkedDone: { type: Boolean, default: false },
     isPrioritized: { type: Boolean, default: false },
 
+    // Optional compressed Base64 image attached to the task
+    imageData: { type: String, default: null },
+
     // NEW: Geospatial Location Data for Radius Filtering
     location: {
         type: { type: String, enum: ['Point'], default: 'Point' },

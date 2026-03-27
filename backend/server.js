@@ -404,15 +404,15 @@ app.post('/api/users/location', async (req, res) => {
 /* ---------------- TASK ROUTES ---------------- */
 app.post('/api/tasks', async (req, res) => {
     // Extract the new lat and lng from the request
-    const { title, description, postedBy, reward, lat, lng } = req.body;
+    const { title, description, postedBy, reward, lat, lng, imageData } = req.body;
 
     try {
-        // --- NEW: ASSEMBLE GEOJSON LOCATION ---
         const newTask = new Task({
             title,
             description,
             postedBy,
             reward,
+            imageData: imageData || null,
             location: {
                 type: 'Point',
                 // CRITICAL: MongoDB requires [Longitude, Latitude] order

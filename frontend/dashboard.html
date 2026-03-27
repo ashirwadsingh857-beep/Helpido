@@ -1204,7 +1204,18 @@
             <input type="text" id="task-title" placeholder="What do you need?" required>
             <textarea id="task-desc" rows="3" placeholder="Provide some details..." required></textarea>
             <input type="number" id="task-reward" placeholder="Reward amount (₹)" required>
-            <div class="modal-actions" style="display: flex; justify-content: space-between; margin-top: 10px;">
+
+            <!-- IMAGE UPLOAD ROW -->
+            <input type="file" id="task-image-input" accept="image/*" style="display:none" onchange="handleImageSelected(this)">
+            <div id="image-preview-container" style="display:none; position:relative; margin-top:10px; margin-bottom:4px;">
+                <img id="image-preview-thumb" src="" style="width:100%; max-height:180px; object-fit:cover; border-radius:12px; display:block;">
+                <button onclick="removeSelectedImage()" style="position:absolute; top:6px; right:6px; background:rgba(0,0,0,0.55); color:#fff; border:none; border-radius:50%; width:28px; height:28px; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1;">✕</button>
+            </div>
+            <button type="button" id="image-picker-btn" onclick="document.getElementById('task-image-input').click()" style="width:100%; margin-top:10px; background:var(--bg-input,#F0F0F0); color:var(--text-secondary,#5F6368); border:1.5px dashed #ccc; border-radius:10px; padding:11px; font-size:0.92rem; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                📷 Add a Photo <span style="font-weight:400; font-size:0.82rem;">(optional)</span>
+            </button>
+
+            <div class="modal-actions" style="display: flex; justify-content: space-between; margin-top: 14px;">
                 <button class="text-btn" onclick="closeModal()" style="color: var(--text-secondary);">Cancel</button>
                 <button class="btn" onclick="postHelpRequest()" style="width: auto; padding: 10px 20px;">Post
                     Request</button>
@@ -1431,6 +1442,7 @@
         let userLng = null;
         let activeTab = 'home';
         let notifTimeout = null;
+        let imageDataBase64 = null; // stores compressed base64 of selected image
 
         let globalSocket = null;
         let currentChatTaskId = null;
@@ -2048,6 +2060,7 @@
         
         <div class="expandable-description">
             <p class="task-desc" style="margin-top: 0; margin-bottom: 0; font-size: 0.95rem; line-height: 1.5; color: var(--text-dark);">${task.description}</p>
+            ${task.imageData ? `<img src="${task.imageData}" style="width:100%; border-radius:12px; margin-top:12px; object-fit:cover; max-height:260px; display:block;">` : ''}
         </div>
         
         <div class="task-bottom-actions" style="margin-top: 12px;">
@@ -2208,6 +2221,7 @@
         
         <div class="expandable-description">
             <p class="task-desc" style="margin-top: 0; margin-bottom: 0px; font-size: 0.95rem; line-height: 1.5; color: var(--text-dark);">${task.description}</p>
+            ${task.imageData ? `<img src="${task.imageData}" style="width:100%; border-radius:12px; margin-top:12px; object-fit:cover; max-height:260px; display:block;">` : ''}
         </div>
         
         <div class="task-bottom-actions" style="margin-top: 12px;">
@@ -2279,6 +2293,7 @@
         
         <div class="expandable-description">
             <p class="task-desc" style="margin-top: 0; margin-bottom: 0px; font-size: 0.95rem; line-height: 1.5; color: var(--text-dark);">${task.description || ''}</p>
+            ${task.imageData ? `<img src="${task.imageData}" style="width:100%; border-radius:12px; margin-top:12px; object-fit:cover; max-height:260px; display:block;">` : ''}
         </div>
         
         <div class="task-bottom-actions" style="margin-top: 12px;">
@@ -2896,8 +2911,8 @@
         }
 
         async function postHelpRequest() {
-            const title = document.getElementById('task-title').value;
-            const description = document.getElementById('task-desc').value;
+            const title = document.getElementById('task-title').value.trim();
+            const description = document.getElementById('task-desc').value.trim();
             const reward = parseInt(document.getElementById('task-reward').value) || 0;
 
             if (!title || !description) return showAppNotification("Please fill all fields!", "error");
@@ -2909,6 +2924,11 @@
                 });
             }
 
+            const postBtn = document.querySelector('#create-modal .btn');
+            const origText = postBtn.innerText;
+            postBtn.innerText = 'Posting...';
+            postBtn.disabled = true;
+
             const res = await fetch(`${API_URL}/tasks`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -2917,11 +2937,14 @@
                     description,
                     postedBy: myPhone,
                     reward,
-                    // NEW: Append the exact GPS coordinates
                     lat: userLat,
-                    lng: userLng
+                    lng: userLng,
+                    imageData: imageDataBase64 || null
                 })
             });
+
+            postBtn.innerText = origText;
+            postBtn.disabled = false;
 
             if (res.ok) {
                 closeModal();
@@ -2954,6 +2977,59 @@
             document.body.classList.remove('no-scroll');
             document.documentElement.classList.remove('no-scroll');
             document.getElementById('create-modal').classList.add('hidden');
+            // Reset image state
+            imageDataBase64 = null;
+            const previewContainer = document.getElementById('image-preview-container');
+            if (previewContainer) previewContainer.style.display = 'none';
+            const pickerBtn = document.getElementById('image-picker-btn');
+            if (pickerBtn) pickerBtn.style.display = 'flex';
+            const fileInput = document.getElementById('task-image-input');
+            if (fileInput) fileInput.value = '';
+        }
+
+        // --- IMAGE COMPRESSION: Canvas API ---
+        function compressImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const MAX_W = 720;
+                        const scale = img.width > MAX_W ? MAX_W / img.width : 1;
+                        const canvas = document.createElement('canvas');
+                        canvas.width = Math.round(img.width * scale);
+                        canvas.height = Math.round(img.height * scale);
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.45));
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function handleImageSelected(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const pickerBtn = document.getElementById('image-picker-btn');
+            if (pickerBtn) { pickerBtn.innerText = 'Compressing...'; pickerBtn.disabled = true; }
+            imageDataBase64 = await compressImage(file);
+            const thumb = document.getElementById('image-preview-thumb');
+            const container = document.getElementById('image-preview-container');
+            if (thumb) thumb.src = imageDataBase64;
+            if (container) container.style.display = 'block';
+            if (pickerBtn) { pickerBtn.style.display = 'none'; pickerBtn.disabled = false; }
+        }
+
+        function removeSelectedImage() {
+            imageDataBase64 = null;
+            const container = document.getElementById('image-preview-container');
+            if (container) container.style.display = 'none';
+            const pickerBtn = document.getElementById('image-picker-btn');
+            if (pickerBtn) { pickerBtn.style.display = 'flex'; pickerBtn.innerText = '📷 Add a Photo (optional)'; }
+            const fileInput = document.getElementById('task-image-input');
+            if (fileInput) fileInput.value = '';
         }
         function logout() { localStorage.removeItem('helpido_phone'); window.location.href = 'index.html'; }
 
