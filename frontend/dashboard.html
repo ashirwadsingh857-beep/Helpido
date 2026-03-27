@@ -233,21 +233,15 @@
         /* EXPANDABLE CARDS CSS */
         .task-card-wrapper {
             position: relative;
-            margin-bottom: 16px;
+            margin-bottom: 0;
             width: 100%;
-            /* Transitions for smooth collapse */
-            transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        /* Expanded card stays IN document flow — siblings are pushed down naturally */
         .task-card.expanded {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 100 !important;
-            margin-bottom: 0;
+            position: relative;
+            z-index: 2;
             box-shadow: 0 16px 32px rgba(0, 0, 0, 0.15) !important;
-            /* Height animates naturally because it's absolute */
         }
         
         .dark-mode .task-card.expanded {
