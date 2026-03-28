@@ -252,16 +252,14 @@
         /* --- IN-APP CAMERA VIEWFINDER ANIMATION --- */
         #img-state-camera {
             max-height: 0;
-            opacity: 0;
             overflow: hidden;
             margin-top: 0;
+            display: none; /* Hidden by default to prevent ghost space */
             transition: max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1),
-                        opacity 0.3s ease,
                         margin-top 0.3s ease;
         }
         #img-state-camera.active {
-            max-height: 320px;
-            opacity: 1;
+            max-height: 350px;
             margin-top: 10px;
         }
         #image-preview-container {
@@ -1235,7 +1233,7 @@
             </div>
 
             <!-- State B: In-app camera stream (animates via CSS class) -->
-            <div id="img-state-camera">
+            <div id="img-state-camera" style="display:none;">
                 <div style="position:relative; border-radius:12px; overflow:hidden;">
                     <video id="img-camera-stream" playsinline autoplay muted style="width:100%; max-height:210px; object-fit:cover; display:block; opacity:0; transition:opacity 0.3s ease;"></video>
                 </div>
@@ -3054,9 +3052,20 @@
             const choice  = document.getElementById('img-state-choice');
             const camera  = document.getElementById('img-state-camera');
             const preview = document.getElementById('image-preview-container');
-            if (choice)  choice.style.display  = state === 'choice'  ? 'flex'  : 'none';
-            // Camera uses CSS class so the max-height animation fires
-            if (camera)  camera.classList.toggle('active', state === 'camera');
+            
+            if (choice) choice.style.display = state === 'choice' ? 'flex' : 'none';
+            
+            if (camera) {
+                if (state === 'camera') {
+                    camera.style.display = 'block';
+                    // setTimeout ensures CSS transition runs after display:block
+                    setTimeout(() => camera.classList.add('active'), 10);
+                } else {
+                    camera.classList.remove('active');
+                    camera.style.display = 'none'; // Instant hide prevents overlapping UI
+                }
+            }
+            
             if (preview) preview.style.display = state === 'preview' ? 'block' : 'none';
         }
 
@@ -3065,6 +3074,12 @@
                 showAppNotification('Camera not available in this browser. Try Gallery.', 'error');
                 return;
             }
+
+            const btnChoice = document.getElementById('img-state-choice').querySelector('button');
+            const oldText = btnChoice.innerText;
+            btnChoice.innerText = 'Opening...';
+            btnChoice.disabled = true;
+
             try {
                 _cameraStream = await navigator.mediaDevices.getUserMedia({
                     video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } },
@@ -3074,11 +3089,16 @@
                 if (video) {
                     video.style.opacity = '0'; // hidden until stream is rendering
                     video.srcObject = _cameraStream;
-                    video.onloadedmetadata = () => { video.style.opacity = '1'; }; // smooth fade-in
+                    video.onloadedmetadata = () => { 
+                        video.style.opacity = '1'; // smooth fade-in
+                        _imgShowState('camera'); // Expand container ONLY when ready
+                    };
                 }
-                _imgShowState('camera');
             } catch (err) {
                 showAppNotification('Could not access camera: ' + err.message, 'error');
+            } finally {
+                btnChoice.innerText = oldText;
+                btnChoice.disabled = false;
             }
         }
 
@@ -3088,8 +3108,8 @@
                 _cameraStream = null;
             }
             const video = document.getElementById('img-camera-stream');
-            if (video) {
-                video.srcObject = null;
+            if (video) { 
+                video.srcObject = null; 
                 video.style.opacity = '0'; // reset so no black frame on retake
             }
             if (backToChoice) _imgShowState('choice');
