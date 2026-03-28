@@ -98,6 +98,47 @@
                 transform: translateY(0);
             }
         }
+
+        /* --- PROFESSIONAL OTP INPUTS --- */
+        .otp-inputs-wrapper {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .otp-box {
+            width: 55px;
+            height: 65px;
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            border: 2px solid #E0E0E0;
+            border-radius: 14px;
+            background: #f9f9f9;
+            color: #FF5722;
+            outline: none;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .otp-box:focus {
+            border-color: #FF5722;
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(255, 87, 34, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .otp-box.filled {
+            border-color: #FF5722;
+            background: #fff;
+        }
+
+        /* Hide HTML5 Arrows */
+        .otp-box::-webkit-inner-spin-button,
+        .otp-box::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
     </style>
 </head>
 
@@ -149,13 +190,18 @@
             </div>
 
             <div id="otp-section" class="form-group" style="display: none;">
-                <p id="otp-message" style="margin-bottom:15px; color:#555; font-size:0.95rem; line-height:1.4;"></p>
-                <input type="number" id="otp-input" class="input-field" placeholder="Enter 4-digit OTP"
-                    oninput="this.value = this.value.slice(0, 4);">
+                <p id="otp-message" style="margin-bottom:20px; color:#555; font-size:0.95rem; line-height:1.4;"></p>
+                
+                <div class="otp-inputs-wrapper" id="otp-inputs-container">
+                    <input type="tel" class="otp-box" maxlength="1" oninput="handleOtpInput(this, 0)" onkeydown="handleOtpKeydown(this, 0)" autocomplete="one-time-code">
+                    <input type="tel" class="otp-box" maxlength="1" oninput="handleOtpInput(this, 1)" onkeydown="handleOtpKeydown(this, 1)">
+                    <input type="tel" class="otp-box" maxlength="1" oninput="handleOtpInput(this, 2)" onkeydown="handleOtpKeydown(this, 2)">
+                    <input type="tel" class="otp-box" maxlength="1" oninput="handleOtpInput(this, 3)" onkeydown="handleOtpKeydown(this, 3)">
+                </div>
+
                 <div id="otp-error" class="error-text"></div>
                 <button type="button" class="btn" onclick="verifyOTP()">Verify & Enter</button>
-                <button type="button" class="text-btn" onclick="switchMode('login')" style="margin-top:15px;">Change
-                    Number</button>
+                <button type="button" class="text-btn" onclick="switchMode('login')" style="margin-top:15px;">Change Number</button>
             </div>
         </div>
     </main>
@@ -212,11 +258,39 @@
             if (mode === 'signup') document.getElementById('signup-section').style.display = 'block';
             if (mode === 'otp') {
                 document.getElementById('otp-section').style.display = 'block';
-                // Automatically focus OTP input to trigger mobile keyboard
+                // Automatically focus first OTP box to trigger mobile keyboard
                 setTimeout(() => {
-                    const otpInput = document.getElementById('otp-input');
-                    if (otpInput) otpInput.focus();
+                    const firstBox = document.querySelector('.otp-box');
+                    if (firstBox) firstBox.focus();
                 }, 50);
+            }
+        }
+
+        function handleOtpInput(input, index) {
+            // Strip anything not a digit
+            input.value = input.value.replace(/[^0-9]/g, '');
+            
+            if (input.value.length === 1) {
+                input.classList.add('filled');
+                // Move to next box
+                const boxes = document.querySelectorAll('.otp-box');
+                if (index < 3) {
+                    boxes[index + 1].focus();
+                } else {
+                    // Last box filled — trigger auto-verify!
+                    verifyOTP();
+                }
+            } else {
+                input.classList.remove('filled');
+            }
+        }
+
+        function handleOtpKeydown(input, index) {
+            if (event.key === "Backspace" && input.value.length === 0) {
+                const boxes = document.querySelectorAll('.otp-box');
+                if (index > 0) {
+                    boxes[index - 1].focus();
+                }
             }
         }
 
@@ -304,7 +378,10 @@
         async function verifyOTP() {
             clearErrors();
             try {
-                const otp = document.getElementById('otp-input').value;
+                // Aggregate OTP from the 4 digit boxes
+                let otp = "";
+                document.querySelectorAll('.otp-box').forEach(box => otp += box.value);
+
                 const phone = activePhone || document.getElementById('login-phone').value;
 
                 if (!otp || otp.length !== 4) return showError("otp-error", "Please enter the 4-digit code");
