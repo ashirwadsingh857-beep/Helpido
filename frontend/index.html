@@ -193,10 +193,10 @@
                 <p id="otp-message" style="margin-bottom:20px; color:#555; font-size:0.95rem; line-height:1.4;"></p>
                 
                 <div class="otp-inputs-wrapper" id="otp-inputs-container">
-                    <input type="tel" class="otp-box" maxlength="1" oninput="handleOtpInput(this, 0)" onkeydown="handleOtpKeydown(this, 0)" autocomplete="one-time-code">
-                    <input type="tel" class="otp-box" maxlength="1" oninput="handleOtpInput(this, 1)" onkeydown="handleOtpKeydown(this, 1)">
-                    <input type="tel" class="otp-box" maxlength="1" oninput="handleOtpInput(this, 2)" onkeydown="handleOtpKeydown(this, 2)">
-                    <input type="tel" class="otp-box" maxlength="1" oninput="handleOtpInput(this, 3)" onkeydown="handleOtpKeydown(this, 3)">
+                    <input type="tel" class="otp-box" maxlength="1" oninput="handleOtpInput(this, 0)" onkeydown="handleOtpKeydown(this, 0)" onfocus="handleOtpFocus(this, 0)" autocomplete="one-time-code">
+                    <input type="tel" class="otp-box" maxlength="1" oninput="handleOtpInput(this, 1)" onkeydown="handleOtpKeydown(this, 1)" onfocus="handleOtpFocus(this, 1)">
+                    <input type="tel" class="otp-box" maxlength="1" oninput="handleOtpInput(this, 2)" onkeydown="handleOtpKeydown(this, 2)" onfocus="handleOtpFocus(this, 2)">
+                    <input type="tel" class="otp-box" maxlength="1" oninput="handleOtpInput(this, 3)" onkeydown="handleOtpKeydown(this, 3)" onfocus="handleOtpFocus(this, 3)">
                 </div>
 
                 <div id="otp-error" class="error-text"></div>
@@ -291,6 +291,25 @@
                 if (index > 0) {
                     boxes[index - 1].focus();
                 }
+            }
+        }
+
+        function handleOtpFocus(input, index) {
+            const boxes = document.querySelectorAll('.otp-box');
+            
+            // Find the index of the first empty box
+            let firstEmptyIndex = 0;
+            for (let i = 0; i < boxes.length; i++) {
+                if (boxes[i].value === "") {
+                    firstEmptyIndex = i;
+                    break;
+                }
+            }
+
+            // Only force focus if the user clicks an EMPTY box that isn't the current expected one.
+            // If they click a box THAT IS ALREADY FILLED, let them edit it for better UX.
+            if (input.value === "" && index > firstEmptyIndex) {
+                boxes[firstEmptyIndex].focus();
             }
         }
 
