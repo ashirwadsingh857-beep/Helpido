@@ -1411,17 +1411,29 @@ input[type="number"] {
     0% {
         transform: translateX(0);
         opacity: 1;
+        max-height: 1000px;
+        margin-bottom: 16px;
+        padding-top: 20px;
+        padding-bottom: 20px;
+        border-width: 1px;
     }
 
     100% {
         transform: translateX(-120%);
         opacity: 0;
+        max-height: 0;
+        margin-bottom: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        border-width: 0;
     }
 }
 
 .slide-out-left {
     /* We use !important so it overrides the slideIn animation when triggered */
     animation: slideOutLeft 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+    overflow: hidden !important;
+    pointer-events: none;
 }
 
 /* 3. Tab Switching (Soft Fade Up) */
