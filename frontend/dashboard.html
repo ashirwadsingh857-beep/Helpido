@@ -2004,7 +2004,7 @@
                 // 1. Unblur the dashboard FIRST (it animates in behind the splash)
                 if (main) main.classList.add('unblur');
 
-                // 2. Fly the hero greet instantly (reduced 1100ms artificial delay to 100ms for natural feel)
+                // 2. Hold the splash for 1s so the user can see the greeting, then fly it
                 setTimeout(() => {
                     if (!splashGreeting || !targetEl || !splash) {
                         if (splash) splash.classList.add('hide');
@@ -2027,11 +2027,11 @@
                     splashGreeting.style.transform = `translate(${dx}px, ${dy}px) scale(${scaleRatio})`;
                     splashGreeting.style.opacity = '0.85';
 
-                    // 7. Reduce the final fade timeout (680ms -> 300ms) to hide splash near-instantly after landing
+                    // 7. After the text has landed (~700ms), fade the splash overlay away
                     setTimeout(() => {
                         if (splash) splash.classList.add('hide');
-                    }, 300);
-                }, 100);
+                    }, 680);
+                }, 1000);
             }
         }
         // NEW: Global cache to securely store names and prevent API spam
