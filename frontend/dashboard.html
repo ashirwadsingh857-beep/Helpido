@@ -26,10 +26,11 @@
     <title>Helpido | Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-    
+
     <!-- Google Maps API (Placeholder Key, Replace later) -->
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places"></script>
-    
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCtPLgQ_IxRlvYefYJur0NivDyTOTSWpvw&libraries=places"></script>
+
     <style>
         /* --- PREMIUM UI POLISH & ANIMATIONS --- */
         :root {
@@ -148,18 +149,18 @@
             color: #5F6368;
             position: relative;
         }
-        
+
         .nav-item.active {
             color: #FF5722;
             font-weight: 700;
         }
 
         .nav-item.active span {
-             background: #E0F2F1;
-             border-radius: 50%;
-             padding: 8px;
-             box-shadow: 0 4px 10px rgba(0, 229, 255, 0.2);
-             margin-bottom: 4px;
+            background: #E0F2F1;
+            border-radius: 50%;
+            padding: 8px;
+            box-shadow: 0 4px 10px rgba(0, 229, 255, 0.2);
+            margin-bottom: 4px;
         }
 
         /* =========================================
@@ -247,7 +248,7 @@
             z-index: 2;
             box-shadow: 0 16px 32px rgba(0, 0, 0, 0.15) !important;
         }
-        
+
         .dark-mode .task-card.expanded {
             box-shadow: 0 16px 32px rgba(0, 0, 0, 0.6) !important;
             border-color: #555;
@@ -258,14 +259,17 @@
             max-height: 0;
             overflow: hidden;
             margin-top: 0;
-            display: none; /* Hidden by default to prevent ghost space */
+            display: none;
+            /* Hidden by default to prevent ghost space */
             transition: max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1),
-                        margin-top 0.3s ease;
+                margin-top 0.3s ease;
         }
+
         #img-state-camera.active {
             max-height: 350px;
             margin-top: 10px;
         }
+
         #image-preview-container {
             transition: opacity 0.3s ease;
         }
@@ -275,10 +279,10 @@
             opacity: 0;
             overflow: hidden;
             margin: 0;
-            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-                        opacity 0.3s ease, 
-                        margin 0.3s ease,
-                        padding 0.3s ease;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.3s ease,
+                margin 0.3s ease,
+                padding 0.3s ease;
         }
 
         .task-card.expanded .expandable-description {
@@ -303,6 +307,7 @@
             z-index: 90;
             display: none;
         }
+
         .card-glass-overlay.active {
             display: block;
         }
@@ -394,7 +399,8 @@
             max-width: 500px;
             margin: 0 auto;
             height: auto;
-            max-height: 65vh; /* stable unit */
+            max-height: 65vh;
+            /* stable unit */
             border-radius: 24px 24px 0 0;
             display: flex;
             flex-direction: column;
@@ -565,8 +571,6 @@
             position: fixed !important;
             bottom: 115px !important;
             right: 20px !important;
-            width: 60px;
-            height: 60px;
             z-index: 9500 !important;
         }
 
@@ -575,6 +579,7 @@
                 transform: scale(0.8);
                 opacity: 0.8;
             }
+
             100% {
                 transform: scale(1.6);
                 opacity: 0;
@@ -583,9 +588,6 @@
 
         .fab-btn {
             position: relative;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
             background: linear-gradient(135deg, #FF8A00, #FF3D00);
             color: white;
             font-size: 32px;
@@ -596,12 +598,13 @@
             justify-content: center;
             align-items: center;
             -webkit-tap-highlight-color: transparent;
-            transition: transform 0.2s, opacity 0.2s;
+            transition: transform 0.2s, background-color 0.2s, opacity 0.2s;
             z-index: 2;
         }
 
         /* The Concentric Glowing Rings */
-        .fab-btn::before, .fab-btn::after {
+        .fab-btn::before,
+        .fab-btn::after {
             content: '';
             position: absolute;
             top: 0;
@@ -655,50 +658,51 @@
             box-shadow: 0 8px 25px rgba(161, 140, 209, 0.3);
             color: white;
         }
-        
+
         .header-profile-wrap {
             display: flex;
             align-items: center;
             /* Placeholder wrapper, if we need it later */
         }
-        
+
         .header-text h2 {
             margin: 0 0 4px 0;
             font-size: 1.3rem;
             color: white;
             font-weight: 700;
         }
+
         .header-text p {
             margin: 0;
             font-size: 0.85rem;
-            color: rgba(255,255,255,0.9);
+            color: rgba(255, 255, 255, 0.9);
             display: flex;
             align-items: center;
             gap: 4px;
         }
-        
+
         .status-button-premium {
-             background: rgba(0,0,0,0.6) !important;
-             color: white !important;
-             border: 1px solid rgba(255,255,255,0.2) !important;
-             border-radius: 20px !important;
-             padding: 6px 16px !important;
-             font-size: 0.85rem !important;
-             font-weight: 600 !important;
-             backdrop-filter: blur(10px);
-             display: flex;
-             align-items: center;
-             gap: 6px;
-             box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+            background: rgba(0, 0, 0, 0.6) !important;
+            color: white !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            border-radius: 20px !important;
+            padding: 6px 16px !important;
+            font-size: 0.85rem !important;
+            font-weight: 600 !important;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
         }
-        
+
         .status-dot-neon {
-             width: 10px;
-             height: 10px;
-             background-color: #00E676;
-             border-radius: 50%;
-             box-shadow: 0 0 8px #00E676, 0 0 12px #00E676;
-             display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: #00E676;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #00E676, 0 0 12px #00E676;
+            display: inline-block;
         }
 
         .modal-content {
@@ -886,7 +890,7 @@
                 border-radius: 0 !important;
                 border-top: none !important;
                 border-right: 1px solid var(--border-color) !important;
-                box-shadow: 2px 0 20px rgba(0,0,0,0.05) !important;
+                box-shadow: 2px 0 20px rgba(0, 0, 0, 0.05) !important;
                 background: var(--nav-bg) !important;
                 backdrop-filter: blur(20px) !important;
                 -webkit-backdrop-filter: blur(20px) !important;
@@ -940,7 +944,7 @@
             }
 
             .nav-item.active {
-                background: rgba(255,87,34,0.1) !important;
+                background: rgba(255, 87, 34, 0.1) !important;
                 transform: none !important;
                 color: var(--primary-color, #FF5722) !important;
             }
@@ -977,7 +981,8 @@
             }
 
             /* Remove pulsing rings on desktop FAB (they look odd on a pill) */
-            .fab-btn::before, .fab-btn::after {
+            .fab-btn::before,
+            .fab-btn::after {
                 display: none !important;
                 animation: none !important;
             }
@@ -987,6 +992,7 @@
                 justify-content: center !important;
                 align-items: center !important;
             }
+
             .chat-drawer {
                 transform: scale(0.9) !important;
                 max-width: 600px !important;
@@ -996,6 +1002,7 @@
                 height: auto !important;
                 transition: transform 0.35s cubic-bezier(0.32, 1.15, 0.25, 1) !important;
             }
+
             .chat-overlay.active .chat-drawer {
                 transform: scale(1) !important;
             }
@@ -1005,6 +1012,7 @@
                 justify-content: center !important;
                 align-items: center !important;
             }
+
             #history-modal .chat-drawer {
                 max-width: 640px !important;
                 width: 90% !important;
@@ -1013,6 +1021,7 @@
                 border-radius: 20px !important;
                 transform: scale(0.9) !important;
             }
+
             #history-modal.active .chat-drawer {
                 transform: scale(1) !important;
             }
@@ -1031,12 +1040,14 @@
                 grid-template-columns: 1fr 1fr !important;
                 gap: 20px !important;
             }
+
             #my-requests-feed,
             #my-jobs-feed {
                 display: grid !important;
                 grid-template-columns: 1fr 1fr !important;
                 gap: 16px !important;
             }
+
             .task-card {
                 margin-bottom: 0 !important;
             }
@@ -1057,8 +1068,9 @@
                         <h2 id="greeting-name">Hi, Neighbor 👋</h2>
                         <p id="home-address">📍 Local Area</p>
                     </div>
-                    <button id="availability-btn" class="status-btn status-button-premium free" onclick="toggleAvailability()"
-                        style="margin-top: 0; white-space: nowrap;"><span class="status-dot-neon"></span> Free</button>
+                    <button id="availability-btn" class="status-btn status-button-premium free"
+                        onclick="toggleAvailability()" style="margin-top: 0; white-space: nowrap;"><span
+                            class="status-dot-neon"></span> Free</button>
                 </div>
             </header>
             <div style="display: flex; justify-content: space-between; align-items: center; padding-right: 20px;">
@@ -1078,18 +1090,27 @@
                     <div class="task-top" style="align-items: flex-start;">
                         <div style="flex: 1;">
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <div class="skeleton-element" style="width: 60%; height: 22px; border-radius: 4px;"></div>
-                                <div class="skeleton-element" style="width: 55px; height: 18px; border-radius: 12px;"></div>
+                                <div class="skeleton-element" style="width: 60%; height: 22px; border-radius: 4px;">
+                                </div>
+                                <div class="skeleton-element" style="width: 55px; height: 18px; border-radius: 12px;">
+                                </div>
                             </div>
-                            <div class="skeleton-element" style="width: 35%; height: 12px; margin-top: 6px; border-radius: 4px;"></div>
-                            <div class="skeleton-element" style="width: 45px; height: 22px; margin-top: 8px; border-radius: 6px;"></div>
+                            <div class="skeleton-element"
+                                style="width: 35%; height: 12px; margin-top: 6px; border-radius: 4px;"></div>
+                            <div class="skeleton-element"
+                                style="width: 45px; height: 22px; margin-top: 8px; border-radius: 6px;"></div>
                         </div>
                         <div class="skeleton-element" style="width: 14px; height: 20px; border-radius: 2px;"></div>
                     </div>
-                    <div class="skeleton-element" style="width: 100%; height: 14px; margin-top: 16px; border-radius: 4px;"></div>
-                    <div class="skeleton-element" style="width: 80%; height: 14px; margin-top: 8px; border-radius: 4px;"></div>
-                    <div class="skeleton-element" style="width: 40%; height: 14px; margin-top: 8px; margin-bottom: 16px; border-radius: 4px;"></div>
-                    <div class="skeleton-element" style="width: 100%; height: 42px; border-radius: 8px; margin-bottom: 16px;"></div>
+                    <div class="skeleton-element"
+                        style="width: 100%; height: 14px; margin-top: 16px; border-radius: 4px;"></div>
+                    <div class="skeleton-element"
+                        style="width: 80%; height: 14px; margin-top: 8px; border-radius: 4px;"></div>
+                    <div class="skeleton-element"
+                        style="width: 40%; height: 14px; margin-top: 8px; margin-bottom: 16px; border-radius: 4px;">
+                    </div>
+                    <div class="skeleton-element"
+                        style="width: 100%; height: 42px; border-radius: 8px; margin-bottom: 16px;"></div>
                     <div class="task-bottom" style="justify-content: flex-end;">
                         <div class="skeleton-element" style="width: 100%; height: 38px; border-radius: 8px;"></div>
                     </div>
@@ -1098,18 +1119,27 @@
                     <div class="task-top" style="align-items: flex-start;">
                         <div style="flex: 1;">
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <div class="skeleton-element" style="width: 60%; height: 22px; border-radius: 4px;"></div>
-                                <div class="skeleton-element" style="width: 55px; height: 18px; border-radius: 12px;"></div>
+                                <div class="skeleton-element" style="width: 60%; height: 22px; border-radius: 4px;">
+                                </div>
+                                <div class="skeleton-element" style="width: 55px; height: 18px; border-radius: 12px;">
+                                </div>
                             </div>
-                            <div class="skeleton-element" style="width: 35%; height: 12px; margin-top: 6px; border-radius: 4px;"></div>
-                            <div class="skeleton-element" style="width: 45px; height: 22px; margin-top: 8px; border-radius: 6px;"></div>
+                            <div class="skeleton-element"
+                                style="width: 35%; height: 12px; margin-top: 6px; border-radius: 4px;"></div>
+                            <div class="skeleton-element"
+                                style="width: 45px; height: 22px; margin-top: 8px; border-radius: 6px;"></div>
                         </div>
                         <div class="skeleton-element" style="width: 14px; height: 20px; border-radius: 2px;"></div>
                     </div>
-                    <div class="skeleton-element" style="width: 100%; height: 14px; margin-top: 16px; border-radius: 4px;"></div>
-                    <div class="skeleton-element" style="width: 80%; height: 14px; margin-top: 8px; border-radius: 4px;"></div>
-                    <div class="skeleton-element" style="width: 40%; height: 14px; margin-top: 8px; margin-bottom: 16px; border-radius: 4px;"></div>
-                    <div class="skeleton-element" style="width: 100%; height: 42px; border-radius: 8px; margin-bottom: 16px;"></div>
+                    <div class="skeleton-element"
+                        style="width: 100%; height: 14px; margin-top: 16px; border-radius: 4px;"></div>
+                    <div class="skeleton-element"
+                        style="width: 80%; height: 14px; margin-top: 8px; border-radius: 4px;"></div>
+                    <div class="skeleton-element"
+                        style="width: 40%; height: 14px; margin-top: 8px; margin-bottom: 16px; border-radius: 4px;">
+                    </div>
+                    <div class="skeleton-element"
+                        style="width: 100%; height: 42px; border-radius: 8px; margin-bottom: 16px;"></div>
                     <div class="task-bottom" style="justify-content: flex-end;">
                         <div class="skeleton-element" style="width: 100%; height: 38px; border-radius: 8px;"></div>
                     </div>
@@ -1118,18 +1148,27 @@
                     <div class="task-top" style="align-items: flex-start;">
                         <div style="flex: 1;">
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <div class="skeleton-element" style="width: 60%; height: 22px; border-radius: 4px;"></div>
-                                <div class="skeleton-element" style="width: 55px; height: 18px; border-radius: 12px;"></div>
+                                <div class="skeleton-element" style="width: 60%; height: 22px; border-radius: 4px;">
+                                </div>
+                                <div class="skeleton-element" style="width: 55px; height: 18px; border-radius: 12px;">
+                                </div>
                             </div>
-                            <div class="skeleton-element" style="width: 35%; height: 12px; margin-top: 6px; border-radius: 4px;"></div>
-                            <div class="skeleton-element" style="width: 45px; height: 22px; margin-top: 8px; border-radius: 6px;"></div>
+                            <div class="skeleton-element"
+                                style="width: 35%; height: 12px; margin-top: 6px; border-radius: 4px;"></div>
+                            <div class="skeleton-element"
+                                style="width: 45px; height: 22px; margin-top: 8px; border-radius: 6px;"></div>
                         </div>
                         <div class="skeleton-element" style="width: 14px; height: 20px; border-radius: 2px;"></div>
                     </div>
-                    <div class="skeleton-element" style="width: 100%; height: 14px; margin-top: 16px; border-radius: 4px;"></div>
-                    <div class="skeleton-element" style="width: 80%; height: 14px; margin-top: 8px; border-radius: 4px;"></div>
-                    <div class="skeleton-element" style="width: 40%; height: 14px; margin-top: 8px; margin-bottom: 16px; border-radius: 4px;"></div>
-                    <div class="skeleton-element" style="width: 100%; height: 42px; border-radius: 8px; margin-bottom: 16px;"></div>
+                    <div class="skeleton-element"
+                        style="width: 100%; height: 14px; margin-top: 16px; border-radius: 4px;"></div>
+                    <div class="skeleton-element"
+                        style="width: 80%; height: 14px; margin-top: 8px; border-radius: 4px;"></div>
+                    <div class="skeleton-element"
+                        style="width: 40%; height: 14px; margin-top: 8px; margin-bottom: 16px; border-radius: 4px;">
+                    </div>
+                    <div class="skeleton-element"
+                        style="width: 100%; height: 42px; border-radius: 8px; margin-bottom: 16px;"></div>
                     <div class="task-bottom" style="justify-content: flex-end;">
                         <div class="skeleton-element" style="width: 100%; height: 38px; border-radius: 8px;"></div>
                     </div>
@@ -1138,18 +1177,27 @@
                     <div class="task-top" style="align-items: flex-start;">
                         <div style="flex: 1;">
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <div class="skeleton-element" style="width: 60%; height: 22px; border-radius: 4px;"></div>
-                                <div class="skeleton-element" style="width: 55px; height: 18px; border-radius: 12px;"></div>
+                                <div class="skeleton-element" style="width: 60%; height: 22px; border-radius: 4px;">
+                                </div>
+                                <div class="skeleton-element" style="width: 55px; height: 18px; border-radius: 12px;">
+                                </div>
                             </div>
-                            <div class="skeleton-element" style="width: 35%; height: 12px; margin-top: 6px; border-radius: 4px;"></div>
-                            <div class="skeleton-element" style="width: 45px; height: 22px; margin-top: 8px; border-radius: 6px;"></div>
+                            <div class="skeleton-element"
+                                style="width: 35%; height: 12px; margin-top: 6px; border-radius: 4px;"></div>
+                            <div class="skeleton-element"
+                                style="width: 45px; height: 22px; margin-top: 8px; border-radius: 6px;"></div>
                         </div>
                         <div class="skeleton-element" style="width: 14px; height: 20px; border-radius: 2px;"></div>
                     </div>
-                    <div class="skeleton-element" style="width: 100%; height: 14px; margin-top: 16px; border-radius: 4px;"></div>
-                    <div class="skeleton-element" style="width: 80%; height: 14px; margin-top: 8px; border-radius: 4px;"></div>
-                    <div class="skeleton-element" style="width: 40%; height: 14px; margin-top: 8px; margin-bottom: 16px; border-radius: 4px;"></div>
-                    <div class="skeleton-element" style="width: 100%; height: 42px; border-radius: 8px; margin-bottom: 16px;"></div>
+                    <div class="skeleton-element"
+                        style="width: 100%; height: 14px; margin-top: 16px; border-radius: 4px;"></div>
+                    <div class="skeleton-element"
+                        style="width: 80%; height: 14px; margin-top: 8px; border-radius: 4px;"></div>
+                    <div class="skeleton-element"
+                        style="width: 40%; height: 14px; margin-top: 8px; margin-bottom: 16px; border-radius: 4px;">
+                    </div>
+                    <div class="skeleton-element"
+                        style="width: 100%; height: 42px; border-radius: 8px; margin-bottom: 16px;"></div>
                     <div class="task-bottom" style="justify-content: flex-end;">
                         <div class="skeleton-element" style="width: 100%; height: 38px; border-radius: 8px;"></div>
                     </div>
@@ -1192,7 +1240,8 @@
                             Your Helper Rating</p>
                         <div id="profile-star-display" style="font-size:1.8rem; letter-spacing:4px; margin-bottom:4px;">
                             ☆☆☆☆☆</div>
-                        <p id="profile-rating-text" style="font-size:0.9rem; color:var(--rating-card-text); font-weight:600; margin:0;">
+                        <p id="profile-rating-text"
+                            style="font-size:0.9rem; color:var(--rating-card-text); font-weight:600; margin:0;">
                             No ratings yet</p>
                     </div>
 
@@ -1211,7 +1260,8 @@
 
                         <div
                             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                            <span style="font-size: 0.95rem; color: var(--text-primary); font-weight: 500;">New Task Alerts</span>
+                            <span style="font-size: 0.95rem; color: var(--text-primary); font-weight: 500;">New Task
+                                Alerts</span>
                             <label class="switch">
                                 <input type="checkbox" id="toggle-new-tasks"
                                     onchange="updateNotifPref('notifyNewTasks', this.checked)">
@@ -1220,7 +1270,8 @@
                         </div>
 
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="font-size: 0.95rem; color: var(--text-primary); font-weight: 500;">Chat Message Alerts</span>
+                            <span style="font-size: 0.95rem; color: var(--text-primary); font-weight: 500;">Chat Message
+                                Alerts</span>
                             <label class="switch">
                                 <input type="checkbox" id="toggle-chat-msgs"
                                     onchange="updateNotifPref('notifyChatMessages', this.checked)">
@@ -1234,8 +1285,10 @@
                         <div style="display:flex; align-items:center; gap:10px;">
                             <span id="dark-mode-icon" style="font-size:1.3rem;">🌙</span>
                             <div style="text-align:left;">
-                                <p style="margin:0; font-size:0.95rem; font-weight:600; color:var(--text-primary);">Dark Mode</p>
-                                <p style="margin:0; font-size:0.78rem; color:var(--text-secondary);">Switch to a darker look</p>
+                                <p style="margin:0; font-size:0.95rem; font-weight:600; color:var(--text-primary);">Dark
+                                    Mode</p>
+                                <p style="margin:0; font-size:0.78rem; color:var(--text-secondary);">Switch to a darker
+                                    look</p>
                             </div>
                         </div>
                         <label class="switch" style="pointer-events: none;">
@@ -1274,17 +1327,24 @@
     <div id="ride-modal" class="modal-overlay hidden" onclick="if(event.target === this) closeRideModal()">
         <div class="modal-content">
             <h3 style="margin-bottom: 16px; color: var(--text-dark);">🚗 Ask for Ride</h3>
-            
+
             <div style="position: relative; margin-bottom: 12px; display: flex; align-items: center;">
-                <input type="text" id="ride-destination" placeholder="Where to? (Search location)" required style="margin-bottom: 0; flex: 1; padding-right: 40px;">
-                <button type="button" onclick="openMapPicker()" style="position: absolute; right: 5px; background: none; border: none; font-size: 1.4rem; cursor: pointer; padding: 5px;">📍</button>
+                <input type="text" id="ride-destination" placeholder="Where to? (Search location)" required
+                    style="margin-bottom: 0; flex: 1; padding-right: 40px;">
+                <button type="button" onclick="openMapPicker()"
+                    style="position: absolute; right: 5px; background: none; border: none; font-size: 1.4rem; cursor: pointer; padding: 5px;">📍</button>
             </div>
-            
+
             <!-- Hidden Map Container inside the modal (expands when picking) -->
-            <div id="ride-map-container" style="display: none; height: 200px; width: 100%; border-radius: 12px; margin-bottom: 12px; border: 1px solid #ddd; overflow: hidden; position: relative;">
+            <div id="ride-map-container"
+                style="display: none; height: 200px; width: 100%; border-radius: 12px; margin-bottom: 12px; border: 1px solid #ddd; overflow: hidden; position: relative;">
                 <div id="ride-map" style="width: 100%; height: 100%;"></div>
-                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none; font-size: 2rem; color: #D32F2F; text-shadow: 0 2px 4px rgba(0,0,0,0.3); margin-top: -16px;">📍</div>
-                <button type="button" onclick="confirmMapPin()" style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); z-index: 10; background: var(--primary-color); color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.2); cursor: pointer;">Confirm Pin</button>
+                <div
+                    style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none; font-size: 2rem; color: #D32F2F; text-shadow: 0 2px 4px rgba(0,0,0,0.3); margin-top: -16px;">
+                    📍</div>
+                <button type="button" onclick="confirmMapPin()"
+                    style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); z-index: 10; background: var(--primary-color); color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.2); cursor: pointer;">Confirm
+                    Pin</button>
             </div>
 
             <input type="text" id="ride-title" placeholder="Short title (e.g., Need lift to college)" required>
@@ -1294,7 +1354,8 @@
             <div class="modal-actions" style="margin-top: 16px; display: flex; gap: 12px;">
                 <button class="btn" onclick="closeRideModal()"
                     style="flex: 1; background-color: #F5F5F5; color: #757575; box-shadow: none;">Cancel</button>
-                <button class="btn" id="submit-ride-btn" onclick="submitRideTask()" style="flex: 1; box-shadow: none;">Request Ride</button>
+                <button class="btn" id="submit-ride-btn" onclick="submitRideTask()"
+                    style="flex: 1; box-shadow: none;">Request Ride</button>
             </div>
         </div>
     </div>
@@ -1308,29 +1369,41 @@
 
             <!-- ===== IMAGE SECTION: 4 states ===== -->
             <!-- Gallery-only file input — explicit MIME types force Android to skip the chooser and open gallery directly -->
-            <input type="file" id="task-image-input" accept="image/jpeg,image/png,image/gif,image/webp,image/bmp,image/heic,image/heif" style="display:none" onchange="handleImageSelected(this)">
+            <input type="file" id="task-image-input"
+                accept="image/jpeg,image/png,image/gif,image/webp,image/bmp,image/heic,image/heif" style="display:none"
+                onchange="handleImageSelected(this)">
 
             <!-- State A: Initial choice buttons -->
             <div id="img-state-choice" style="display:flex; gap:8px; margin-top:10px;">
-                <button type="button" onclick="openInAppCamera()" style="flex:1; padding:10px 6px; background:var(--bg-input,#F0F0F0); color:var(--text-secondary,#5F6368); border:1.5px dashed #ccc; border-radius:10px; font-size:0.88rem; font-weight:600; cursor:pointer;">📷 Camera</button>
-                <button type="button" onclick="openGalleryPicker()" style="flex:1; padding:10px 6px; background:var(--bg-input,#F0F0F0); color:var(--text-secondary,#5F6368); border:1.5px dashed #ccc; border-radius:10px; font-size:0.88rem; font-weight:600; cursor:pointer;">🖼 Gallery</button>
+                <button type="button" onclick="openInAppCamera()"
+                    style="flex:1; padding:10px 6px; background:var(--bg-input,#F0F0F0); color:var(--text-secondary,#5F6368); border:1.5px dashed #ccc; border-radius:10px; font-size:0.88rem; font-weight:600; cursor:pointer;">📷
+                    Camera</button>
+                <button type="button" onclick="openGalleryPicker()"
+                    style="flex:1; padding:10px 6px; background:var(--bg-input,#F0F0F0); color:var(--text-secondary,#5F6368); border:1.5px dashed #ccc; border-radius:10px; font-size:0.88rem; font-weight:600; cursor:pointer;">🖼
+                    Gallery</button>
             </div>
 
             <!-- State B: In-app camera stream (animates via CSS class) -->
             <div id="img-state-camera" style="display:none;">
                 <div style="position:relative; border-radius:12px; overflow:hidden;">
-                    <video id="img-camera-stream" playsinline autoplay muted style="width:100%; max-height:210px; object-fit:cover; display:block; opacity:0; transition:opacity 0.3s ease;"></video>
+                    <video id="img-camera-stream" playsinline autoplay muted
+                        style="width:100%; max-height:210px; object-fit:cover; display:block; opacity:0; transition:opacity 0.3s ease;"></video>
                 </div>
                 <div style="display:flex; gap:8px; margin-top:8px;">
-                    <button type="button" onclick="capturePhoto()" style="flex:1; padding:11px; background:linear-gradient(135deg,#FF8A00,#FF3D00); color:#fff; border:none; border-radius:10px; font-weight:700; font-size:0.95rem; cursor:pointer;">📸 Capture</button>
-                    <button type="button" onclick="stopCamera(true)" style="padding:11px 16px; background:#eee; color:#555; border:none; border-radius:10px; font-weight:600; cursor:pointer;">✕</button>
+                    <button type="button" onclick="capturePhoto()"
+                        style="flex:1; padding:11px; background:linear-gradient(135deg,#FF8A00,#FF3D00); color:#fff; border:none; border-radius:10px; font-weight:700; font-size:0.95rem; cursor:pointer;">📸
+                        Capture</button>
+                    <button type="button" onclick="stopCamera(true)"
+                        style="padding:11px 16px; background:#eee; color:#555; border:none; border-radius:10px; font-weight:600; cursor:pointer;">✕</button>
                 </div>
             </div>
 
             <!-- State C: Image preview (after capture or gallery select) -->
             <div id="image-preview-container" style="display:none; position:relative; margin-top:10px;">
-                <img id="image-preview-thumb" src="" style="width:100%; max-height:200px; object-fit:cover; border-radius:12px; display:block;">
-                <button onclick="removeSelectedImage()" style="position:absolute; top:6px; right:6px; background:rgba(0,0,0,0.55); color:#fff; border:none; border-radius:50%; width:28px; height:28px; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1;">✕</button>
+                <img id="image-preview-thumb" src=""
+                    style="width:100%; max-height:200px; object-fit:cover; border-radius:12px; display:block;">
+                <button onclick="removeSelectedImage()"
+                    style="position:absolute; top:6px; right:6px; background:rgba(0,0,0,0.55); color:#fff; border:none; border-radius:50%; width:28px; height:28px; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1;">✕</button>
             </div>
 
             <div class="modal-actions" style="display: flex; justify-content: space-between; margin-top: 14px;">
@@ -1344,11 +1417,13 @@
     <div id="chat-modal" class="chat-overlay hidden" onclick="if(event.target === this) closeChat()">
         <div class="chat-drawer" style="height: 100%; max-height: 85%; display: flex; flex-direction: column;">
             <div class="chat-header">
-                <h3 id="chat-header-title" style="margin: 0; font-size: 1.2rem; color: var(--text-primary);">Task Chat</h3>
+                <h3 id="chat-header-title" style="margin: 0; font-size: 1.2rem; color: var(--text-primary);">Task Chat
+                </h3>
                 <button onclick="closeChat()"
                     style="background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer;">&times;</button>
             </div>
-            <div id="chat-messages" class="chat-messages" style="flex: 1; overflow-y: auto; overscroll-behavior: auto; padding-bottom: 20px;"></div>
+            <div id="chat-messages" class="chat-messages"
+                style="flex: 1; overflow-y: auto; overscroll-behavior: auto; padding-bottom: 20px;"></div>
             <div class="chat-input-area" id="chat-input-wrapper">
                 <input type="text" id="chat-input" placeholder="Message..." autocomplete="off" enterkeyhint="send"
                     oninput="document.getElementById('chat-send-btn').style.background = this.value.trim() ? '#FF5722' : '#E0E0E0';"
@@ -2436,13 +2511,13 @@
         <div class="task-bottom-actions" style="margin-top: 12px;">
             <div style="background:${isCompleted ? '#EDE7F6' : '#e3f2fd'}; padding:8px 12px; border-radius:8px; margin-bottom:10px; font-size:0.85rem; color:${isCompleted ? '#6A1B9A' : '#1565C0'}; font-weight:600;" id="poster-name-job-${task._id}">${isCompleted ? '🌟 Task marked done by poster' : '👤 Loading poster name...'}</div>
             ${isCompleted
-                                    ? `<div style="background:#EDE7F6; color:#6A1B9A; border-radius:8px; padding:10px 14px; font-size:0.9rem; font-weight:700; text-align:center;">🎉 Task Completed! This will be removed shortly.</div>`
-                                    : task.helperMarkedDone
-                                        ? `<button class="btn" style="width:100%; margin:8px 0 0; background-color:#2196F3;" onclick="event.stopPropagation(); openChat('${task._id}', '${task.postedBy}')">💬 Chat</button>
+                                ? `<div style="background:#EDE7F6; color:#6A1B9A; border-radius:8px; padding:10px 14px; font-size:0.9rem; font-weight:700; text-align:center;">🎉 Task Completed! This will be removed shortly.</div>`
+                                : task.helperMarkedDone
+                                    ? `<button class="btn" style="width:100%; margin:8px 0 0; background-color:#2196F3;" onclick="event.stopPropagation(); openChat('${task._id}', '${task.postedBy}')">💬 Chat</button>
                        <div id="helper-waiting-${task._id}" style="margin-top:8px; background:#FFF3E0; border:1px solid #FFE0B2; border-radius:10px; padding:12px 14px; font-size:0.88rem; color:#E65100; font-weight:600; text-align:center;">⏳ Waiting for poster to confirm...</div>`
-                                        : `<button class="btn" style="width:100%; margin:8px 0 0; background-color:#2196F3;" onclick="event.stopPropagation(); openChat('${task._id}', '${task.postedBy}')">💬 Chat</button>
+                                    : `<button class="btn" style="width:100%; margin:8px 0 0; background-color:#2196F3;" onclick="event.stopPropagation(); openChat('${task._id}', '${task.postedBy}')">💬 Chat</button>
                        <button class="btn" id="helper-done-btn-${task._id}" style="width:100%; margin-top:8px; background-color:#4CAF50;" onclick="event.stopPropagation(); helperMarkDone('${task._id}')">✅ Mark as Done</button>`
-                                }
+                            }
         </div>
     </div>
 </div>                        `;
@@ -2534,15 +2609,15 @@
                 // --- NEW WEBVIEW KEYBOARD FIX: Instant Scroll ---
                 if (chatInput) {
                     chatInput.addEventListener('focus', () => {
-                         // Instant scroll to bottom when keyboard opens
-                         if (msgBox) msgBox.scrollTop = msgBox.scrollHeight;
-                         // Secondary check for slow-mounting keyboards
-                         requestAnimationFrame(() => {
-                             if (msgBox) msgBox.scrollTop = msgBox.scrollHeight;
-                         });
+                        // Instant scroll to bottom when keyboard opens
+                        if (msgBox) msgBox.scrollTop = msgBox.scrollHeight;
+                        // Secondary check for slow-mounting keyboards
+                        requestAnimationFrame(() => {
+                            if (msgBox) msgBox.scrollTop = msgBox.scrollHeight;
+                        });
                     });
                 }
-                
+
                 // Keep the manual dismissal
                 msgBox.addEventListener('touchstart', () => {
                     if (chatInput) chatInput.blur();
@@ -2726,7 +2801,7 @@
                 const el = document.getElementById(`${tab}-view`);
                 if (el) el.classList.add('hidden');
             });
-            
+
             const activeEl = document.getElementById(`${tabName}-view`);
             if (activeEl) activeEl.classList.remove('hidden');
 
@@ -3140,7 +3215,7 @@
             document.body.classList.add('no-scroll');
             document.documentElement.classList.add('no-scroll');
             document.getElementById('ride-modal').classList.remove('hidden');
-            if(!rideAutocomplete) initRideMaps();
+            if (!rideAutocomplete) initRideMaps();
         }
 
         function closeRideModal() {
@@ -3159,16 +3234,19 @@
             mapContainer.style.display = 'block';
 
             if (!rideMap && typeof google !== "undefined" && google.maps) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const pos = { lat: position.coords.latitude, lng: position.coords.longitude };
-                        initInteractiveMap(pos);
-                    },
-                    (err) => {
-                        // Fallback to center of India if location is denied
-                        initInteractiveMap({ lat: 21.1458, lng: 79.0882 }); 
-                    }
-                );
+                // Instantly load map UI so user isn't staring at a blank container
+                initInteractiveMap({ lat: 21.1458, lng: 79.0882 });
+
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const pos = { lat: position.coords.latitude, lng: position.coords.longitude };
+                            rideMap.panTo(pos);
+                        },
+                        (err) => { console.log("Geolocation error/denied."); },
+                        { timeout: 5000 }
+                    );
+                }
             }
         }
 
@@ -3186,7 +3264,7 @@
             if (!rideMap || !rideGeocoder) return;
             const center = rideMap.getCenter();
             selectedLocation = { lat: center.lat(), lng: center.lng() };
-            
+
             // Reverse Geocode to get the area name
             rideGeocoder.geocode({ location: selectedLocation }, (results, status) => {
                 if (status === "OK" && results[0]) {
@@ -3257,8 +3335,8 @@
         function openModal() {
             // Close the Speed Dial Menu if it was open
             const speedDial = document.getElementById('speed-dial-menu');
-            if(speedDial && speedDial.classList.contains('open')) {
-                toggleFabSpeedDial(); 
+            if (speedDial && speedDial.classList.contains('open')) {
+                toggleFabSpeedDial();
             }
             document.body.classList.add('no-scroll');
             document.documentElement.classList.add('no-scroll');
@@ -3306,12 +3384,12 @@
 
         function _imgShowState(state) {
             // state: 'choice' | 'camera' | 'preview'
-            const choice  = document.getElementById('img-state-choice');
-            const camera  = document.getElementById('img-state-camera');
+            const choice = document.getElementById('img-state-choice');
+            const camera = document.getElementById('img-state-camera');
             const preview = document.getElementById('image-preview-container');
-            
+
             if (choice) choice.style.display = state === 'choice' ? 'flex' : 'none';
-            
+
             if (camera) {
                 if (state === 'camera') {
                     camera.style.display = 'block';
@@ -3322,7 +3400,7 @@
                     camera.style.display = 'none'; // Instant hide prevents overlapping UI
                 }
             }
-            
+
             if (preview) preview.style.display = state === 'preview' ? 'block' : 'none';
         }
 
@@ -3346,7 +3424,7 @@
                 if (video) {
                     video.style.opacity = '0'; // hidden until stream is rendering
                     video.srcObject = _cameraStream;
-                    video.onloadedmetadata = () => { 
+                    video.onloadedmetadata = () => {
                         video.style.opacity = '1'; // smooth fade-in
                         _imgShowState('camera'); // Expand container ONLY when ready
                     };
@@ -3365,8 +3443,8 @@
                 _cameraStream = null;
             }
             const video = document.getElementById('img-camera-stream');
-            if (video) { 
-                video.srcObject = null; 
+            if (video) {
+                video.srcObject = null;
                 video.style.opacity = '0'; // reset so no black frame on retake
             }
             if (backToChoice) _imgShowState('choice');
@@ -3378,7 +3456,7 @@
             const canvas = document.createElement('canvas');
             const MAX_W = 720;
             const scale = video.videoWidth > MAX_W ? MAX_W / video.videoWidth : 1;
-            canvas.width  = Math.round(video.videoWidth  * scale);
+            canvas.width = Math.round(video.videoWidth * scale);
             canvas.height = Math.round(video.videoHeight * scale);
             canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
             imageDataBase64 = canvas.toDataURL('image/jpeg', 0.45);
@@ -4019,7 +4097,7 @@
             if (isTransitionSupported && e) {
                 document.documentElement.style.setProperty('--click-x', e.clientX + 'px');
                 document.documentElement.style.setProperty('--click-y', e.clientY + 'px');
-                
+
                 if (!isDarkModeRequested) {
                     document.startViewTransition(performToggle);
                 } else {
@@ -4112,7 +4190,7 @@
             window.visualViewport.addEventListener('scroll', handleViewportChange);
         }
     </script>
-    
+
     <!-- ===== GLOBAL OVERLAY FOR EXPANDED CARDS ===== -->
     <div id="card-glass-overlay" class="card-glass-overlay" onclick="closeAllExpandedCards()"></div>
 </body>
