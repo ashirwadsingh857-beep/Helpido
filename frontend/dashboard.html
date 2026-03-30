@@ -3223,6 +3223,10 @@
             document.documentElement.classList.remove('no-scroll');
             document.getElementById('ride-modal').classList.add('hidden');
             document.getElementById('ride-map-container').style.display = 'none';
+            
+            // Force hide Google Maps injected body elements (Autocomplete dropdowns & API error alerts)
+            document.querySelectorAll('.pac-container').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.gm-err-container').forEach(el => el.style.display = 'none');
         }
 
         function openMapPicker() {
