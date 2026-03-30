@@ -1000,28 +1000,31 @@ input[type="number"] {
     position: fixed;
     bottom: 100px;
     right: 24px;
-    z-index: 1000;
+    z-index: 10000; /* Ensure it stays above everything, including nav */
     display: flex;
     flex-direction: column;
     align-items: flex-end;
 }
 
 .speed-dial-menu {
+    position: absolute;
+    bottom: 66px; /* Anchor it right above the FAB button */
+    right: 0;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
     gap: 12px;
-    margin-bottom: 16px;
     opacity: 0;
     pointer-events: none;
-    transform: translateY(20px);
+    transform: translateY(20px) scale(0.9);
     transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    transform-origin: bottom right;
 }
 
 .speed-dial-menu.open {
     opacity: 1;
     pointer-events: auto;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
 }
 
 .speed-dial-btn {
@@ -1047,19 +1050,27 @@ input[type="number"] {
 }
 
 .fab-btn {
-    width: 56px;
-    height: 56px;
+    width: 56px !important;
+    height: 56px !important;
+    min-width: 56px !important;
+    min-height: 56px !important;
+    padding: 0 !important;
+    box-sizing: border-box;
     background: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 50%;
+    border-radius: 50% !important;
     font-size: 2rem;
-    box-shadow: 0 4px 12px rgba(255, 87, 34, 0.3);
+    line-height: 1;
+    box-shadow: 0 4px 12px rgba(255, 87, 34, 0.4);
     cursor: pointer;
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), background 0.3s ease;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2; /* Keep FAB above the animated menu below it */
 }
 
 .fab-btn.open {
