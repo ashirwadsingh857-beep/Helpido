@@ -24,7 +24,7 @@
         }
     </script>
     <title>Helpido | Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2">
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
     <!-- Google Maps API (Placeholder Key, Replace later) -->
@@ -2265,6 +2265,12 @@
         <div class="expandable-description">
             <p class="task-desc" style="margin-top: 0; margin-bottom: 0; font-size: 0.95rem; line-height: 1.5; color: var(--text-dark);">${task.description}</p>
             ${task.imageData ? `<img src="${task.imageData}" style="width:100%; border-radius:12px; margin-top:12px; object-fit:cover; max-height:260px; display:block;">` : ''}
+            ${task.taskType === 'ride' && task.destination && task.destination.location ? `
+                <div style="margin-top: 12px; border-radius: 12px; overflow: hidden; border: 1px solid #eee;">
+                    <iframe width="100%" height="200" style="border:0;" loading="lazy" src="https://maps.google.com/maps?q=${task.destination.location.coordinates[1]},${task.destination.location.coordinates[0]}&z=15&output=embed"></iframe>
+                </div>
+                <button class="btn" onclick="event.stopPropagation(); window.open('https://www.google.com/maps/dir/?api=1&destination=${task.destination.location.coordinates[1]},${task.destination.location.coordinates[0]}', '_blank')" style="width: 100%; margin-top: 8px; background-color: #F5F5F5; color: #1976D2; border: 1px solid #E3F2FD; font-weight: bold; box-shadow: none;">🗺️ Get Directions</button>
+            ` : ''}
         </div>
         
         <div class="task-bottom-actions" style="margin-top: 12px;">
@@ -2430,6 +2436,12 @@
         <div class="expandable-description">
             <p class="task-desc" style="margin-top: 0; margin-bottom: 0px; font-size: 0.95rem; line-height: 1.5; color: var(--text-dark);">${task.description}</p>
             ${task.imageData ? `<img src="${task.imageData}" style="width:100%; border-radius:12px; margin-top:12px; object-fit:cover; max-height:260px; display:block;">` : ''}
+            ${task.taskType === 'ride' && task.destination && task.destination.location ? `
+                <div style="margin-top: 12px; border-radius: 12px; overflow: hidden; border: 1px solid #eee;">
+                    <iframe width="100%" height="200" style="border:0;" loading="lazy" src="https://maps.google.com/maps?q=${task.destination.location.coordinates[1]},${task.destination.location.coordinates[0]}&z=15&output=embed"></iframe>
+                </div>
+                <button class="btn" onclick="event.stopPropagation(); window.open('https://www.google.com/maps/dir/?api=1&destination=${task.destination.location.coordinates[1]},${task.destination.location.coordinates[0]}', '_blank')" style="width: 100%; margin-top: 8px; background-color: #F5F5F5; color: #1976D2; border: 1px solid #E3F2FD; font-weight: bold; box-shadow: none;">🗺️ Get Directions</button>
+            ` : ''}
         </div>
         
         <div class="task-bottom-actions" style="margin-top: 12px;">
@@ -2506,6 +2518,12 @@
         <div class="expandable-description">
             <p class="task-desc" style="margin-top: 0; margin-bottom: 0px; font-size: 0.95rem; line-height: 1.5; color: var(--text-dark);">${task.description || ''}</p>
             ${task.imageData ? `<img src="${task.imageData}" style="width:100%; border-radius:12px; margin-top:12px; object-fit:cover; max-height:260px; display:block;">` : ''}
+            ${task.taskType === 'ride' && task.destination && task.destination.location ? `
+                <div style="margin-top: 12px; border-radius: 12px; overflow: hidden; border: 1px solid #eee;">
+                    <iframe width="100%" height="200" style="border:0;" loading="lazy" src="https://maps.google.com/maps?q=${task.destination.location.coordinates[1]},${task.destination.location.coordinates[0]}&z=15&output=embed"></iframe>
+                </div>
+                <button class="btn" onclick="event.stopPropagation(); window.open('https://www.google.com/maps/dir/?api=1&destination=${task.destination.location.coordinates[1]},${task.destination.location.coordinates[0]}', '_blank')" style="width: 100%; margin-top: 8px; background-color: #F5F5F5; color: #1976D2; border: 1px solid #E3F2FD; font-weight: bold; box-shadow: none;">🗺️ Get Directions</button>
+            ` : ''}
         </div>
         
         <div class="task-bottom-actions" style="margin-top: 12px;">
@@ -3270,13 +3288,24 @@
             selectedLocation = { lat: center.lat(), lng: center.lng() };
 
             // Reverse Geocode to get the area name
-            rideGeocoder.geocode({ location: selectedLocation }, (results, status) => {
+            rideGeocoder.geocode({ location: selectedLocation }, async (results, status) => {
                 if (status === "OK" && results[0]) {
                     // Try to grab a formatted short name
                     let address = results[0].formatted_address;
                     document.getElementById('ride-destination').value = address;
                 } else {
-                    document.getElementById('ride-destination').value = `Pinned Location (${selectedLocation.lat.toFixed(4)}, ...）`;
+                    // FALLBACK: OSM Nominatim if Google blocks the API Key
+                    try {
+                        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${selectedLocation.lat}&lon=${selectedLocation.lng}&format=json`);
+                        const data = await res.json();
+                        if (data && data.display_name) {
+                            document.getElementById('ride-destination').value = data.display_name;
+                        } else {
+                            throw new Error("No OSM results");
+                        }
+                    } catch (err) {
+                        document.getElementById('ride-destination').value = `Pinned Location (${selectedLocation.lat.toFixed(4)}, ...)`;
+                    }
                 }
                 document.getElementById('ride-map-container').style.display = 'none';
             });
@@ -3293,16 +3322,32 @@
                 return;
             }
 
+            // Forward Geocode Fallback if user just typed text manually without choosing a suggestion
+            const btn = document.getElementById('submit-ride-btn');
+            const originalText = btn.innerText;
+            btn.innerText = "Finding Location...";
+            btn.disabled = true;
+
+            if (selectedLocation.lat === 0 && selectedLocation.lng === 0) {
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(destName)}&format=json&limit=1`);
+                    const data = await res.json();
+                    if (data && data.length > 0) {
+                        selectedLocation.lat = parseFloat(data[0].lat);
+                        selectedLocation.lng = parseFloat(data[0].lon);
+                    }
+                } catch(e) {
+                    console.log("Forward geocoding fallback failed", e);
+                }
+            }
+
             // Create destination object
             const destinationObj = {
                 name: destName,
                 location: { type: 'Point', coordinates: [selectedLocation.lng, selectedLocation.lat] }
             };
 
-            const btn = document.getElementById('submit-ride-btn');
-            const originalText = btn.innerText;
             btn.innerText = "Requesting...";
-            btn.disabled = true;
 
             try {
                 const res = await fetch(`${API_URL}/tasks`, {
