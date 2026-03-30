@@ -1008,41 +1008,55 @@ input[type="number"] {
 
 .speed-dial-menu {
     position: absolute;
-    bottom: 100%; /* Anchor precisely to the top edge of the wrapper! */
-    margin-bottom: 16px;
+    bottom: 0;
     right: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 12px;
-    opacity: 0;
+    width: 56px;
+    height: 56px;
     pointer-events: none;
-    transform: translateY(20px) scale(0.9);
-    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-    transform-origin: bottom right;
-}
-
-.speed-dial-menu.open {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateY(0) scale(1);
+    z-index: 10001; /* Ensure ABOVE the fab-btn */
 }
 
 .speed-dial-btn {
+    position: absolute;
+    bottom: 8px; /* Offset slightly inside the fab */
+    right: 8px;
     background: white;
     color: var(--text-dark);
     border: none;
-    padding: 10px 16px;
+    padding: 10px 18px;
     border-radius: 20px;
     font-size: 0.95rem;
-    font-weight: 600;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 8px;
     white-space: nowrap;
-    transition: transform 0.2s ease, background 0.2s ease;
+    opacity: 0;
+    pointer-events: none;
+    transform-origin: bottom right;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease, background 0.2s ease;
+}
+
+/* Closed state transforms to keep them tucked behind */
+.speed-dial-btn:nth-child(1) { transform: scale(0.5) translate(0, 0); }
+.speed-dial-btn:nth-child(2) { transform: scale(0.5) translate(0, 0); }
+
+/* Open State - Fan out diagonally */
+.speed-dial-menu.open .speed-dial-btn {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Ask for Ride - Furthest out (Top Left stair) */
+.speed-dial-menu.open .speed-dial-btn:nth-child(1) {
+    transform: scale(1) translate(-20px, -135px);
+}
+
+/* Normal Help - Closer (Bottom stair) */
+.speed-dial-menu.open .speed-dial-btn:nth-child(2) {
+    transform: scale(1) translate(0px, -70px);
 }
 
 .speed-dial-btn:active {
