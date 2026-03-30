@@ -404,7 +404,7 @@ app.post('/api/users/location', async (req, res) => {
 /* ---------------- TASK ROUTES ---------------- */
 app.post('/api/tasks', async (req, res) => {
     // Extract the new lat and lng from the request
-    const { title, description, postedBy, reward, lat, lng, imageData } = req.body;
+    const { title, description, postedBy, reward, lat, lng, imageData, taskType, destination } = req.body;
 
     try {
         const newTask = new Task({
@@ -412,11 +412,13 @@ app.post('/api/tasks', async (req, res) => {
             description,
             postedBy,
             reward,
+            taskType: taskType || 'help',
+            destination: destination || null,
             imageData: imageData || null,
             location: {
                 type: 'Point',
                 // CRITICAL: MongoDB requires [Longitude, Latitude] order
-                coordinates: [parseFloat(lng), parseFloat(lat)]
+                coordinates: [parseFloat(lng || 0), parseFloat(lat || 0)]
             }
         });
 

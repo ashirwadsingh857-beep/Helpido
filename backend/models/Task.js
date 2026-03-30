@@ -19,7 +19,17 @@ const taskSchema = new mongoose.Schema({
         coordinates: { type: [Number], default: [0, 0] } // Format: [longitude, latitude]
     },
     // NEW: Robust Auto-Deletion Persistence
-    completedAt: { type: Date, default: null }
+    completedAt: { type: Date, default: null },
+
+    // NEW: Task Type and Destination for Rides
+    taskType: { type: String, enum: ['help', 'ride'], default: 'help' },
+    destination: {
+        name: { type: String, default: null },
+        location: {
+            type: { type: String, enum: ['Point'], default: 'Point' },
+            coordinates: { type: [Number], default: [0, 0] } // Format: [longitude, latitude]
+        }
+    }
 }, { timestamps: true });
 
 // CRITICAL: Tasks expire 10 minutes after completedAt is set

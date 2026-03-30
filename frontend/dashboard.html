@@ -26,6 +26,10 @@
     <title>Helpido | Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    
+    <!-- Google Maps API (Placeholder Key, Replace later) -->
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places"></script>
+    
     <style>
         /* --- PREMIUM UI POLISH & ANIMATIONS --- */
         :root {
@@ -1266,6 +1270,35 @@
         </div>
     </div>
 
+    <!-- ===== RIDE MODAL ===== -->
+    <div id="ride-modal" class="modal-overlay hidden" onclick="if(event.target === this) closeRideModal()">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 16px; color: var(--text-dark);">🚗 Ask for Ride</h3>
+            
+            <div style="position: relative; margin-bottom: 12px; display: flex; align-items: center;">
+                <input type="text" id="ride-destination" placeholder="Where to? (Search location)" required style="margin-bottom: 0; flex: 1; padding-right: 40px;">
+                <button type="button" onclick="openMapPicker()" style="position: absolute; right: 5px; background: none; border: none; font-size: 1.4rem; cursor: pointer; padding: 5px;">📍</button>
+            </div>
+            
+            <!-- Hidden Map Container inside the modal (expands when picking) -->
+            <div id="ride-map-container" style="display: none; height: 200px; width: 100%; border-radius: 12px; margin-bottom: 12px; border: 1px solid #ddd; overflow: hidden; position: relative;">
+                <div id="ride-map" style="width: 100%; height: 100%;"></div>
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none; font-size: 2rem; color: #D32F2F; text-shadow: 0 2px 4px rgba(0,0,0,0.3); margin-top: -16px;">📍</div>
+                <button type="button" onclick="confirmMapPin()" style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); z-index: 10; background: var(--primary-color); color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.2); cursor: pointer;">Confirm Pin</button>
+            </div>
+
+            <input type="text" id="ride-title" placeholder="Short title (e.g., Need lift to college)" required>
+            <textarea id="ride-desc" rows="2" placeholder="Any extra details? (e.g., Have 1 bag)" required></textarea>
+            <input type="number" id="ride-reward" placeholder="Reward amount (₹)" required>
+
+            <div class="modal-actions" style="margin-top: 16px; display: flex; gap: 12px;">
+                <button class="btn" onclick="closeRideModal()"
+                    style="flex: 1; background-color: #F5F5F5; color: #757575; box-shadow: none;">Cancel</button>
+                <button class="btn" id="submit-ride-btn" onclick="submitRideTask()" style="flex: 1; box-shadow: none;">Request Ride</button>
+            </div>
+        </div>
+    </div>
+
     <div id="create-modal" class="modal-overlay hidden" onclick="if(event.target === this) closeModal()">
         <div class="modal-content">
             <h3 style="margin-bottom: 16px; color: var(--text-dark);">Ask for Help</h3>
@@ -1415,8 +1448,12 @@
         </button>
     </div>
 
-    <div class="fab-wrapper">
-        <button class="fab-btn" onclick="openModal()"><span id="fab-icon">+</span><span id="fab-label" style="display:none; font-size:1rem; font-weight:700;">Ask for Help</span></button>
+    <div class="fab-wrapper" id="fab-wrapper">
+        <div class="speed-dial-menu" id="speed-dial-menu">
+            <button class="speed-dial-btn" onclick="openRideModal()">🚗 Ask for Ride</button>
+            <button class="speed-dial-btn" onclick="openModal()">🤝 Normal Help</button>
+        </div>
+        <button class="fab-btn" id="main-fab" onclick="toggleFabSpeedDial()">+</button>
     </div>
     <nav class="bottom-nav">
         <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><span>🏠</span>
@@ -2130,8 +2167,10 @@
             <div style="flex: 1;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <h4 style="margin: 0;">${task.title}</h4>
-                    <span class="poster-badge ${task.posterStatus}">${task.posterStatus.toUpperCase()}</span>
+                    ${task.taskType === 'ride' ? `<span style="background: #E3F2FD; color: #1976D2; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 6px;">🚗 RIDE</span>` : ''}
+                    <span class="poster-badge ${task.posterStatus}" style="margin-left:auto;">${task.posterStatus.toUpperCase()}</span>
                 </div>
+                ${task.taskType === 'ride' && task.destination ? `<p style="font-size: 0.85rem; color: #D32F2F; margin: 4px 0 0 0; font-weight: 600;">📍 To: ${task.destination.name}</p>` : ''}
                 <p class="time-ago-label" 
                data-timestamp="${task.createdAt}" 
                data-prefix="Uploaded"
@@ -2290,7 +2329,11 @@
     <div class="task-card ${breatherClass}" id="req-card-${task._id}" style="border-left: 4px solid #FF5722; ${animStyle}" onclick="toggleCardExpansion(this, event)">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
-                <h4 style="margin:0;">${task.title} <span style="font-size:0.8rem; color:gray; font-weight:normal;">(₹${task.reward})</span></h4>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <h4 style="margin:0;">${task.title} <span style="font-size:0.8rem; color:gray; font-weight:normal;">(₹${task.reward})</span></h4>
+                    ${task.taskType === 'ride' ? `<span style="background: #E3F2FD; color: #1976D2; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">🚗 RIDE</span>` : ''}
+                </div>
+                ${task.taskType === 'ride' && task.destination ? `<p style="font-size: 0.85rem; color: #D32F2F; margin: 4px 0 0 0; font-weight: 600;">📍 To: ${task.destination.name}</p>` : ''}
                 <p class="time-ago-label" 
                    data-timestamp="${task.createdAt}" 
                    data-prefix="Uploaded"
@@ -2364,7 +2407,11 @@
     <div class="task-card ${breatherClass}" id="job-card-${task._id}" style="border-left: 4px solid ${isCompleted ? '#9C27B0' : '#2E7D32'}; ${task.isPrioritized && !isCompleted ? 'background-color: #FFFDE7;' : ''} ${isCompleted ? 'background-color:#F3E5F5;' : ''} ${animStyle}" onclick="toggleCardExpansion(this, event)">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
-                <h4 style="margin:0;">${task.title} ${task.isPrioritized && !isCompleted ? '<span style="color:#F57F17; font-size:0.8rem; margin-left:6px;">★ Priority</span>' : ''}</h4>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <h4 style="margin:0;">${task.title} ${task.isPrioritized && !isCompleted ? '<span style="color:#F57F17; font-size:0.8rem; margin-left:6px;">★ Priority</span>' : ''}</h4>
+                    ${task.taskType === 'ride' ? `<span style="background: #E3F2FD; color: #1976D2; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">🚗 RIDE</span>` : ''}
+                </div>
+                ${task.taskType === 'ride' && task.destination ? `<p style="font-size: 0.85rem; color: #D32F2F; margin: 4px 0 0 0; font-weight: 600;">📍 To: ${task.destination.name}</p>` : ''}
                <p class="time-ago-label" 
                data-timestamp="${task.updatedAt}" 
                data-prefix="${isCompleted ? 'Completed' : 'Accepted'}"
@@ -3058,7 +3105,161 @@
         function closeConfirm() { document.getElementById('confirm-modal').classList.add('hidden'); pendingConfirmAction = null; }
         document.getElementById('confirm-action-btn').addEventListener('click', () => { if (pendingConfirmAction) pendingConfirmAction(); closeConfirm(); });
 
+        /* --- SPEED DIAL FAB LOGIC --- */
+        function toggleFabSpeedDial() {
+            const fabBtn = document.getElementById('main-fab');
+            const speedDial = document.getElementById('speed-dial-menu');
+            fabBtn.classList.toggle('open');
+            speedDial.classList.toggle('open');
+        }
+
+        /* --- RIDE MODAL & GOOGLE MAPS LOGIC --- */
+        let rideMap, rideMarker, rideGeocoder, rideAutocomplete;
+        let selectedLocation = { lat: 0, lng: 0 };
+
+        function initRideMaps() {
+            if (typeof google === "undefined" || !google.maps || !google.maps.places) return;
+            // Initialize Autocomplete
+            const input = document.getElementById('ride-destination');
+            rideAutocomplete = new google.maps.places.Autocomplete(input, { types: ['geocode', 'establishment'] });
+            rideAutocomplete.addListener('place_changed', () => {
+                const place = rideAutocomplete.getPlace();
+                if (place.geometry && place.geometry.location) {
+                    selectedLocation = {
+                        lat: place.geometry.location.lat(),
+                        lng: place.geometry.location.lng()
+                    };
+                }
+            });
+            // Initialize Geocoder for Reverse lookups
+            rideGeocoder = new google.maps.Geocoder();
+        }
+
+        function openRideModal() {
+            toggleFabSpeedDial(); // Close the menu
+            document.body.classList.add('no-scroll');
+            document.documentElement.classList.add('no-scroll');
+            document.getElementById('ride-modal').classList.remove('hidden');
+            if(!rideAutocomplete) initRideMaps();
+        }
+
+        function closeRideModal() {
+            document.body.classList.remove('no-scroll');
+            document.documentElement.classList.remove('no-scroll');
+            document.getElementById('ride-modal').classList.add('hidden');
+            document.getElementById('ride-map-container').style.display = 'none';
+        }
+
+        function openMapPicker() {
+            const mapContainer = document.getElementById('ride-map-container');
+            if (mapContainer.style.display === 'block') {
+                mapContainer.style.display = 'none';
+                return;
+            }
+            mapContainer.style.display = 'block';
+
+            if (!rideMap && typeof google !== "undefined" && google.maps) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const pos = { lat: position.coords.latitude, lng: position.coords.longitude };
+                        initInteractiveMap(pos);
+                    },
+                    (err) => {
+                        // Fallback to center of India if location is denied
+                        initInteractiveMap({ lat: 21.1458, lng: 79.0882 }); 
+                    }
+                );
+            }
+        }
+
+        function initInteractiveMap(centerPos) {
+            rideMap = new google.maps.Map(document.getElementById('ride-map'), {
+                center: centerPos,
+                zoom: 15,
+                disableDefaultUI: true,
+                zoomControl: true
+            });
+            // Marker is static in CSS, map moves underneath.
+        }
+
+        function confirmMapPin() {
+            if (!rideMap || !rideGeocoder) return;
+            const center = rideMap.getCenter();
+            selectedLocation = { lat: center.lat(), lng: center.lng() };
+            
+            // Reverse Geocode to get the area name
+            rideGeocoder.geocode({ location: selectedLocation }, (results, status) => {
+                if (status === "OK" && results[0]) {
+                    // Try to grab a formatted short name
+                    let address = results[0].formatted_address;
+                    document.getElementById('ride-destination').value = address;
+                } else {
+                    document.getElementById('ride-destination').value = `Pinned Location (${selectedLocation.lat.toFixed(4)}, ...）`;
+                }
+                document.getElementById('ride-map-container').style.display = 'none';
+            });
+        }
+
+        async function submitRideTask() {
+            const destName = document.getElementById('ride-destination').value.trim();
+            const title = document.getElementById('ride-title').value.trim();
+            const desc = document.getElementById('ride-desc').value.trim();
+            const reward = parseInt(document.getElementById('ride-reward').value);
+
+            if (!destName || !title || !desc || isNaN(reward) || reward <= 0) {
+                showAppNotification('Please fill all requirements.', 'error');
+                return;
+            }
+
+            // Create destination object
+            const destinationObj = {
+                name: destName,
+                location: { type: 'Point', coordinates: [selectedLocation.lng, selectedLocation.lat] }
+            };
+
+            const btn = document.getElementById('submit-ride-btn');
+            const originalText = btn.innerText;
+            btn.innerText = "Requesting...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_URL}/tasks`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: title,
+                        description: desc,
+                        postedBy: myPhone,
+                        reward: reward,
+                        taskType: 'ride',
+                        destination: destinationObj
+                    })
+                });
+
+                if (res.ok) {
+                    closeRideModal();
+                    document.getElementById('ride-title').value = '';
+                    document.getElementById('ride-desc').value = '';
+                    document.getElementById('ride-destination').value = '';
+                    loadTasks();
+                    showAppNotification('Ride Request Posted!');
+                } else {
+                    showAppNotification('Failed to post ride.', 'error');
+                }
+            } catch (err) {
+                showAppNotification('Network error.', 'error');
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
         function openModal() {
+            // Close the Speed Dial Menu if it was open
+            const speedDial = document.getElementById('speed-dial-menu');
+            if(speedDial && speedDial.classList.contains('open')) {
+                toggleFabSpeedDial(); 
+            }
             document.body.classList.add('no-scroll');
             document.documentElement.classList.add('no-scroll');
             document.getElementById('create-modal').classList.remove('hidden');
