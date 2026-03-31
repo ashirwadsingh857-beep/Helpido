@@ -2885,11 +2885,24 @@
             }
         }
 
-        document.addEventListener('click', () => {
+        document.addEventListener('click', (event) => {
+            const expandedCard = document.querySelector('.task-card.expanded');
+            const clickedInsideExpanded = expandedCard && expandedCard.contains(event.target);
+
+            // Close expanded cards only when tapping outside them.
+            if (!clickedInsideExpanded) {
+                closeAllExpandedCards();
+            }
+
             document.querySelectorAll('.dropdown-menu.show').forEach(menu => menu.classList.remove('show'));
             document.querySelectorAll('.task-card').forEach(card => {
-                card.style.zIndex = '1';
-                card.style.opacity = '1';
+                if (card.classList.contains('expanded')) {
+                    card.style.zIndex = '10001';
+                    card.style.opacity = '1';
+                } else {
+                    card.style.zIndex = '1';
+                    card.style.opacity = '1';
+                }
             });
         });
 
