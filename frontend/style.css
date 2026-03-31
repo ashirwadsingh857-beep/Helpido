@@ -1091,6 +1091,14 @@ input[type="number"] {
 .fab-btn.open {
     transform: rotate(45deg);
     background: #D32F2F; /* Turns red when open */
+    opacity: 0;
+    pointer-events: none;
+}
+
+.fab-btn.hidden {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: scale(0.85) !important;
 }
 
 /* Modal */

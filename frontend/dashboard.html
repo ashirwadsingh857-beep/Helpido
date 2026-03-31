@@ -3222,12 +3222,39 @@
         document.getElementById('confirm-action-btn').addEventListener('click', () => { if (pendingConfirmAction) pendingConfirmAction(); closeConfirm(); });
 
         /* --- SPEED DIAL FAB LOGIC --- */
-        function toggleFabSpeedDial() {
+        function openFabSpeedDial() {
             const fabBtn = document.getElementById('main-fab');
             const speedDial = document.getElementById('speed-dial-menu');
-            fabBtn.classList.toggle('open');
-            speedDial.classList.toggle('open');
+            fabBtn.classList.add('open', 'hidden');
+            speedDial.classList.add('open');
         }
+
+        function closeFabSpeedDial() {
+            const fabBtn = document.getElementById('main-fab');
+            const speedDial = document.getElementById('speed-dial-menu');
+            fabBtn.classList.remove('open', 'hidden');
+            if (speedDial) speedDial.classList.remove('open');
+        }
+
+        function toggleFabSpeedDial() {
+            const speedDial = document.getElementById('speed-dial-menu');
+            if (speedDial && speedDial.classList.contains('open')) {
+                closeFabSpeedDial();
+            } else {
+                openFabSpeedDial();
+            }
+        }
+
+        document.addEventListener('click', (event) => {
+            const fabWrapper = document.getElementById('fab-wrapper');
+            const speedDial = document.getElementById('speed-dial-menu');
+            const fabBtn = document.getElementById('main-fab');
+            if (!speedDial || !speedDial.classList.contains('open')) return;
+            if (fabWrapper && fabWrapper.contains(event.target)) return; // keep open for fab/menu clicks
+            if (fabBtn && typeof fabBtn !== 'undefined') {
+                closeFabSpeedDial();
+            }
+        });
 
         /* --- RIDE MODAL & GOOGLE MAPS LOGIC --- */
         let rideMap, rideMarker, rideGeocoder, rideAutocomplete;
