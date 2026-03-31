@@ -2295,7 +2295,7 @@
                 <div style="margin-top: 12px; border-radius: 12px; overflow: hidden; border: 1px solid #eee;">
                     <iframe width="100%" height="200" style="border:0;" loading="lazy" src="https://maps.google.com/maps?q=${task.destination.location.coordinates[1]},${task.destination.location.coordinates[0]}&z=15&output=embed"></iframe>
                 </div>
-                <button class="btn" onclick="event.stopPropagation(); window.open('https://www.google.com/maps/dir/?api=1&destination=${task.destination.location.coordinates[1]},${task.destination.location.coordinates[0]}', '_blank')" style="width: 100%; margin-top: 8px; background-color: #F5F5F5; color: #1976D2; border: 1px solid #E3F2FD; font-weight: bold; box-shadow: none;">🗺️ Get Directions</button>
+                <button class="btn" onclick="event.stopPropagation(); openDirections(${task.destination.location.coordinates[1]}, ${task.destination.location.coordinates[0]});" style="width: 100%; margin-top: 8px; background-color: #F5F5F5; color: #1976D2; border: 1px solid #E3F2FD; font-weight: bold; box-shadow: none;">🗺️ Get Directions</button>
             ` : ''}
         </div>
         
@@ -2466,7 +2466,7 @@
                 <div style="margin-top: 12px; border-radius: 12px; overflow: hidden; border: 1px solid #eee;">
                     <iframe width="100%" height="200" style="border:0;" loading="lazy" src="https://maps.google.com/maps?q=${task.destination.location.coordinates[1]},${task.destination.location.coordinates[0]}&z=15&output=embed"></iframe>
                 </div>
-                <button class="btn" onclick="event.stopPropagation(); window.open('https://www.google.com/maps/dir/?api=1&destination=${task.destination.location.coordinates[1]},${task.destination.location.coordinates[0]}', '_blank')" style="width: 100%; margin-top: 8px; background-color: #F5F5F5; color: #1976D2; border: 1px solid #E3F2FD; font-weight: bold; box-shadow: none;">🗺️ Get Directions</button>
+                <button class="btn" onclick="event.stopPropagation(); openDirections(${task.destination.location.coordinates[1]}, ${task.destination.location.coordinates[0]});" style="width: 100%; margin-top: 8px; background-color: #F5F5F5; color: #1976D2; border: 1px solid #E3F2FD; font-weight: bold; box-shadow: none;">🗺️ Get Directions</button>
             ` : ''}
         </div>
         
@@ -2548,7 +2548,7 @@
                 <div style="margin-top: 12px; border-radius: 12px; overflow: hidden; border: 1px solid #eee;">
                     <iframe width="100%" height="200" style="border:0;" loading="lazy" src="https://maps.google.com/maps?q=${task.destination.location.coordinates[1]},${task.destination.location.coordinates[0]}&z=15&output=embed"></iframe>
                 </div>
-                <button class="btn" onclick="event.stopPropagation(); window.open('https://www.google.com/maps/dir/?api=1&destination=${task.destination.location.coordinates[1]},${task.destination.location.coordinates[0]}', '_blank')" style="width: 100%; margin-top: 8px; background-color: #F5F5F5; color: #1976D2; border: 1px solid #E3F2FD; font-weight: bold; box-shadow: none;">🗺️ Get Directions</button>
+                <button class="btn" onclick="event.stopPropagation(); openDirections(${task.destination.location.coordinates[1]}, ${task.destination.location.coordinates[0]});" style="width: 100%; margin-top: 8px; background-color: #F5F5F5; color: #1976D2; border: 1px solid #E3F2FD; font-weight: bold; box-shadow: none;">🗺️ Get Directions</button>
             ` : ''}
         </div>
         
@@ -3250,6 +3250,16 @@
             const speedDial = document.getElementById('speed-dial-menu');
             fabBtn.classList.remove('open', 'hidden');
             if (speedDial) speedDial.classList.remove('open');
+        }
+
+        function openDirections(lat, lng) {
+            if (!lat || !lng) return;
+            const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(lat + ',' + lng)}`;
+            // Try to open in a new tab; if blocked, navigate current window.
+            const win = window.open(mapsUrl, '_blank');
+            if (!win) {
+                window.location.href = mapsUrl;
+            }
         }
 
         function toggleFabSpeedDial() {
