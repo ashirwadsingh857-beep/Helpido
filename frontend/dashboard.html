@@ -323,12 +323,12 @@
             background: transparent;
             z-index: 1000;
             display: none;
-            pointer-events: none;
+            pointer-events: none; /* Always let cards and buttons receive clicks */
         }
 
         .card-glass-overlay.active {
             display: block;
-            pointer-events: auto;
+            pointer-events: none; /* Keep this non-blocking for expanded card controls */
         }
 
         .skeleton-card {
