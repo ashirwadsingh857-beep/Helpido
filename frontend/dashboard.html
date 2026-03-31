@@ -3254,11 +3254,27 @@
 
         function openDirections(lat, lng) {
             if (!lat || !lng) return;
-            const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(lat + ',' + lng)}`;
-            // Try to open in a new tab; if blocked, navigate current window.
-            const win = window.open(mapsUrl, '_blank');
-            if (!win) {
-                window.location.href = mapsUrl;
+
+            // Prefer native navigation links on mobile (including Flutter webview contexts), fallback to web URL.
+            const destination = `${encodeURIComponent(lat + ',' + lng)}`;
+            const webUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+
+            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            const mobileUrl = `google.navigation:q=${lat},${lng}`; // Deep-link for Google Maps apps.
+
+            try {
+                if (isMobile) {
+                    // For Flutter WebView, this should route to Google Maps app if available.
+                    window.location.href = mobileUrl;
+                    return;
+                }
+
+                const win = window.open(webUrl, '_blank');
+                if (!win) {
+                    window.location.href = webUrl;
+                }
+            } catch (e) {
+                window.location.href = webUrl;
             }
         }
 
