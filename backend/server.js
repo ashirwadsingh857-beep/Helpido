@@ -451,11 +451,19 @@ app.post('/api/tasks', async (req, res) => {
                 }
             });
 
-            const payloadData = {
+            let payloadData = {
                 title: `New Task Near You 📍`,
                 body: `${posterName} needs help: "${title}" for ₹${reward}`,
                 type: 'task'
             };
+            
+            if (taskType === 'ride') {
+                payloadData = {
+                    title: `New Ride Request 🚗`,
+                    body: `${posterName} needs a lift to ${destination?.name || 'Destination'}: "${title}"`,
+                    type: 'ride'
+                };
+            }
 
             const pushPromises = subscribedUsers.flatMap(user => {
                 const promises = [];

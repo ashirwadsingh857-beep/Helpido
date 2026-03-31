@@ -1895,7 +1895,9 @@
                         if (distance > currentRadius) return;
                     }
 
-                    if (activeTab !== 'home') {
+                    if (activeTab === 'home') {
+                        loadTasks(); 
+                    } else {
                         showAppNotification('👋', `New task posted: ${task.title}`, 'Tap to view the Home feed!', () => {
                             switchTab('home');
                             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -3516,6 +3518,8 @@
                         postedBy: myPhone,
                         reward: reward,
                         taskType: 'ride',
+                        lat: userLat,
+                        lng: userLng,
                         destination: destinationObj
                     })
                 });
