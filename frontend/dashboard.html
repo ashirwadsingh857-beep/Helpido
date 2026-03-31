@@ -3255,27 +3255,39 @@
         function openDirections(lat, lng) {
             if (!lat || !lng) return;
 
-            // Prefer native navigation links on mobile (including Flutter webview contexts), fallback to web URL.
             const destination = `${encodeURIComponent(lat + ',' + lng)}`;
             const webUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
 
-            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-            const mobileUrl = `google.navigation:q=${lat},${lng}`; // Deep-link for Google Maps apps.
+            const userAgent = navigator.userAgent || '';
+            const isFlutterWebView = /wv|flutter/i.test(userAgent);
+            const isAndroid = /Android/i.test(userAgent);
+            const isiOS = /iPhone|iPad|iPod/i.test(userAgent);
 
-            try {
-                if (isMobile) {
-                    // For Flutter WebView, this should route to Google Maps app if available.
-                    window.location.href = mobileUrl;
-                    return;
-                }
-
+            if (isFlutterWebView) {
+                // Flutter WebView handles https URLs reliably; avoid unknown-scheme errors.
                 const win = window.open(webUrl, '_blank');
+                if (!win) window.location.href = webUrl;
+                return;
+            }
+
+            if (isAndroid) {
+                const intentUrl = `intent://maps.google.com/maps?daddr=${lat},${lng}#Intent;package=com.google.android.apps.maps;scheme=https;end`;
+                const win = window.open(intentUrl, '_blank');
                 if (!win) {
                     window.location.href = webUrl;
                 }
-            } catch (e) {
-                window.location.href = webUrl;
+                return;
             }
+
+            if (isiOS) {
+                const iosUrl = `comgooglemaps://?daddr=${lat},${lng}`;
+                window.location.href = iosUrl;
+                setTimeout(() => { window.location.href = webUrl; }, 500);
+                return;
+            }
+
+            const win = window.open(webUrl, '_blank');
+            if (!win) window.location.href = webUrl;
         }
 
         function toggleFabSpeedDial() {
