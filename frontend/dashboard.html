@@ -302,12 +302,23 @@
                 padding 0.3s ease;
         }
 
-        .task-card.expanded .expandable-description {
-            max-height: 500px;
+        .task-card.expanded .expandable-description,
+        .task-card.expanded .task-bottom-actions {
+            max-height: 1000px;
             opacity: 1;
             margin: 16px 0;
             padding-top: 16px;
             border-top: 1px dashed #eee;
+        }
+
+        .task-bottom-actions {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                        opacity 0.3s ease,
+                        margin 0.3s ease,
+                        padding 0.3s ease;
         }
 
         .dark-mode .task-card.expanded .expandable-description {
@@ -323,12 +334,12 @@
             background: transparent;
             z-index: 1000;
             display: none;
-            pointer-events: none; /* Always let cards and buttons receive clicks */
+            pointer-events: none; /* User requested non-clickable overlay */
         }
 
         .card-glass-overlay.active {
             display: block;
-            pointer-events: none; /* Keep this non-blocking for expanded card controls */
+            pointer-events: none;
         }
 
         .skeleton-card {
@@ -2261,25 +2272,26 @@
                         return `
     <div class="task-card-wrapper">
     <div class="task-card ${breatheClass}" id="feed-card-${task._id}" style="${animStyle}">
-        <div class="card-header-clickable" onclick="toggleCardExpansion(this.closest('.task-card'), event)" style="cursor: pointer;">
-            <div class="task-top" style="align-items: flex-start;">
-                <div style="flex: 1;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <h4 style="margin: 0;">${task.title}</h4>
-                        ${task.taskType === 'ride' ? `<span style="background: #E3F2FD; color: #1976D2; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 6px;">🚗 RIDE</span>` : ''}
-                        <span class="poster-badge ${task.posterStatus}" style="margin-left:auto;">${task.posterStatus.toUpperCase()}</span>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div class="card-header-clickable" onclick="toggleCardExpansion(this.closest('.task-card'), event)" style="cursor: pointer; flex: 1;">
+                <div class="task-top" style="align-items: flex-start;">
+                    <div style="flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <h4 style="margin: 0;">${task.title}</h4>
+                            ${task.taskType === 'ride' ? `<span style="background: #E3F2FD; color: #1976D2; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 6px;">🚗 RIDE</span>` : ''}
+                            <span class="poster-badge ${task.posterStatus}" style="margin-left:auto;">${task.posterStatus.toUpperCase()}</span>
+                        </div>
+                        ${task.taskType === 'ride' && task.destination ? `<p style="font-size: 0.85rem; color: #D32F2F; margin: 4px 0 0 0; font-weight: 600;">📍 To: ${task.destination.name}</p>` : ''}
+                        <p class="time-ago-label" 
+                       data-timestamp="${task.createdAt}" 
+                       data-prefix="Uploaded"
+                       style="font-size: 0.72rem; color: #888; margin: 2px 0 0 0;">
+                       Uploaded ${timeAgo(task.createdAt)}
+                    </p>
+                        <span class="reward-tag" style="display: inline-block; margin-top: 6px;">₹${task.reward}</span>
                     </div>
-                    ${task.taskType === 'ride' && task.destination ? `<p style="font-size: 0.85rem; color: #D32F2F; margin: 4px 0 0 0; font-weight: 600;">📍 To: ${task.destination.name}</p>` : ''}
-                    <p class="time-ago-label" 
-                   data-timestamp="${task.createdAt}" 
-                   data-prefix="Uploaded"
-                   style="font-size: 0.72rem; color: #888; margin: 2px 0 0 0;">
-                   Uploaded ${timeAgo(task.createdAt)}
-                </p>
-                    <span class="reward-tag" style="display: inline-block; margin-top: 6px;">₹${task.reward}</span>
                 </div>
             </div>
-        </div>
             <div style="position: relative;">
                 <button class="menu-btn" onclick="event.stopPropagation(); toggleMenu('menu-home-${task._id}', event)">⋮</button>
                 <div id="menu-home-${task._id}" class="dropdown-menu">
@@ -2287,32 +2299,32 @@
                 </div>
             </div>
         </div>
-        
-        <div class="expandable-description">
-            <p class="task-desc" style="margin-top: 0; margin-bottom: 0; font-size: 0.95rem; line-height: 1.5; color: var(--text-dark);">${task.description}</p>
-            ${task.imageData ? `<img src="${task.imageData}" style="width:100%; border-radius:12px; margin-top:12px; object-fit:cover; max-height:260px; display:block;">` : ''}
-            ${task.taskType === 'ride' && task.destination && task.destination.location ? `
-                <div style="margin-top: 12px; border-radius: 12px; overflow: hidden; border: 1px solid #eee;">
-                    <iframe width="100%" height="200" style="border:0;" loading="lazy" src="https://maps.google.com/maps?q=${task.destination.location.coordinates[1]},${task.destination.location.coordinates[0]}&z=15&output=embed"></iframe>
+                
+                <div class="expandable-description">
+                    <p class="task-desc" style="margin-top: 0; margin-bottom: 0; font-size: 0.95rem; line-height: 1.5; color: var(--text-dark);">${task.description}</p>
+                    ${task.imageData ? `<img src="${task.imageData}" style="width:100%; border-radius:12px; margin-top:12px; object-fit:cover; max-height:260px; display:block;">` : ''}
+                    ${task.taskType === 'ride' && task.destination && task.destination.location ? `
+                        <div style="margin-top: 12px; border-radius: 12px; overflow: hidden; border: 1px solid #eee;">
+                            <iframe width="100%" height="200" style="border:0;" loading="lazy" src="https://maps.google.com/maps?q=${task.destination.location.coordinates[1]},${task.destination.location.coordinates[0]}&z=15&output=embed"></iframe>
+                        </div>
+                        <button class="btn" onclick="event.stopPropagation(); openDirections(${task.destination.location.coordinates[1]}, ${task.destination.location.coordinates[0]});" style="width: 100%; margin-top: 8px; background-color: #F5F5F5; color: #1976D2; border: 1px solid #E3F2FD; font-weight: bold; box-shadow: none;">🗺️ Get Directions</button>
+                    ` : ''}
                 </div>
-                <button class="btn" onclick="event.stopPropagation(); openDirections(${task.destination.location.coordinates[1]}, ${task.destination.location.coordinates[0]});" style="width: 100%; margin-top: 8px; background-color: #F5F5F5; color: #1976D2; border: 1px solid #E3F2FD; font-weight: bold; box-shadow: none;">🗺️ Get Directions</button>
-            ` : ''}
-        </div>
-        
-        <div class="task-bottom-actions" style="margin-top: 12px;">
-            <div style="background: #f5f5f5; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; border-left: 3px solid #FF5722;">
-                <p id="poster-name-${task._id}" style="margin: 0; font-size: 0.9rem; font-weight: 600; color: #333;">👤 Loading name...</p>
-            </div>
-            
-            <p class="task-desc" style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                <span class="status-badge status-${task.status}">${task.status}</span>
-            </p>
-            <div class="task-bottom" style="justify-content: flex-end;">
-                <button class="accept-btn" onclick="event.stopPropagation(); acceptTask('${task._id}')" style="width: 100%;">I can do it</button>
-            </div>
-        </div>
-    </div>
-    </div>                        `;
+                
+                <div class="task-bottom-actions" style="margin-top: 12px;">
+                    <div style="background: #f5f5f5; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; border-left: 3px solid #FF5722;">
+                        <p id="poster-name-${task._id}" style="margin: 0; font-size: 0.9rem; font-weight: 600; color: #333;">👤 Loading name...</p>
+                    </div>
+                    
+                    <p class="task-desc" style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                        <span class="status-badge status-${task.status}">${task.status}</span>
+                    </p>
+                    <div class="task-bottom" style="justify-content: flex-end;">
+                        <button class="accept-btn" onclick="event.stopPropagation(); acceptTask('${task._id}')" style="width: 100%;">I can do it</button>
+                    </div>
+                </div>
+            </div> <!-- task-card -->
+        </div> <!-- task-card-wrapper -->                        `;
                     }).join('');
 
                     // Dynamically fetch and replace real names
@@ -2886,14 +2898,7 @@
         }
 
         document.addEventListener('click', (event) => {
-            const expandedCard = document.querySelector('.task-card.expanded');
-            const clickedInsideExpanded = expandedCard && expandedCard.contains(event.target);
-
-            // Close expanded cards only when tapping outside them.
-            if (!clickedInsideExpanded) {
-                closeAllExpandedCards();
-            }
-
+            // Global click handler: Close dropdowns, but don't close expanded cards unless toggled by header.
             document.querySelectorAll('.dropdown-menu.show').forEach(menu => menu.classList.remove('show'));
             document.querySelectorAll('.task-card').forEach(card => {
                 if (card.classList.contains('expanded')) {
@@ -4393,7 +4398,7 @@
     </script>
 
     <!-- ===== GLOBAL OVERLAY FOR EXPANDED CARDS ===== -->
-    <div id="card-glass-overlay" class="card-glass-overlay" onclick="closeAllExpandedCards()"></div>
+    <div id="card-glass-overlay" class="card-glass-overlay"></div>
 </body>
 
 </html>
