@@ -771,7 +771,7 @@
         }
 
         #ride-modal {
-            z-index: 10500 !important;
+            z-index: 40000 !important; /* Forces it above everything else */
         }
 
         #chat-modal {
@@ -4347,23 +4347,30 @@
     <script>
         function handleViewportChange() {
             const viewport = window.visualViewport;
-            const keyboardHeight = window.innerHeight - viewport.height;
-            const isKeyboardOpen = keyboardHeight > 100;
+            if (!viewport) return;
+
+            // 1. KEYBOARD DETECTION & GLOBAL CLASS TOGGLE
+            // Robust detection: if viewport height is significantly less than window height
+            const isKeyboardActive = (window.innerHeight - viewport.height) > 60 || 
+                                     (viewport.height < window.screen.height * 0.7);
+            
+            document.body.classList.toggle('keyboard-active', isKeyboardActive);
 
             const chatWrapper = document.getElementById('chat-input-wrapper');
             const chatDrawer = document.querySelector('.chat-drawer');
             const chatMessages = document.getElementById('chat-messages');
             const chatModal = document.getElementById('chat-modal');
 
-            // 1. CHAT WINDOW OPTIMIZATION
+            // 2. CHAT WINDOW OPTIMIZATION
             if (chatWrapper && chatModal && !chatModal.classList.contains('hidden')) {
                 // FORCE: Disable transitions to prevent jitter/lagging behind the keyboard
                 if (chatDrawer) chatDrawer.style.transition = 'none';
                 chatWrapper.style.transition = 'none';
 
-                if (isKeyboardOpen) {
+                if (isKeyboardActive) {
                     // Push the input exactly above the keyboard
-                    chatWrapper.style.transform = `translateY(-${keyboardHeight}px)`;
+                    const kbHeight = window.innerHeight - viewport.height;
+                    chatWrapper.style.transform = `translateY(-${kbHeight}px)`;
                     // Hard-set height to prevent "vh" jumps
                     if (chatDrawer) {
                         chatDrawer.style.maxHeight = `${viewport.height - 20}px`;
@@ -4381,14 +4388,14 @@
                 if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
             }
 
-            // 2. CREATE MODAL (ASK FOR HELP) OPTIMIZATION
+            // 3. CREATE MODAL (ASK FOR HELP) OPTIMIZATION
             const createModal = document.getElementById('create-modal');
             if (createModal && !createModal.classList.contains('hidden')) {
                 const modalContent = createModal.querySelector('.modal-content');
                 if (modalContent) {
                     modalContent.style.transition = 'none';
-                    if (isKeyboardOpen) {
-                        const offset = Math.max(0, keyboardHeight / 2);
+                    if (isKeyboardActive) {
+                        const offset = Math.max(0, (window.innerHeight - viewport.height) / 2);
                         modalContent.style.transform = `translateY(-${offset}px) scale(1)`;
                     } else {
                         modalContent.style.transform = 'translateY(0) scale(1)';
@@ -4397,51 +4404,19 @@
                 }
             }
 
-            // 3. RIDE MODAL OPTIMIZATION
+            // 4. RIDE MODAL OPTIMIZATION
             const rideModal = document.getElementById('ride-modal');
             if (rideModal && !rideModal.classList.contains('hidden')) {
                 const modalContent = rideModal.querySelector('.modal-content');
                 if (modalContent) {
                     modalContent.style.transition = 'none';
-                    if (isKeyboardOpen) {
-                        const offset = Math.max(0, keyboardHeight / 1.5);
+                    if (isKeyboardActive) {
+                        const offset = Math.max(0, (window.innerHeight - viewport.height) / 1.5);
                         modalContent.style.transform = `translateY(-${offset}px) scale(1)`;
                     } else {
                         modalContent.style.transform = 'translateY(0) scale(1)';
                         modalContent.style.transition = 'transform 0.4s cubic-bezier(0.32, 1.15, 0.25, 1)';
                     }
-                }
-            }
-
-            // 4. NAVIGATION BAR OPTIMIZATION (UPDATED)
-            const bottomNav = document.querySelector('.bottom-nav');
-            if (bottomNav) {
-                // Ensure the nav dock is hidden when filling out a form in a modal
-                if (isKeyboardOpen) {
-                    bottomNav.style.opacity = '0';
-                    bottomNav.style.pointerEvents = 'none';
-                    // Sink it further to be safe
-                    bottomNav.style.transform = `translate(-50%, 100px)`;
-                } else {
-                    bottomNav.style.opacity = '1';
-                    bottomNav.style.pointerEvents = 'auto';
-                    bottomNav.style.transform = 'translateX(-50%)';
-                    bottomNav.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-                }
-            }
-
-            // 5. FAB OPTIMIZATION (UPDATED)
-            const fabWrapper = document.getElementById('fab-wrapper');
-            if (fabWrapper) {
-                if (isKeyboardOpen) {
-                    fabWrapper.style.opacity = '0';
-                    fabWrapper.style.pointerEvents = 'none';
-                    fabWrapper.style.transform = `translateY(100px)`;
-                } else {
-                    fabWrapper.style.opacity = '1';
-                    fabWrapper.style.pointerEvents = 'auto';
-                    fabWrapper.style.transform = 'translateY(0)';
-                    fabWrapper.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
                 }
             }
         }

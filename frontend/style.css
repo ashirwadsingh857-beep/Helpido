@@ -1145,6 +1145,14 @@ input[type="number"] {
     border-top: 1px solid #E0E0E0;
     z-index: 9000;
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+body.keyboard-active .bottom-nav,
+body.keyboard-active .fab-wrapper {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
 }
 
 .nav-item {
