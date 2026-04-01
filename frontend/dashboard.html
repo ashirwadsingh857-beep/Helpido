@@ -4388,9 +4388,52 @@
                         modalContent.style.transform = `translateY(-${offset}px) scale(1)`;
                     } else {
                         modalContent.style.transform = 'translateY(0) scale(1)';
-                        // Restore transition when keyboard is closed
                         modalContent.style.transition = 'transform 0.4s cubic-bezier(0.32, 1.15, 0.25, 1)';
                     }
+                }
+            }
+
+            // 3. RIDE MODAL OPTIMIZATION
+            const rideModal = document.getElementById('ride-modal');
+            if (rideModal && !rideModal.classList.contains('hidden')) {
+                const modalContent = rideModal.querySelector('.modal-content');
+                if (modalContent) {
+                    modalContent.style.transition = 'none';
+                    if (isKeyboardOpen) {
+                        const offset = Math.max(0, keyboardHeight / 1.5);
+                        modalContent.style.transform = `translateY(-${offset}px) scale(1)`;
+                    } else {
+                        modalContent.style.transform = 'translateY(0) scale(1)';
+                        modalContent.style.transition = 'transform 0.4s cubic-bezier(0.32, 1.15, 0.25, 1)';
+                    }
+                }
+            }
+
+            // 4. NAVIGATION BAR OPTIMIZATION (NEW)
+            const bottomNav = document.querySelector('.bottom-nav');
+            if (bottomNav) {
+                // Remove transitions to prevent jittering with the keyboard
+                bottomNav.style.transition = 'none';
+                if (isKeyboardOpen) {
+                    // Push the nav down exactly by the keyboard height so it stays at the "true" bottom
+                    bottomNav.style.transform = `translate(-50%, ${keyboardHeight}px)`;
+                } else {
+                    bottomNav.style.transform = 'translateX(-50%)';
+                    // Re-enable transition for smooth aesthetic when keyboard closes
+                    bottomNav.style.transition = 'transform 0.3s ease';
+                }
+            }
+
+            // 5. FAB OPTIMIZATION (NEW)
+            const fabWrapper = document.getElementById('fab-wrapper');
+            if (fabWrapper) {
+                fabWrapper.style.transition = 'none';
+                if (isKeyboardOpen) {
+                    // Push the FAB down exactly by the keyboard height
+                    fabWrapper.style.transform = `translateY(${keyboardHeight}px)`;
+                } else {
+                    fabWrapper.style.transform = 'translateY(0)';
+                    fabWrapper.style.transition = 'transform 0.3s ease';
                 }
             }
         }
