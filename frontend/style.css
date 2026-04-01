@@ -998,7 +998,7 @@ input[type="number"] {
 /* FAB Button & Speed Dial */
 .fab-wrapper {
     position: fixed;
-    bottom: 100px;
+    bottom: 85px; /* Moved down from 100px to be nearer to the nav dock */
     right: 24px;
     z-index: 10000; /* Ensure it stays above everything, including nav */
     display: flex;
@@ -1049,9 +1049,9 @@ input[type="number"] {
     pointer-events: auto;
 }
 
-/* Ask for Ride - Furthest out (Top Left stair) */
+/* Ask for Ride - Furthest out (Top stair) */
 .speed-dial-menu.open .speed-dial-btn:nth-child(1) {
-    transform: scale(1) translate(-20px, -135px);
+    transform: scale(1) translate(0px, -135px); /* Removed -20px X translation to align right edges perfectly */
 }
 
 /* Normal Help - Closer (Bottom stair) */
@@ -1101,7 +1101,7 @@ input[type="number"] {
     transform: scale(0.85) !important;
 }
 
-/* Modal */
+/* Modal Overlay */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -1112,7 +1112,7 @@ input[type="number"] {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 2000;
+    z-index: 10001;
 }
 
 .modal-content {
@@ -1132,7 +1132,7 @@ input[type="number"] {
 /* Bottom Navigation */
 .bottom-nav {
     position: fixed;
-    bottom: 0;
+    bottom: 0px !important; /* Force stay at true bottom for keyboard handling */
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
