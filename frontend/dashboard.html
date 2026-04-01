@@ -770,8 +770,12 @@
             z-index: 10000 !important;
         }
 
-        #chat-modal {
+        #ride-modal {
             z-index: 10500 !important;
+        }
+
+        #chat-modal {
+            z-index: 10600 !important;
         }
 
         #create-modal {
@@ -4409,31 +4413,35 @@
                 }
             }
 
-            // 4. NAVIGATION BAR OPTIMIZATION (NEW)
+            // 4. NAVIGATION BAR OPTIMIZATION (UPDATED)
             const bottomNav = document.querySelector('.bottom-nav');
             if (bottomNav) {
-                // Remove transitions to prevent jittering with the keyboard
-                bottomNav.style.transition = 'none';
+                // Ensure the nav dock is hidden when filling out a form in a modal
                 if (isKeyboardOpen) {
-                    // Push the nav down exactly by the keyboard height so it stays at the "true" bottom
-                    bottomNav.style.transform = `translate(-50%, ${keyboardHeight}px)`;
+                    bottomNav.style.opacity = '0';
+                    bottomNav.style.pointerEvents = 'none';
+                    // Sink it further to be safe
+                    bottomNav.style.transform = `translate(-50%, 100px)`;
                 } else {
+                    bottomNav.style.opacity = '1';
+                    bottomNav.style.pointerEvents = 'auto';
                     bottomNav.style.transform = 'translateX(-50%)';
-                    // Re-enable transition for smooth aesthetic when keyboard closes
-                    bottomNav.style.transition = 'transform 0.3s ease';
+                    bottomNav.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
                 }
             }
 
-            // 5. FAB OPTIMIZATION (NEW)
+            // 5. FAB OPTIMIZATION (UPDATED)
             const fabWrapper = document.getElementById('fab-wrapper');
             if (fabWrapper) {
-                fabWrapper.style.transition = 'none';
                 if (isKeyboardOpen) {
-                    // Push the FAB down exactly by the keyboard height
-                    fabWrapper.style.transform = `translateY(${keyboardHeight}px)`;
+                    fabWrapper.style.opacity = '0';
+                    fabWrapper.style.pointerEvents = 'none';
+                    fabWrapper.style.transform = `translateY(100px)`;
                 } else {
+                    fabWrapper.style.opacity = '1';
+                    fabWrapper.style.pointerEvents = 'auto';
                     fabWrapper.style.transform = 'translateY(0)';
-                    fabWrapper.style.transition = 'transform 0.3s ease';
+                    fabWrapper.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
                 }
             }
         }
