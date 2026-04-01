@@ -1036,7 +1036,14 @@ input[type="number"] {
     opacity: 0;
     pointer-events: none;
     transform-origin: bottom right;
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease, background 0.2s ease;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.dark-mode .speed-dial-btn {
+    background: #2A2A2A;
+    color: #FFFFFF;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    border: 1px solid #444;
 }
 
 /* Closed state transforms to keep them tucked behind */
