@@ -1013,62 +1013,86 @@ input[type="number"] {
     width: 56px;
     height: 56px;
     pointer-events: none;
-    z-index: 10001; /* Ensure ABOVE the fab-btn */
+    z-index: 10001;
 }
 
+/* CIRCULAR speed-dial buttons — icon only, no text */
 .speed-dial-btn {
     position: absolute;
-    bottom: 8px; /* Offset slightly inside the fab */
-    right: 8px;
+    bottom: 0;
+    right: 0;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
     background: white;
-    color: var(--text-dark);
     border: none;
-    padding: 10px 18px;
-    border-radius: 20px;
-    font-size: 0.95rem;
-    font-weight: 700;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 8px;
-    white-space: nowrap;
+    justify-content: center;
+    padding: 0;
     opacity: 0;
     pointer-events: none;
-    transform-origin: bottom right;
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease, background 0.2s ease, color 0.2s ease;
+    transform-origin: center center;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease, background 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
+}
+
+/* Hide any text inside the button, show only icon */
+.speed-dial-btn > .speed-dial-icon-wrapper {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    margin: 0;
+    background: none;
+    box-shadow: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.speed-dial-btn > .speed-dial-icon-wrapper img {
+    width: 60%;
+    height: 60%;
+    object-fit: contain;
+}
+
+/* Completely hide text nodes inside button */
+.speed-dial-btn > *:not(.speed-dial-icon-wrapper) {
+    display: none !important;
 }
 
 .dark-mode .speed-dial-btn {
     background: #2A2A2A;
-    color: #FFFFFF;
     box-shadow: 0 4px 15px rgba(0,0,0,0.4);
     border: 1px solid #444;
 }
 
-/* Closed state transforms to keep them tucked behind */
-.speed-dial-btn:nth-child(1) { transform: scale(0.5) translate(0, 0); }
-.speed-dial-btn:nth-child(2) { transform: scale(0.5) translate(0, 0); }
+/* Closed state */
+.speed-dial-btn:nth-child(1) { transform: scale(0.3); }
+.speed-dial-btn:nth-child(2) { transform: scale(0.3); }
 
-/* Open State - Fan out diagonally */
+/* Open State */
 .speed-dial-menu.open .speed-dial-btn {
     opacity: 1;
     pointer-events: auto;
 }
 
-/* Ask for Ride - Furthest out (Top stair) */
+/* Ask for Ride - top */
 .speed-dial-menu.open .speed-dial-btn:nth-child(1) {
-    transform: scale(1) translate(0px, -135px); /* Removed -20px X translation to align right edges perfectly */
+    transform: scale(1) translate(0px, -130px);
 }
 
-/* Normal Help - Closer (Bottom stair) */
+/* Normal Help - closer */
 .speed-dial-menu.open .speed-dial-btn:nth-child(2) {
-    transform: scale(1) translate(0px, -70px);
+    transform: scale(1) translate(0px, -68px);
 }
 
 .speed-dial-btn:active {
-    transform: scale(0.95);
-    background: var(--bg-light);
+    transform: scale(0.9) !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
 .fab-btn {
@@ -1180,7 +1204,39 @@ body.keyboard-active .fab-wrapper {
 
 .nav-item span {
     font-size: 1.5rem;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Custom image icons in nav bar */
+.nav-icon-container {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 2px;
+}
+
+.nav-icon-container img {
+    width: 24px !important;
+    height: 24px !important;
+    object-fit: contain;
+    display: block;
+}
+
+.nav-item.active .nav-icon-container {
+    background: rgba(255, 87, 34, 0.12);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    padding: 6px;
+}
+
+.nav-item.active .nav-icon-container img {
+    filter: drop-shadow(0px 1px 3px rgba(255,87,34,0.4));
 }
 
 .nav-item p {
@@ -1395,6 +1451,17 @@ body.keyboard-active .fab-wrapper {
 
 .status-btn:active {
     transform: scale(0.95);
+}
+
+/* Custom image icon in status pill */
+.status-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: inline-block;
+    vertical-align: middle;
+    flex-shrink: 0;
 }
 
 .poster-badge {
