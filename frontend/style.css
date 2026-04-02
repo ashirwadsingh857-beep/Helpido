@@ -1021,8 +1021,8 @@ input[type="number"] {
     position: absolute;
     bottom: 0;
     right: 0;
-    width: 52px;
-    height: 52px;
+    width: 58px;
+    height: 58px;
     border-radius: 50%;
     background: white;
     border: none;
@@ -1039,7 +1039,7 @@ input[type="number"] {
     overflow: hidden;
 }
 
-/* Hide any text inside the button, show only icon */
+/* Icon wrapper fills the whole circular button */
 .speed-dial-btn > .speed-dial-icon-wrapper {
     width: 100%;
     height: 100%;
@@ -1051,11 +1051,13 @@ input[type="number"] {
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    padding: 10px;
+    box-sizing: border-box;
 }
 
 .speed-dial-btn > .speed-dial-icon-wrapper img {
-    width: 60%;
-    height: 60%;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
 }
 
@@ -1212,8 +1214,8 @@ body.keyboard-active .fab-wrapper {
 
 /* Custom image icons in nav bar */
 .nav-icon-container {
-    width: 28px;
-    height: 28px;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1221,8 +1223,8 @@ body.keyboard-active .fab-wrapper {
 }
 
 .nav-icon-container img {
-    width: 24px !important;
-    height: 24px !important;
+    width: 32px !important;
+    height: 32px !important;
     object-fit: contain;
     display: block;
 }
@@ -1230,9 +1232,9 @@ body.keyboard-active .fab-wrapper {
 .nav-item.active .nav-icon-container {
     background: rgba(255, 87, 34, 0.12);
     border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    padding: 6px;
+    width: 44px;
+    height: 44px;
+    padding: 7px;
 }
 
 .nav-item.active .nav-icon-container img {

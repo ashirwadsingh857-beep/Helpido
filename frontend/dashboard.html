@@ -1563,13 +1563,11 @@
 
     <div class="fab-wrapper" id="fab-wrapper">
         <div class="speed-dial-menu" id="speed-dial-menu">
-            <button class="speed-dial-btn" onclick="openRideModal()">
-                <div class="speed-dial-icon-wrapper"><img src="asset/ride.png" alt="Ride" onerror="this.style.display='none'"></div>
-                Ask for Ride
+            <button class="speed-dial-btn" onclick="openRideModal()" title="Ask for Ride">
+                <div class="speed-dial-icon-wrapper"><img src="asset/ride.png" alt="Ride"></div>
             </button>
-            <button class="speed-dial-btn" onclick="openModal()">
-                <div class="speed-dial-icon-wrapper"><img src="asset/help.png" alt="Help" onerror="this.style.display='none'"></div>
-                Normal Help
+            <button class="speed-dial-btn" onclick="openModal()" title="Normal Help">
+                <div class="speed-dial-icon-wrapper"><img src="asset/help.png" alt="Help"></div>
             </button>
         </div>
         <button class="fab-btn" id="main-fab" onclick="toggleFabSpeedDial()">+</button>
