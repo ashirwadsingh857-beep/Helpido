@@ -1086,6 +1086,14 @@
                 margin-bottom: 0 !important;
             }
         }
+        /* Custom Icon Styling */
+        .nav-icon-container img { width: 24px; height: 24px; object-fit: contain; vertical-align: middle; }
+        .nav-item.active .nav-icon-container img { filter: drop-shadow(0px 2px 4px rgba(255,87,34,0.3)); }
+        
+        .speed-dial-icon-wrapper { display: inline-flex; justify-content: center; align-items: center; width: 32px; height: 32px; border-radius: 50%; background: #f0f0f0; margin-right: 12px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .speed-dial-icon-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .status-icon { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.15); display: inline-block; background: #fff; }
     </style>
 </head>
 
@@ -1563,19 +1571,28 @@
 
     <div class="fab-wrapper" id="fab-wrapper">
         <div class="speed-dial-menu" id="speed-dial-menu">
-            <button class="speed-dial-btn" onclick="openRideModal()">🚗 Ask for Ride</button>
-            <button class="speed-dial-btn" onclick="openModal()">🤝 Normal Help</button>
+            <button class="speed-dial-btn" onclick="openRideModal()">
+                <div class="speed-dial-icon-wrapper"><img src="asset/ride.png" alt="Ride" onerror="this.style.display='none'"></div>
+                Ask for Ride
+            </button>
+            <button class="speed-dial-btn" onclick="openModal()">
+                <div class="speed-dial-icon-wrapper"><img src="asset/help.png" alt="Help" onerror="this.style.display='none'"></div>
+                Normal Help
+            </button>
         </div>
         <button class="fab-btn" id="main-fab" onclick="toggleFabSpeedDial()">+</button>
     </div>
     <nav class="bottom-nav">
-        <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><span>🏠</span>
+        <div class="nav-item active" id="nav-home" onclick="switchTab('home')">
+            <span class="nav-icon-container"><img src="asset/home.png" alt="Home" onerror="this.style.display='none'; this.parentElement.innerHTML='🏠'"></span>
             <p>Home</p>
         </div>
-        <div class="nav-item" id="nav-tasks" onclick="switchTab('tasks')"><span>📋</span>
+        <div class="nav-item" id="nav-tasks" onclick="switchTab('tasks')">
+            <span class="nav-icon-container"><img src="asset/task.png" alt="Tasks" onerror="this.style.display='none'; this.parentElement.innerHTML='📋'"></span>
             <p>Tasks</p>
         </div>
-        <div class="nav-item" id="nav-profile" onclick="switchTab('profile')"><span>👤</span>
+        <div class="nav-item" id="nav-profile" onclick="switchTab('profile')">
+            <span class="nav-icon-container"><img src="asset/profile.png" alt="Profile" onerror="this.style.display='none'; this.parentElement.innerHTML='👤'"></span>
             <p>Profile</p>
         </div>
     </nav>
@@ -2974,8 +2991,13 @@
 
         function updateStatusUI() {
             const btn = document.getElementById('availability-btn');
-            if (currentStatus === 'free') { btn.innerHTML = '🟢 Free'; btn.className = 'status-btn free'; }
-            else { btn.innerHTML = '🔴 Busy'; btn.className = 'status-btn busy'; }
+            if (currentStatus === 'free') { 
+                btn.innerHTML = '<img src="asset/free.png" class="status-icon" alt="Free" onerror="this.style.display=\'none\'"> Free'; 
+                btn.className = 'status-btn free'; 
+            } else { 
+                btn.innerHTML = '<img src="asset/busy.png" class="status-icon" alt="Busy" onerror="this.style.display=\'none\'"> Busy'; 
+                btn.className = 'status-btn busy'; 
+            }
         }
 
         // --- HELPER MARKS TASK DONE (Step 1 of 2-sided completion) ---
