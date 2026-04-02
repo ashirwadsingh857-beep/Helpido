@@ -4558,10 +4558,26 @@
     function hpdLoad(k){try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;}}
 
     /* ---- Haptic bridge (safe no-op when Flutter handler not ready) ---- */
+    /* Haptic intensity → vibration pattern map */
+    const HPD_VIBRATE = {
+        hapticLight:   [18],
+        hapticMedium:  [35],
+        hapticHeavy:   [60],
+        hapticSuccess: [35, 80, 18],  /* double-pulse like iOS success */
+    };
+
     function hpdHaptic(type) {
+        // 1) Try Flutter bridge (native HapticFeedback — best quality)
         try {
             if (window.flutter_inappwebview) {
                 window.flutter_inappwebview.callHandler(type);
+                return;
+            }
+        } catch(e) {}
+        // 2) Fallback: Web Vibration API (works in Android WebView with VIBRATE permission)
+        try {
+            if (navigator.vibrate) {
+                navigator.vibrate(HPD_VIBRATE[type] || [30]);
             }
         } catch(e) {}
     }
