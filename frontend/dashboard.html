@@ -1090,6 +1090,10 @@
 </head>
 
 <body>
+    <!-- Offline status banner -->
+    <div id="offline-banner" style="display:none; position:fixed; top:0; left:0; right:0; z-index:99999; background:#1a1a2e; color:#fff; text-align:center; padding:8px 16px; font-size:0.78rem; font-weight:600; letter-spacing:0.3px; box-shadow:0 2px 8px rgba(0,0,0,0.3);">
+        📡 You're offline — showing cached data
+    </div>
     <div id="splash-screen" class="splash-screen">
         <h2 id="splash-greeting" class="splash-greeting">Loading...</h2>
     </div>
@@ -1108,8 +1112,10 @@
                 </div>
             </header>
             <div style="display: flex; justify-content: space-between; align-items: center; padding-right: 20px;">
-                <h3 class="section-title" style="margin-bottom: 0;">Help Needed Nearby</h3>
-
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <h3 class="section-title" style="margin-bottom: 0;">Help Needed Nearby</h3>
+                    <span id="home-cache-label" style="display:none; font-size:0.68rem; color:#9E9E9E; background:#F5F5F5; border-radius:10px; padding:2px 8px; font-weight:500;"></span>
+                </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <span style="font-size: 0.8rem; color: #757575; font-weight: 600;">Radius:</span>
                     <div id="radius-btn" class="radius-btn" onclick="openRadiusModal(); event.stopPropagation();">
@@ -1246,7 +1252,10 @@
                     <p>Track requests and tasks you accepted.</p>
                 </div>
             </header>
-            <h3 class="section-title">My Uploaded Requests</h3>
+            <div style="display:flex; align-items:center; gap:8px; padding: 0 20px 0 0;">
+                <h3 class="section-title" style="margin-bottom:0;">My Uploaded Requests</h3>
+                <span id="tasks-cache-label" style="display:none; font-size:0.68rem; color:#9E9E9E; background:#F5F5F5; border-radius:10px; padding:2px 8px; font-weight:500;"></span>
+            </div>
             <div id="my-requests-feed" style="margin-bottom: 30px;"></div>
             <h3 class="section-title">Tasks I Accepted</h3>
             <div id="my-jobs-feed" style="margin-bottom: 40px;"></div>
@@ -4468,6 +4477,193 @@
             window.visualViewport.addEventListener('resize', handleViewportChange);
             window.visualViewport.addEventListener('scroll', handleViewportChange);
         }
+    </script>
+
+    <script>
+    /* =============================================================
+       HELPIDO OFFLINE-FIRST ENGINE
+    ============================================================= */
+    const HPD_CACHE = { home:'hpd_home_cache', tasks:'hpd_tasks_cache', pending:'hpd_pending_queue' };
+
+    function hpdSave(k,d){try{localStorage.setItem(k,JSON.stringify(d));}catch(e){}}
+    function hpdLoad(k){try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;}}
+
+    function hpdTimeAgoShort(ts){
+        if(!ts) return '';
+        const d=Math.round((Date.now()-ts)/1000);
+        if(d<60) return d+'s ago';
+        if(d<3600) return Math.floor(d/60)+'m ago';
+        return Math.floor(d/3600)+'h ago';
+    }
+    function hpdShowCacheLabel(id,ts){
+        const el=document.getElementById(id); if(!el) return;
+        if(ts && (Date.now()-ts)>2*60*1000){
+            el.textContent='\u23f1 '+hpdTimeAgoShort(ts);
+            el.style.display='inline-block';
+        } else { el.style.display='none'; }
+    }
+
+    /* ---- Offline / Online Banner ---- */
+    function hpdSetOfflineUI(off){
+        const b=document.getElementById('offline-banner');
+        if(b) b.style.display=off?'block':'none';
+    }
+    window.addEventListener('offline',()=>{ hpdSetOfflineUI(true); });
+    window.addEventListener('online',()=>{
+        hpdSetOfflineUI(false);
+        if(typeof loadTasks==='function') loadTasks();
+        if(typeof loadMyTasks==='function') loadMyTasks();
+        setTimeout(hpdProcessPendingQueue, 1500);
+    });
+    if(!navigator.onLine) hpdSetOfflineUI(true);
+
+    /* ---- Pending Action Queue ---- */
+    function hpdAddPending(action){
+        const q=hpdLoad(HPD_CACHE.pending)||[];
+        q.push({...action,id:Date.now()+Math.random().toString(36).slice(2),ts:Date.now()});
+        hpdSave(HPD_CACHE.pending,q);
+    }
+    async function hpdProcessPendingQueue(){
+        const q=hpdLoad(HPD_CACHE.pending)||[];
+        if(!q.length) return;
+        if(typeof showAppNotification==='function') showAppNotification('📤 Sending '+q.length+' pending action(s)...');
+        const failed=[];
+        for(const a of q){
+            try{
+                if(a.type==='chat'){
+                    if(typeof globalSocket!=='undefined'&&globalSocket.connected){
+                        globalSocket.emit('sendMessage',{taskId:a.taskId,senderPhone:a.senderPhone,targetPhone:a.targetPhone,text:a.text});
+                        const bbl=document.querySelector('[data-temp-id="'+a.tempId+'"]');
+                        if(bbl){const ic=bbl.querySelector('.pending-icon');if(ic)ic.textContent='✓';}
+                    } else { failed.push(a); }
+                } else if(a.type==='post_task'){
+                    const url=(typeof API_URL!=='undefined'?API_URL:'')+'/tasks';
+                    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(a.payload)});
+                    if(r.ok){
+                        if(typeof showAppNotification==='function') showAppNotification('✅ Pending task posted!');
+                        if(typeof loadTasks==='function') loadTasks();
+                        if(typeof loadMyTasks==='function') loadMyTasks();
+                    } else { failed.push(a); }
+                }
+            }catch(e){ failed.push(a); }
+        }
+        hpdSave(HPD_CACHE.pending,failed);
+        if(!failed.length&&q.length) if(typeof showAppNotification==='function') showAppNotification('✅ All pending messages sent!');
+    }
+
+    /* ---- Optimistic Chat + Offline Queue ---- */
+    window.addEventListener('load',()=>{
+        const chatInput=document.getElementById('chat-input');
+        const chatSendBtn=document.getElementById('chat-send-btn');
+        function hpdSendChat(){
+            if(!chatInput) return;
+            const text=chatInput.value.trim(); if(!text) return;
+            const phone=typeof myPhone!=='undefined'?myPhone:'';
+            const taskId=typeof currentChatTaskId!=='undefined'?currentChatTaskId:null;
+            const target=typeof currentChatTargetPhone!=='undefined'?currentChatTargetPhone:null;
+            if(!taskId) return;
+            const tempId=Date.now().toString(36)+Math.random().toString(36).slice(2);
+            // Optimistic bubble
+            const msgBox=document.getElementById('chat-messages');
+            if(msgBox){
+                const e=document.getElementById('empty-chat-msg'); if(e) e.remove();
+                const bbl=document.createElement('div');
+                bbl.className='msg-bubble msg-sent';
+                bbl.setAttribute('data-temp-id',tempId);
+                const td=document.createElement('div'); td.innerText=text;
+                const tim=document.createElement('div');
+                tim.className='msg-time';
+                tim.style.cssText='display:flex;align-items:center;justify-content:flex-end;gap:3px;';
+                tim.innerText=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+                const tk=document.createElement('span');
+                tk.className='pending-icon';
+                tk.style.cssText='font-size:0.7rem;color:'+(navigator.onLine?'#4FC3F7':'#aaa')+';';
+                tk.textContent=navigator.onLine?'✓':'⏰';
+                tim.appendChild(tk); bbl.appendChild(td); bbl.appendChild(tim);
+                msgBox.appendChild(bbl); msgBox.scrollTop=msgBox.scrollHeight;
+            }
+            chatInput.value='';
+            const sb=document.getElementById('chat-send-btn'); if(sb) sb.style.background='#E0E0E0';
+            if(!navigator.onLine){
+                hpdAddPending({type:'chat',tempId,taskId,senderPhone:phone,targetPhone:target,text});
+                return;
+            }
+            if(typeof globalSocket!=='undefined') globalSocket.emit('sendMessage',{taskId,senderPhone:phone,targetPhone:target,text});
+        }
+        if(chatSendBtn) chatSendBtn.addEventListener('click',e=>{e.stopPropagation();hpdSendChat();},true);
+        if(chatInput) chatInput.addEventListener('keypress',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();e.stopPropagation();hpdSendChat();}},true);
+    });
+
+    /* ---- Offline guard: camera & gallery ---- */
+    window.addEventListener('load',()=>{
+        ['img-btn-camera','img-btn-gallery','task-image-input'].forEach(id=>{
+            const el=document.getElementById(id);
+            if(el) el.addEventListener('click',e=>{
+                if(!navigator.onLine){
+                    e.stopImmediatePropagation();
+                    if(typeof showAppNotification==='function') showAppNotification('📡 You need an internet connection for uploading images','error');
+                }
+            },true);
+        });
+    });
+
+    /* ---- Offline task posting (text-only queue) ---- */
+    window.addEventListener('load',()=>{
+        const createModal=document.getElementById('create-modal');
+        if(!createModal) return;
+        createModal.querySelectorAll('.btn').forEach(btn=>{
+            if((btn.getAttribute('onclick')||'').includes('postHelpRequest')){
+                btn.addEventListener('click',e=>{
+                    if(!navigator.onLine){
+                        e.stopImmediatePropagation();
+                        const title=document.getElementById('task-title')?.value?.trim();
+                        const desc=document.getElementById('task-desc')?.value?.trim();
+                        const reward=parseInt(document.getElementById('task-reward')?.value)||0;
+                        if(!title||!desc) return;
+                        hpdAddPending({type:'post_task',payload:{title,description:desc,reward,postedBy:typeof myPhone!=='undefined'?myPhone:'',lat:typeof userLat!=='undefined'?userLat:null,lng:typeof userLng!=='undefined'?userLng:null,imageData:null}});
+                        if(typeof closeModal==='function') closeModal();
+                        if(typeof showAppNotification==='function') showAppNotification("📡 Task saved! Will post when you're back online.");
+                    }
+                },true);
+            }
+        });
+    });
+
+    /* ---- Feed Cache Write (intercept fetch) ---- */
+    (()=>{
+        const orig=window.fetch;
+        window.fetch=async function(url,opts){
+            const r=await orig.apply(this,arguments);
+            if(typeof url==='string'){
+                const m=(!opts||!opts.method||opts.method==='GET');
+                if(m&&url.includes('/tasks?lat=')){
+                    try{const c=r.clone();const d=await c.json();if(Array.isArray(d)){hpdSave(HPD_CACHE.home,{tasks:d,ts:Date.now()});hpdShowCacheLabel('home-cache-label',Date.now());}}catch(e){}
+                }
+                if(m&&url.includes('/tasks/my-tasks')){
+                    try{const c=r.clone();const d=await c.json();if(d&&(d.myRequests||d.myJobs)){hpdSave(HPD_CACHE.tasks,{myRequests:d.myRequests||[],myJobs:d.myJobs||[],ts:Date.now()});hpdShowCacheLabel('tasks-cache-label',Date.now());}}catch(e){}
+                }
+            }
+            return r;
+        };
+    })();
+
+    /* ---- Flutter Pull-to-Refresh Bridge ---- */
+    window.helpidoRefresh=async function(){
+        try{
+            await Promise.allSettled([
+                typeof loadTasks==='function'?loadTasks():Promise.resolve(),
+                typeof loadMyTasks==='function'?loadMyTasks():Promise.resolve()
+            ]);
+        }catch(e){}
+        if(window.flutter_inappwebview) window.flutter_inappwebview.callHandler('refreshComplete');
+    };
+
+    /* ---- Refresh cache labels every minute ---- */
+    setInterval(()=>{
+        const h=hpdLoad(HPD_CACHE.home); if(h) hpdShowCacheLabel('home-cache-label',h.ts);
+        const t=hpdLoad(HPD_CACHE.tasks); if(t) hpdShowCacheLabel('tasks-cache-label',t.ts);
+    },60000);
+
     </script>
 
     <!-- ===== GLOBAL OVERLAY FOR EXPANDED CARDS ===== -->
