@@ -235,6 +235,73 @@ app.get('/api/chat/:taskId', async (req, res) => {
     } catch (err) { res.status(500).json({ message: "Error fetching chat" }); }
 });
 
+// --- NEW ROUTE: Send Chat Message via REST (for headless flutter background actions) ---
+app.post('/api/chat/send', async (req, res) => {
+    const data = req.body;
+    try {
+        const newMsg = new Message({
+            taskId: data.taskId,
+            senderPhone: data.senderPhone,
+            text: data.text,
+            seenBy: []
+        });
+        await newMsg.save();
+
+        io.to(data.taskId).emit('receiveMessage', newMsg);
+
+        if (data.targetPhone) {
+            io.to(data.targetPhone).emit('notifyMessage', newMsg);
+            try {
+                const targetUser = await User.findOne({ phone: data.targetPhone });
+                if (targetUser && targetUser.notifyChatMessages !== false) {
+                    const senderUser = await User.findOne({ phone: data.senderPhone });
+                    const senderName = senderUser ? senderUser.name.split(' ')[0] : 'Someone';
+
+                    const payloadData = {
+                        title: `New message from ${senderName}`,
+                        body: data.text,
+                        type: 'chat',
+                        taskId: data.taskId,
+                        senderPhone: data.senderPhone
+                    };
+
+                    if (targetUser.pushSubscription) {
+                        const payload = JSON.stringify({
+                            title: payloadData.title,
+                            desc: payloadData.body,
+                            type: payloadData.type,
+                            taskId: payloadData.taskId,
+                            senderPhone: payloadData.senderPhone
+                        });
+                        await webpush.sendNotification(targetUser.pushSubscription, payload);
+                    }
+
+                    if (targetUser.fcmToken) {
+                        const message = {
+                            data: {
+                                title: payloadData.title || '',
+                                body: payloadData.body || '',
+                                type: payloadData.type,
+                                taskId: payloadData.taskId,
+                                senderPhone: payloadData.senderPhone,
+                                click_action: 'FLUTTER_NOTIFICATION_CLICK'
+                            },
+                            token: targetUser.fcmToken,
+                        };
+                        await admin.messaging().send(message);
+                    }
+                }
+            } catch (pushErr) {
+                console.error("Native push failed:", pushErr);
+            }
+        }
+        res.status(201).json({ message: "Message sent", data: newMsg });
+    } catch (err) { 
+        console.error("REST Message save error", err); 
+        res.status(500).json({ message: "Error saving message" });
+    }
+});
+
 app.use(express.static(path.join(__dirname, '../frontend')));
 
 mongoose.connect(process.env.MONGO_URI)
