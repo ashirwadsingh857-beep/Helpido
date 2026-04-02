@@ -531,14 +531,16 @@ app.post('/api/tasks', async (req, res) => {
             let payloadData = {
                 title: `New Task Near You 📍`,
                 body: `${posterName} needs help: "${title}" for ₹${reward}`,
-                type: 'task'
+                type: 'task',
+                taskId: newTask._id.toString()
             };
             
             if (taskType === 'ride') {
                 payloadData = {
                     title: `New Ride Request 🚗`,
                     body: `${posterName} needs a lift to ${destination?.name || 'Destination'}: "${title}"`,
-                    type: 'ride'
+                    type: 'ride',
+                    taskId: newTask._id.toString()
                 };
             }
 
@@ -548,7 +550,8 @@ app.post('/api/tasks', async (req, res) => {
                     const payload = JSON.stringify({
                         title: payloadData.title,
                         desc: payloadData.body,
-                        type: payloadData.type
+                        type: payloadData.type,
+                        taskId: payloadData.taskId
                     });
                     promises.push(webpush.sendNotification(user.pushSubscription, payload).catch(() => { }));
                 }
@@ -558,6 +561,7 @@ app.post('/api/tasks', async (req, res) => {
                             title: payloadData.title || '',
                             body: payloadData.body || '',
                             type: payloadData.type,
+                            taskId: payloadData.taskId,
                             click_action: 'FLUTTER_NOTIFICATION_CLICK'
                         },
                         token: user.fcmToken,
