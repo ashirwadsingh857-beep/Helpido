@@ -149,11 +149,9 @@ io.on('connection', (socket) => {
                         // 2. Send via FCM if token exists
                         if (targetUser.fcmToken) {
                             const message = {
-                                notification: {
-                                    title: payloadData.title,
-                                    body: payloadData.body,
-                                },
                                 data: {
+                                    title: payloadData.title || '',
+                                    body: payloadData.body || '',
                                     type: payloadData.type,
                                     taskId: payloadData.taskId,
                                     senderPhone: payloadData.senderPhone,
@@ -477,11 +475,9 @@ app.post('/api/tasks', async (req, res) => {
                 }
                 if (user.fcmToken) {
                     const message = {
-                        notification: {
-                            title: payloadData.title,
-                            body: payloadData.body,
-                        },
                         data: {
+                            title: payloadData.title || '',
+                            body: payloadData.body || '',
                             type: payloadData.type,
                             click_action: 'FLUTTER_NOTIFICATION_CLICK'
                         },
@@ -594,11 +590,9 @@ app.post("/api/tasks/accept", async (req, res) => {
 
                 if (posterUser.fcmToken) {
                     const message = {
-                        notification: {
-                            title: payloadData.title,
-                            body: payloadData.body,
-                        },
                         data: {
+                            title: payloadData.title || '',
+                            body: payloadData.body || '',
                             type: payloadData.type,
                             taskId: payloadData.taskId,
                             senderPhone: payloadData.senderPhone,
@@ -663,11 +657,9 @@ app.post("/api/tasks/helper-done", async (req, res) => {
 
                 if (posterUser.fcmToken) {
                     const message = {
-                        notification: {
-                            title: payloadData.title,
-                            body: payloadData.body,
-                        },
                         data: {
+                            title: payloadData.title || '',
+                            body: payloadData.body || '',
                             type: payloadData.type,
                             taskId: payloadData.taskId,
                             click_action: 'FLUTTER_NOTIFICATION_CLICK'
@@ -770,11 +762,9 @@ app.post("/api/tasks/complete", async (req, res) => {
 
                 if (helper.fcmToken) {
                     const message = {
-                        notification: {
-                            title: payloadData.title,
-                            body: payloadData.body,
-                        },
                         data: {
+                            title: payloadData.title || '',
+                            body: payloadData.body || '',
                             type: payloadData.type,
                             taskId: payloadData.taskId,
                             click_action: 'FLUTTER_NOTIFICATION_CLICK'
