@@ -1649,13 +1649,17 @@
         const myPhone = localStorage.getItem('helpido_phone');
 
         // Check if running inside Flutter app and sync the phone down to Shared Preferences for headless notification actions
-        if (myPhone && window.flutter_inappwebview) {
-            window.flutter_inappwebview.callHandler('syncUserPhone', myPhone);
-        } else if (myPhone) {
-            // Also try to ensure it syncs if webview handler hasn't been attached yet
-            window.addEventListener("flutterInAppWebViewPlatformReady", function(event) {
-                window.flutter_inappwebview.callHandler('syncUserPhone', myPhone);
-            });
+        if (myPhone) {
+            let syncRetries = 0;
+            const syncInterval = setInterval(() => {
+                if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
+                    window.flutter_inappwebview.callHandler('syncUserPhone', myPhone).catch(e => console.error(e));
+                    clearInterval(syncInterval);
+                }
+                syncRetries++;
+                // Stop trying after 10 seconds
+                if (syncRetries > 20) clearInterval(syncInterval);
+            }, 500);
         }
 
         // --- NEW: PUSH NOTIFICATION SETUP ---

@@ -247,6 +247,18 @@ app.post('/api/chat/send', async (req, res) => {
         });
         await newMsg.save();
 
+        // If targetPhone wasn't sent by the headless background worker, determine it from the task
+        if (!data.targetPhone && data.taskId) {
+            const task = await Task.findById(data.taskId);
+            if (task) {
+                if (data.senderPhone === task.helperPhone) {
+                    data.targetPhone = task.postedBy;
+                } else if (data.senderPhone === task.postedBy) {
+                    data.targetPhone = task.helperPhone;
+                }
+            }
+        }
+
         io.to(data.taskId).emit('receiveMessage', newMsg);
 
         if (data.targetPhone) {
