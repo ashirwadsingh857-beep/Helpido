@@ -3911,45 +3911,7 @@
             onScroll();
         }
 
-        let touchStart = 0;
-        const ptrThreshold = 150;
-        const mainContainer = document.getElementById('main-dash');
 
-        // Helper to get active scroll pos regardless of which element is scrolling
-        function getScrollTop() {
-            return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
-        }
-
-        window.addEventListener('touchstart', e => {
-            if (getScrollTop() === 0) touchStart = e.touches[0].clientY;
-        }, { passive: true });
-
-        const PTR_DEADZONE = 12;
-        window.addEventListener('touchmove', e => {
-            const touchY = e.touches[0].clientY;
-            const pullDistance = touchY - touchStart;
-            if (getScrollTop() === 0 && pullDistance > PTR_DEADZONE && mainContainer) {
-                const adjustedPull = pullDistance - PTR_DEADZONE;
-                mainContainer.style.transform = `translateY(${Math.min(adjustedPull / 3, 80)}px)`;
-            }
-        }, { passive: true });
-
-        window.addEventListener('touchend', e => {
-            if (mainContainer) {
-                mainContainer.style.transform = 'translateY(0)';
-                mainContainer.style.transition = 'transform 0.3s ease';
-                setTimeout(() => {
-                    mainContainer.style.transform = '';
-                    mainContainer.style.transition = '';
-                }, 300);
-            }
-            const touchEnd = e.changedTouches[0].clientY;
-            if (getScrollTop() === 0 && (touchEnd - touchStart) > ptrThreshold) {
-                showAppNotification('↻', 'Refreshing...', 'Fetching latest tasks');
-                if (activeTab === 'home') loadTasks();
-                if (activeTab === 'tasks') loadMyTasks();
-            }
-        });
 
         /* =========================================
            8. TASK HISTORY LOGIC
@@ -4756,13 +4718,15 @@
             if (!ptrPulling || ptrTriggered) return;
             const dy = e.touches[0].clientY - ptrStartY;
             if (dy <= 0) { ptrPulling = false; return; }
+            // Block the browser from scrolling the page while we animate the PTR bar
+            e.preventDefault();
             const progress = Math.min(dy / PTR_THRESHOLD, 1);
             const height = Math.min(dy * 0.5, PTR_MAX_SHOW);
             indicator.style.height = height + 'px';
             arrow.style.transform = 'rotate(' + (progress * 200) + 'deg)';
             label.textContent = progress >= 1 ? 'Release to refresh' : 'Pull to refresh';
             label.style.opacity = Math.min(progress * 1.5, 1);
-        }, { passive: true });
+        }, { passive: false }); // passive:false required to call preventDefault()
 
         document.addEventListener('touchend', function(e) {
             if (!ptrPulling) return;
