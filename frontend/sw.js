@@ -1,167 +1,133 @@
-const SHELL_CACHE = 'helpido-shell-v3';
+/* =============================================================
+   Helpido Service Worker v4
+   Strategy:
+   - App shell (HTML + local CSS): Cache-first, update in background
+   - CDN resources (Google Fonts, Socket.IO, etc): Network-only
+     (we never try to cache these to avoid broken offline state)
+   - API calls: Network-only (feed data is in localStorage via HPD_CACHE)
+   - Push notifications: handled here
+============================================================= */
+
+const SHELL_CACHE = 'helpido-shell-v4';
+
+// Only cache files we FULLY control (self-hosted on render.com)
 const SHELL_ASSETS = [
     '/dashboard.html',
     '/style.css',
-    '/asset/192.png',
-    '/asset/512.png',
-    '/manifest.json'
 ];
 
-// ---- INSTALL: Cache app shell ----
-self.addEventListener('install', (event) => {
-    console.log('[SW] Installing v3 — caching app shell');
+// ---- INSTALL: pre-cache app shell ----
+self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(SHELL_CACHE).then(cache => {
-            return cache.addAll(SHELL_ASSETS).catch(err => {
-                console.warn('[SW] Shell pre-cache partial failure (ok):', err);
-            });
-        })
+            // Use individual adds (not addAll) so one failure doesn't abort everything
+            return Promise.allSettled(
+                SHELL_ASSETS.map(url => cache.add(url).catch(e => console.warn('[SW] Could not cache:', url, e)))
+            );
+        }).then(() => self.skipWaiting())
     );
-    self.skipWaiting();
 });
 
-// ---- ACTIVATE: Remove old caches ----
-self.addEventListener('activate', (event) => {
-    console.log('[SW] Activating v3');
+// ---- ACTIVATE: clean up old caches ----
+self.addEventListener('activate', event => {
     event.waitUntil(
         caches.keys().then(keys =>
-            Promise.all(keys.map(key => {
-                if (key !== SHELL_CACHE) {
-                    console.log('[SW] Deleting old cache:', key);
-                    return caches.delete(key);
-                }
-            }))
+            Promise.all(keys
+                .filter(k => k !== SHELL_CACHE)
+                .map(k => caches.delete(k))
+            )
         ).then(() => self.clients.claim())
     );
 });
 
-// ---- FETCH: Cache-first for shell, network-first for API ----
-self.addEventListener('fetch', (event) => {
-    const url = new URL(event.request.url);
+// ---- FETCH ----
+self.addEventListener('fetch', event => {
+    const req = event.request;
+    const url = new URL(req.url);
 
-    // Never cache: API calls, socket.io, firebase, external APIs
-    if (
+    // === NEVER cache: external CDN, APIs, sockets, Firebase ===
+    const isExternal = (
+        url.hostname !== self.location.hostname ||
         url.pathname.startsWith('/api/') ||
-        url.hostname.includes('socket.io') ||
-        url.hostname.includes('firebaseapp') ||
-        url.hostname.includes('googleapis') ||
-        url.hostname.includes('gstatic') ||
-        url.hostname.includes('nominatim') ||
-        url.hostname.includes('openstreetmap') ||
-        url.hostname.includes('wikimedia')
-    ) {
-        event.respondWith(
-            fetch(event.request).catch(() => {
-                return new Response('{"offline":true}', {
-                    headers: { 'Content-Type': 'application/json' }
-                });
-            })
-        );
+        url.pathname.includes('socket.io')
+    );
+    if (isExternal) {
+        // Just pass through (network only, no cache involvement)
         return;
     }
 
-    // For navigation requests (main HTML), try network first then cache
-    if (event.request.mode === 'navigate') {
-        event.respondWith(
-            fetch(event.request)
-                .then(response => {
-                    // Update cache with fresh response
-                    const clone = response.clone();
-                    caches.open(SHELL_CACHE).then(cache => cache.put(event.request, clone));
-                    return response;
-                })
-                .catch(() => {
-                    // Offline: serve from cache
-                    return caches.match(event.request).then(cached => {
-                        return cached || caches.match('/dashboard.html');
-                    });
-                })
-        );
-        return;
-    }
-
-    // Static assets (CSS, images, fonts): cache-first, update in background
+    // === App shell: stale-while-revalidate ===
+    // Serve from cache immediately, fetch update in background
     event.respondWith(
-        caches.match(event.request).then(cached => {
-            const networkFetch = fetch(event.request).then(response => {
-                if (response.ok) {
-                    const clone = response.clone();
-                    caches.open(SHELL_CACHE).then(cache => cache.put(event.request, clone));
-                }
-                return response;
-            }).catch(() => null);
+        caches.open(SHELL_CACHE).then(cache =>
+            cache.match(req).then(cached => {
+                const networkFetch = fetch(req).then(response => {
+                    if (response && response.ok) {
+                        cache.put(req, response.clone());
+                    }
+                    return response;
+                }).catch(() => null);
 
-            return cached || networkFetch;
-        })
+                // Return cache immediately if available, else wait for network
+                return cached || networkFetch;
+            })
+        )
     );
 });
 
-// --- UNIFIED NATIVE PUSH HANDLER WITH FOREGROUND SUPPRESSION ---
-self.addEventListener('push', function (event) {
+/* =======================================================
+   PUSH NOTIFICATION HANDLER
+   (Only shows OS notification when app is in background)
+======================================================= */
+self.addEventListener('push', function(event) {
     if (!event.data) return;
-
-    const data = event.data.json();
-
-    const options = {
-        body: data.desc || 'You have a new notification!',
-        icon: 'asset/192.png',
-        badge: 'asset/192.png',
-        vibrate: [200, 100, 200],
-        data: {
-            type: data.type,
-            taskId: data.taskId,
-            senderPhone: data.senderPhone
-        }
-    };
+    let data;
+    try { data = event.data.json(); } catch(e) { return; }
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
-            let isAppVisible = false;
-            for (let i = 0; i < windowClients.length; i++) {
-                const client = windowClients[i];
-                if (client.url.includes('helpido.onrender.com') || client.url.includes('/dashboard.html')) {
-                    if (client.visibilityState === 'visible') {
-                        isAppVisible = true;
-                        break;
-                    }
-                }
-            }
-            if (isAppVisible) {
-                console.log("Foreground detected: Suppressing native OS notification.");
-                return null;
-            }
-            return self.registration.showNotification(data.title || 'Helpido', options);
+            // Suppress OS notification if app is visible in foreground
+            const appVisible = windowClients.some(c =>
+                c.visibilityState === 'visible' &&
+                (c.url.includes('helpido.onrender.com') || c.url.includes('/dashboard.html'))
+            );
+            if (appVisible) return;
+
+            return self.registration.showNotification(data.title || 'Helpido', {
+                body: data.desc || 'You have a new notification!',
+                icon: '/asset/192.png',
+                badge: '/asset/192.png',
+                vibrate: [200, 100, 200],
+                data: { type: data.type, taskId: data.taskId, senderPhone: data.senderPhone }
+            });
         })
     );
 });
 
-self.addEventListener('notificationclick', function (event) {
+self.addEventListener('notificationclick', function(event) {
     event.notification.close();
     const payload = event.notification.data;
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
-            let chatUrl = '/dashboard.html';
-            if (payload && payload.type === 'chat') {
-                chatUrl = `/dashboard.html?action=chat&taskId=${payload.taskId}&phone=${payload.senderPhone}`;
-            }
-
-            for (let i = 0; i < windowClients.length; i++) {
-                let client = windowClients[i];
-                if ((client.url.includes('helpido.onrender.com') || client.url.includes('/dashboard.html')) && 'focus' in client) {
+            // Try to focus existing window
+            for (const client of windowClients) {
+                if (client.url.includes('helpido.onrender.com') || client.url.includes('/dashboard.html')) {
                     client.focus();
-                    if (payload && payload.type === 'chat') {
+                    if (payload?.type === 'chat') {
                         client.postMessage({ action: 'openChat', taskId: payload.taskId, phone: payload.senderPhone });
-                    } else if (payload && payload.type === 'task') {
+                    } else if (payload?.type === 'task') {
                         client.postMessage({ action: 'openHome' });
                     }
                     return;
                 }
             }
-
-            if (clients.openWindow) {
-                return clients.openWindow(chatUrl);
+            // Open new window
+            let targetUrl = '/dashboard.html';
+            if (payload?.type === 'chat') {
+                targetUrl = `/dashboard.html?action=chat&taskId=${payload.taskId}&phone=${payload.senderPhone}`;
             }
+            if (clients.openWindow) return clients.openWindow(targetUrl);
         })
     );
 });

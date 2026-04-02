@@ -1098,6 +1098,22 @@
         <h2 id="splash-greeting" class="splash-greeting">Loading...</h2>
     </div>
 
+    <!-- ===== PULL-TO-REFRESH INDICATOR ===== -->
+    <div id="ptr-indicator" style="
+        position: fixed; top: 0; left: 0; right: 0; z-index: 99998;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        height: 0; overflow: hidden;
+        background: linear-gradient(135deg, #FF5722, #FF8A50);
+        transition: height 0.15s ease;
+        pointer-events: none;
+    ">
+        <svg id="ptr-arrow-svg" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="white"
+            style="transition: transform 0.2s ease; transform-origin: center; will-change: transform;">
+            <path d="M17.65 6.35A7.958 7.958 0 0 0 12 4C7.58 4 4 7.58 4 12s3.58 8 8 8 8-3.58 8-8h-2c0 3.31-2.69 6-6 6s-6-2.69-6-6 2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L11 11h6V5l-2.12 2.12z"/>
+        </svg>
+        <span id="ptr-label" style="font-size:0.78rem; font-weight:700; color:white; letter-spacing:0.5px;">Pull to refresh</span>
+    </div>
+
     <main id="main-dash" class="app-container dashboard-layout blur-start">
         <section id="home-view" class="feed-section">
             <header class="dash-header">
@@ -2403,7 +2419,39 @@
                         });
                     }, 5000);
                 }
-            } catch (err) { feed.innerHTML = `<p style="text-align:center; color:red;">Failed to load tasks.</p>`; }
+            } catch (err) {
+                // Offline: render from localStorage cache instead of error
+                const cached = (typeof hpdLoad === 'function') ? hpdLoad('hpd_home_cache') : null;
+                if (cached && Array.isArray(cached.tasks) && cached.tasks.length > 0) {
+                    const droppedTasks = JSON.parse(localStorage.getItem('dropped_tasks') || '[]');
+                    const dismissedTasks = JSON.parse(localStorage.getItem('dismissed_tasks') || '[]');
+                    const publicTasks = cached.tasks.filter(t => t.postedBy !== myPhone && !droppedTasks.includes(t._id) && !dismissedTasks.includes(t._id));
+                    if (publicTasks.length > 0) {
+                        feed.innerHTML = publicTasks.map((task, index) => `
+<div class="task-card-wrapper">
+<div class="task-card" id="feed-card-${task._id}" style="opacity:1;transform:translateY(0); border-top: 2px dashed #eee;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div class="card-header-clickable" onclick="toggleCardExpansion(this.closest('.task-card'), event)" style="cursor:pointer;flex:1;">
+            <div class="task-top" style="align-items:flex-start;"><div style="flex:1;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <h4 style="margin:0;">${task.title}</h4>
+                    ${task.taskType === 'ride' ? '<span style="background:#E3F2FD;color:#1976D2;padding:2px 6px;border-radius:4px;font-size:0.75rem;font-weight:bold;">🚗 RIDE</span>' : ''}
+                </div>
+                <span class="reward-tag" style="display:inline-block;margin-top:6px;">₹${task.reward}</span>
+            </div></div>
+        </div>
+    </div>
+    <div class="expandable-description">
+        <p class="task-desc" style="margin:0;font-size:0.95rem;line-height:1.5;color:var(--text-dark);">${task.description}</p>
+    </div>
+</div></div>`).join('');
+                    } else {
+                        feed.innerHTML = '<div style="text-align:center;padding:40px 20px;"><div style="font-size:3rem;">🍃</div><p style="color:#888;margin-top:8px;">No tasks in cache.</p></div>';
+                    }
+                } else {
+                    feed.innerHTML = '<div style="text-align:center;padding:40px 20px;"><div style="font-size:3rem;">📡</div><h3 style="color:#555;">You\'re Offline</h3><p style="color:#888;">Pull down to retry when connected.</p></div>';
+                }
+            }
         } async function loadMyTasks() {
             const reqFeed = document.getElementById('my-requests-feed');
             const jobsFeed = document.getElementById('my-jobs-feed');
@@ -2656,7 +2704,44 @@
                         });
                     }, 5000);
                 }
-            } catch (err) { reqFeed.innerHTML = `<p style="text-align:center; color:red;">Error loading tasks.</p>`; }
+            } catch (err) {
+                // Offline: render from localStorage cache
+                const cached = (typeof hpdLoad === 'function') ? hpdLoad('hpd_tasks_cache') : null;
+                if (cached) {
+                    const visReqs = (cached.myRequests || []).filter(t => t.status !== 'completed');
+                    if (visReqs.length === 0) {
+                        reqHeader.style.display = 'none'; reqFeed.innerHTML = '';
+                    } else {
+                        reqHeader.style.display = 'block';
+                        reqFeed.innerHTML = visReqs.map(task => `
+<div class="task-card-wrapper"><div class="task-card" id="req-card-${task._id}" style="border-left:4px solid #FF5722;opacity:1;">
+    <div class="card-header-clickable" onclick="toggleCardExpansion(this.closest('.task-card'), event)" style="cursor:pointer;">
+        <h4 style="margin:0;">${task.title} <span style="font-size:0.8rem;color:gray;font-weight:normal;">(₹${task.reward})</span></h4>
+        <span class="status-badge status-${task.status}" style="display:inline-block;margin-top:4px;">${task.status}</span>
+    </div>
+</div></div>`).join('');
+                    }
+                    const visJobs = (cached.myJobs || []).filter(t => t.status !== 'completed');
+                    if (visJobs.length === 0) {
+                        jobsHeader.style.display = 'none'; jobsFeed.innerHTML = '';
+                    } else {
+                        jobsHeader.style.display = 'block';
+                        jobsFeed.innerHTML = visJobs.map(task => `
+<div class="task-card-wrapper"><div class="task-card" id="job-card-${task._id}" style="border-left:4px solid #2E7D32;opacity:1;">
+    <div class="card-header-clickable" onclick="toggleCardExpansion(this.closest('.task-card'), event)" style="cursor:pointer;">
+        <h4 style="margin:0;">${task.title}</h4>
+        <p style="font-size:0.72rem;color:#2E7D32;font-weight:bold;margin:2px 0 0 0;">Accepted</p>
+    </div>
+</div></div>`).join('');
+                    }
+                    if (visReqs.length === 0 && visJobs.length === 0) {
+                        reqHeader.style.display='none'; jobsHeader.style.display='none';
+                        reqFeed.innerHTML='<div style="text-align:center;padding:40px 20px;"><div style="font-size:3rem;">📡</div><p style="color:#888;">You\'re offline — no cached activity.</p></div>';
+                    }
+                } else {
+                    reqFeed.innerHTML='<div style="text-align:center;padding:30px 20px;"><div style="font-size:3rem;">📡</div><p style="color:#888;">You\'re offline. Pull down to retry.</p></div>';
+                }
+            }
         }
 
         /* =========================================
@@ -4647,15 +4732,71 @@
         };
     })();
 
-    /* ---- Flutter Pull-to-Refresh Bridge ---- */
-    window.helpidoRefresh=async function(){
-        try{
+    /* ---- Pull-to-Refresh (Webapp touch gestures) ---- */
+    (function() {
+        const PTR_THRESHOLD = 75;
+        const PTR_MAX_SHOW  = 54;
+        let ptrStartY = 0, ptrPulling = false, ptrTriggered = false;
+        const indicator = document.getElementById('ptr-indicator');
+        const arrow = document.getElementById('ptr-arrow-svg');
+        const label = document.getElementById('ptr-label');
+
+        const style = document.createElement('style');
+        style.textContent = '@keyframes ptr-spin{to{transform:rotate(360deg);}} .ptr-spinning{animation:ptr-spin 0.65s linear infinite!important;transition:none!important;}';
+        document.head.appendChild(style);
+
+        document.addEventListener('touchstart', function(e) {
+            if (ptrTriggered) return;
+            const main = document.getElementById('main-dash');
+            const atTop = (main ? main.scrollTop : window.scrollY) <= 0;
+            if (atTop) { ptrStartY = e.touches[0].clientY; ptrPulling = true; }
+        }, { passive: true });
+
+        document.addEventListener('touchmove', function(e) {
+            if (!ptrPulling || ptrTriggered) return;
+            const dy = e.touches[0].clientY - ptrStartY;
+            if (dy <= 0) { ptrPulling = false; return; }
+            const progress = Math.min(dy / PTR_THRESHOLD, 1);
+            const height = Math.min(dy * 0.5, PTR_MAX_SHOW);
+            indicator.style.height = height + 'px';
+            arrow.style.transform = 'rotate(' + (progress * 200) + 'deg)';
+            label.textContent = progress >= 1 ? 'Release to refresh' : 'Pull to refresh';
+            label.style.opacity = Math.min(progress * 1.5, 1);
+        }, { passive: true });
+
+        document.addEventListener('touchend', function(e) {
+            if (!ptrPulling) return;
+            ptrPulling = false;
+            const dy = e.changedTouches[0].clientY - ptrStartY;
+            if (dy >= PTR_THRESHOLD) {
+                ptrTriggered = true;
+                indicator.style.transition = 'none';
+                indicator.style.height = PTR_MAX_SHOW + 'px';
+                arrow.classList.add('ptr-spinning');
+                label.textContent = 'Refreshing...';
+                window.helpidoRefresh().finally(endPtr);
+                setTimeout(endPtr, 5000);
+            } else { endPtr(); }
+        }, { passive: true });
+
+        function endPtr() {
+            ptrTriggered = false; ptrPulling = false;
+            indicator.style.transition = 'height 0.3s ease';
+            indicator.style.height = '0';
+            arrow.classList.remove('ptr-spinning');
+            arrow.style.transform = 'rotate(0deg)';
+            label.textContent = 'Pull to refresh';
+        }
+    })();
+
+    /* ---- helpidoRefresh ---- */
+    window.helpidoRefresh = async function() {
+        try {
             await Promise.allSettled([
-                typeof loadTasks==='function'?loadTasks():Promise.resolve(),
-                typeof loadMyTasks==='function'?loadMyTasks():Promise.resolve()
+                typeof loadTasks === 'function' ? loadTasks() : Promise.resolve(),
+                typeof loadMyTasks === 'function' ? loadMyTasks() : Promise.resolve()
             ]);
-        }catch(e){}
-        if(window.flutter_inappwebview) window.flutter_inappwebview.callHandler('refreshComplete');
+        } catch(e) {}
     };
 
     /* ---- Refresh cache labels every minute ---- */
