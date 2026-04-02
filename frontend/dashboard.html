@@ -1829,18 +1829,23 @@
                             userLat = position.coords.latitude;
                             userLng = position.coords.longitude;
                             syncLocationWithServer(userLat, userLng);
-                            // ONLY load tasks now that we have exact coordinates!
-                            if (activeTab === 'home') loadTasks();
+                            
+                            // PROACTIVE BACKGROUND PRELOADING:
+                            // Initialize ALL feeds simultaneously the moment GPS is acquired
+                            // so that tabs switch instantly without waiting.
+                            loadTasks();
+                            loadMyTasks();
                         },
                         (error) => {
                             console.warn("GPS location denied or unavailable", error);
-                            // Run loadTasks anyway to trigger the "Location Required" UI
-                            if (activeTab === 'home') loadTasks();
+                            loadTasks();
+                            loadMyTasks();
                         },
                         { enableHighAccuracy: true }
                     );
                 } else {
-                    if (activeTab === 'home') loadTasks();
+                    loadTasks();
+                    loadMyTasks();
                 }
 
                 // --- NEW: HANDLE DEEP LINKING FOR CHAT PUSH NOTIFICATIONS ---
