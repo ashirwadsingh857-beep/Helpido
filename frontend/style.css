@@ -344,8 +344,11 @@ body.dark-mode {
 html, body {
     overflow-x: hidden;
     width: 100%;
-    /* Ensure the system background is dark in dark mode */
-    background-color: var(--bg-light);
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    /* Match dark mode background so no white strip is visible */
+    background-color: var(--bg-app);
 }
 
 /* Custom Scrollbar Theming */
@@ -366,8 +369,10 @@ html, body {
 body {
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     min-height: 100vh;
+    margin: 0;
+    padding: 0;
 }
 
 /* Mobile App Container */
@@ -376,12 +381,24 @@ body {
     width: 100%;
     max-width: 480px;
     /* Limits width on desktop, acts as mobile container */
-    min-height: 100vh;
-    /* Takes full height on mobile */
+    min-height: 100svh;
+    /* Use svh for correct mobile viewport height */
     padding: 40px 24px;
     display: flex;
     flex-direction: column;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+    /* On actual phones, fill 100% to avoid any gap */
+    body {
+        justify-content: flex-start;
+    }
+    .app-container {
+        max-width: 100%;
+        box-shadow: none;
+    }
 }
 
 @media (min-width: 481px) {
