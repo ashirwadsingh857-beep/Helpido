@@ -2507,20 +2507,14 @@
             <p class="task-desc" style="margin-top: 0; margin-bottom: 0px; font-size: 0.95rem; line-height: 1.5; color: var(--text-dark);">${task.description}</p>
             ${task.imageData ? `<img src="${task.imageData}" style="width:100%; border-radius:12px; margin-top:12px; object-fit:cover; max-height:260px; display:block;">` : ''}
             ${task.taskType === 'ride' && task.destination && task.destination.location ? `
-                <div style="margin-top:12px; border-radius:12px; overflow:hidden; border:1px solid #eee; position:relative; height:180px; background:#e8f0fe;">
-                    <img
-                        src="https://maps.wikimedia.org/img/osm-intl,15,${task.destination.location.coordinates[1]},${task.destination.location.coordinates[0]},400x200.png"
-                        style="width:100%; height:180px; object-fit:cover; display:block;"
-                        alt="Map to ${task.destination.name}"
-                        onerror="this.style.display='none';"
-                        crossorigin="anonymous"
-                    >
-                    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-100%); pointer-events:none; line-height:1;">
-                        <span style="font-size:2.2rem; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));">📍</span>
+                <div style="margin-top:12px; background:#EEF2FF; border-radius:12px; padding:12px 14px; display:flex; align-items:center; gap:12px; border:1px solid #C7D2FE;">
+                    <span style="font-size:1.6rem; flex-shrink:0;">📍</span>
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-size:0.7rem; font-weight:600; color:#6366F1; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px;">Destination</div>
+                        <div style="font-size:0.88rem; font-weight:600; color:#1E293B; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${task.destination.name}</div>
                     </div>
-                    <div style="position:absolute; bottom:6px; right:8px; background:rgba(255,255,255,0.85); border-radius:6px; padding:2px 7px; font-size:0.72rem; color:#333;">© OpenStreetMap</div>
                 </div>
-                <button class="btn" onclick="event.stopPropagation(); openDirections(${task.destination.location.coordinates[1]}, ${task.destination.location.coordinates[0]});" style="width:100%; margin-top:8px; background-color:#F5F5F5; color:#1976D2; border:1px solid #E3F2FD; font-weight:bold; box-shadow:none;">🗺️ Get Directions</button>
+                <button class="btn" onclick="event.stopPropagation(); openDirections(${task.destination.location.coordinates[1]}, ${task.destination.location.coordinates[0]});" style="width:100%; margin-top:8px; background-color:#4F46E5; color:#fff; border:none; font-weight:bold; box-shadow:0 2px 8px rgba(79,70,229,0.3);">🗺️ Get Directions</button>
             ` : ''}
         </div>
         
@@ -2599,20 +2593,14 @@
             <p class="task-desc" style="margin-top: 0; margin-bottom: 0px; font-size: 0.95rem; line-height: 1.5; color: var(--text-dark);">${task.description || ''}</p>
             ${task.imageData ? `<img src="${task.imageData}" style="width:100%; border-radius:12px; margin-top:12px; object-fit:cover; max-height:260px; display:block;">` : ''}
             ${task.taskType === 'ride' && task.destination && task.destination.location ? `
-                <div style="margin-top:12px; border-radius:12px; overflow:hidden; border:1px solid #eee; position:relative; height:180px; background:#e8f0fe;">
-                    <img
-                        src="https://maps.wikimedia.org/img/osm-intl,15,${task.destination.location.coordinates[1]},${task.destination.location.coordinates[0]},400x200.png"
-                        style="width:100%; height:180px; object-fit:cover; display:block;"
-                        alt="Map to ${task.destination.name}"
-                        onerror="this.style.display='none';"
-                        crossorigin="anonymous"
-                    >
-                    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-100%); pointer-events:none; line-height:1;">
-                        <span style="font-size:2.2rem; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));">📍</span>
+                <div style="margin-top:12px; background:#EEF2FF; border-radius:12px; padding:12px 14px; display:flex; align-items:center; gap:12px; border:1px solid #C7D2FE;">
+                    <span style="font-size:1.6rem; flex-shrink:0;">📍</span>
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-size:0.7rem; font-weight:600; color:#6366F1; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px;">Destination</div>
+                        <div style="font-size:0.88rem; font-weight:600; color:#1E293B; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${task.destination.name}</div>
                     </div>
-                    <div style="position:absolute; bottom:6px; right:8px; background:rgba(255,255,255,0.85); border-radius:6px; padding:2px 7px; font-size:0.72rem; color:#333;">© OpenStreetMap</div>
                 </div>
-                <button class="btn" onclick="event.stopPropagation(); openDirections(${task.destination.location.coordinates[1]}, ${task.destination.location.coordinates[0]});" style="width:100%; margin-top:8px; background-color:#F5F5F5; color:#1976D2; border:1px solid #E3F2FD; font-weight:bold; box-shadow:none;">🗺️ Get Directions</button>
+                <button class="btn" onclick="event.stopPropagation(); openDirections(${task.destination.location.coordinates[1]}, ${task.destination.location.coordinates[0]});" style="width:100%; margin-top:8px; background-color:#4F46E5; color:#fff; border:none; font-weight:bold; box-shadow:0 2px 8px rgba(79,70,229,0.3);">🗺️ Get Directions</button>
             ` : ''}
         </div>
         
