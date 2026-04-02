@@ -2507,8 +2507,17 @@
             <p class="task-desc" style="margin-top: 0; margin-bottom: 0px; font-size: 0.95rem; line-height: 1.5; color: var(--text-dark);">${task.description}</p>
             ${task.imageData ? `<img src="${task.imageData}" style="width:100%; border-radius:12px; margin-top:12px; object-fit:cover; max-height:260px; display:block;">` : ''}
             ${task.taskType === 'ride' && task.destination && task.destination.location ? `
-                <div style="margin-top: 12px; border-radius: 12px; overflow: hidden; border: 1px solid #eee;">
-                    <iframe width="100%" height="200" style="border:0;" loading="lazy" src="https://maps.google.com/maps?q=${task.destination.location.coordinates[1]},${task.destination.location.coordinates[0]}&z=15&output=embed"></iframe>
+                <div style="margin-top: 12px; border-radius: 12px; overflow: hidden; border: 1px solid #eee; position: relative;">
+                    <img 
+                        src="https://staticmap.openstreetmap.de/staticmap.php?center=${task.destination.location.coordinates[1]},${task.destination.location.coordinates[0]}&zoom=15&size=400x200&markers=${task.destination.location.coordinates[1]},${task.destination.location.coordinates[0]},red"
+                        style="width:100%; height:180px; object-fit:cover; display:block;"
+                        alt="Map to ${task.destination.name}"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                    >
+                    <div style="display:none; background:#f0f4ff; border-radius:12px; height:80px; align-items:center; justify-content:center; flex-direction:column; gap:4px;">
+                        <span style="font-size:1.5rem;">📍</span>
+                        <span style="font-size:0.8rem; color:#555;">Tap 'Get Directions' to open map</span>
+                    </div>
                 </div>
                 <button class="btn" onclick="event.stopPropagation(); openDirections(${task.destination.location.coordinates[1]}, ${task.destination.location.coordinates[0]});" style="width: 100%; margin-top: 8px; background-color: #F5F5F5; color: #1976D2; border: 1px solid #E3F2FD; font-weight: bold; box-shadow: none;">🗺️ Get Directions</button>
             ` : ''}
@@ -2589,8 +2598,17 @@
             <p class="task-desc" style="margin-top: 0; margin-bottom: 0px; font-size: 0.95rem; line-height: 1.5; color: var(--text-dark);">${task.description || ''}</p>
             ${task.imageData ? `<img src="${task.imageData}" style="width:100%; border-radius:12px; margin-top:12px; object-fit:cover; max-height:260px; display:block;">` : ''}
             ${task.taskType === 'ride' && task.destination && task.destination.location ? `
-                <div style="margin-top: 12px; border-radius: 12px; overflow: hidden; border: 1px solid #eee;">
-                    <iframe width="100%" height="200" style="border:0;" loading="lazy" src="https://maps.google.com/maps?q=${task.destination.location.coordinates[1]},${task.destination.location.coordinates[0]}&z=15&output=embed"></iframe>
+                <div style="margin-top: 12px; border-radius: 12px; overflow: hidden; border: 1px solid #eee; position: relative;">
+                    <img 
+                        src="https://staticmap.openstreetmap.de/staticmap.php?center=${task.destination.location.coordinates[1]},${task.destination.location.coordinates[0]}&zoom=15&size=400x200&markers=${task.destination.location.coordinates[1]},${task.destination.location.coordinates[0]},red"
+                        style="width:100%; height:180px; object-fit:cover; display:block;"
+                        alt="Map to ${task.destination.name}"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                    >
+                    <div style="display:none; background:#f0f4ff; border-radius:12px; height:80px; align-items:center; justify-content:center; flex-direction:column; gap:4px;">
+                        <span style="font-size:1.5rem;">📍</span>
+                        <span style="font-size:0.8rem; color:#555;">Tap 'Get Directions' to open map</span>
+                    </div>
                 </div>
                 <button class="btn" onclick="event.stopPropagation(); openDirections(${task.destination.location.coordinates[1]}, ${task.destination.location.coordinates[0]});" style="width: 100%; margin-top: 8px; background-color: #F5F5F5; color: #1976D2; border: 1px solid #E3F2FD; font-weight: bold; box-shadow: none;">🗺️ Get Directions</button>
             ` : ''}
