@@ -1453,7 +1453,7 @@
     </div>
 
     <div id="chat-modal" class="chat-overlay hidden" onclick="if(event.target === this) closeChat()">
-        <div class="chat-drawer" style="height: 100%; max-height: 85%; display: flex; flex-direction: column;">
+        <div class="chat-drawer" id="chat-drawer" style="height: auto; max-height: 65vh; display: flex; flex-direction: column;">
             <div class="chat-header">
                 <h3 id="chat-header-title" style="margin: 0; font-size: 1.2rem; color: var(--text-primary);">Task Chat
                 </h3>
@@ -1461,7 +1461,7 @@
                     style="background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer;">&times;</button>
             </div>
             <div id="chat-messages" class="chat-messages"
-                style="flex: 1; overflow-y: auto; overscroll-behavior: auto; padding-bottom: 20px;"></div>
+                style="flex: 0 1 auto; overflow-y: auto; overscroll-behavior: auto; padding-bottom: 20px;"></div>
             <div class="chat-input-area" id="chat-input-wrapper">
                 <input type="text" id="chat-input" placeholder="Message..." autocomplete="off" enterkeyhint="send"
                     oninput="document.getElementById('chat-send-btn').style.background = this.value.trim() ? '#FF5722' : '#E0E0E0';"
@@ -4371,7 +4371,7 @@
             document.body.classList.toggle('keyboard-active', isKeyboardActive);
 
             const chatWrapper = document.getElementById('chat-input-wrapper');
-            const chatDrawer = document.querySelector('.chat-drawer');
+            const chatDrawer = document.getElementById('chat-drawer');
             const chatMessages = document.getElementById('chat-messages');
             const chatModal = document.getElementById('chat-modal');
 
@@ -4382,21 +4382,25 @@
                 chatWrapper.style.transition = 'none';
 
                 if (isKeyboardActive) {
-                    // Push the input exactly above the keyboard
                     const kbHeight = window.innerHeight - viewport.height;
-                    chatWrapper.style.transform = `translateY(-${kbHeight}px)`;
-                    // Hard-set height to prevent "vh" jumps
+                    
                     if (chatDrawer) {
+                        // Translate the ENTIRE drawer up safely above the keyboard
+                        chatDrawer.style.transform = `translateY(-${kbHeight}px)`;
+                        // Restrict maximum height so it stays bounded inside the available upper viewport
                         chatDrawer.style.maxHeight = `${viewport.height - 20}px`;
-                        chatDrawer.style.height = `${viewport.height - 20}px`;
+                        chatDrawer.style.height = 'auto'; // Allow natural shrink-wrapping
                     }
-                } else {
+                    // Reset input wrapper, we moved the whole drawer
                     chatWrapper.style.transform = 'translateY(0)';
+                } else {
                     if (chatDrawer) {
                         chatDrawer.style.transition = 'transform 0.4s cubic-bezier(0.32, 1.15, 0.25, 1)';
-                        chatDrawer.style.maxHeight = '85vh';
+                        chatDrawer.style.transform = 'translateY(0)';
+                        chatDrawer.style.maxHeight = '65vh';
                         chatDrawer.style.height = 'auto';
                     }
+                    chatWrapper.style.transform = 'translateY(0)';
                     chatWrapper.style.transition = 'background 0.2s ease';
                 }
                 if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
