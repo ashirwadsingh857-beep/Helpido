@@ -92,6 +92,23 @@
             -webkit-overflow-scrolling: touch;
         }
 
+        /* ---- Native feel: disable text selection on interactive UI ---- */
+        .task-card, .task-card-wrapper, .nav-item, .bottom-nav,
+        .dash-header, .section-title, .btn, .accept-btn, .decline-btn,
+        .fab, .speed-dial-item, .status-btn, .reward-tag, .status-badge,
+        .modal-header, .app-notification, .ptr-indicator,
+        .card-header-clickable, .task-top, h2, h3, h4,
+        button, label, .toggle-row, .radius-btn {
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none; /* suppress iOS long-press popover */
+        }
+        /* Keep text fields and message bubbles selectable */
+        input, textarea, .task-desc, .msg-bubble, p.task-desc {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
         .app-container {
             min-height: 100dvh;
             display: flex;
@@ -1938,20 +1955,21 @@
                 // Routes to Home Tab
                 globalSocket.on('newTask', (task) => {
                     if (task.postedBy === myPhone) return;
-                    if (currentStatus === 'busy') return; // Busy: suppress all new-task alerts
+                    if (currentStatus === 'busy') return;
 
                     // STRICT FRONTEND RADIUS CHECK
                     if (userLat !== null && userLng !== null && task.location && task.location.coordinates) {
                         const taskLng = task.location.coordinates[0];
                         const taskLat = task.location.coordinates[1];
                         const distance = getDistanceInKm(userLat, userLng, taskLat, taskLng);
-
-                        // If the task is further away than your dropdown radius, SILENTLY DESTROY THE NOTIFICATION!
                         if (distance > currentRadius) return;
                     }
 
+                    // Haptic: light pulse when new task nearby
+                    hpdHaptic('hapticLight');
+
                     if (activeTab === 'home') {
-                        loadTasks(); 
+                        loadTasks();
                     } else {
                         showAppNotification('👋', `New task posted: ${task.title}`, 'Tap to view the Home feed!', () => {
                             switchTab('home');
@@ -1963,6 +1981,8 @@
                 // Routes to Tasks Tab & Opens Chat
                 globalSocket.on('taskAccepted', (data) => {
                     if (data.posterPhone === myPhone) {
+                        // Double-pulse: someone accepted your task!
+                        hpdHaptic('hapticSuccess');
                         showAppNotification('🤝', 'Task Accepted!', `${data.title} accepted by ${data.acceptorName}`, () => {
                             switchTab('tasks');
                             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2006,6 +2026,8 @@
 
                 globalSocket.on('notifyMessage', async (msg) => {
                     if (currentChatTaskId !== msg.taskId) {
+                        // Haptic: medium pulse for incoming message
+                        hpdHaptic('hapticMedium');
                         try {
                             const res = await fetch(`${API_URL}/users/${msg.senderPhone}`);
                             const user = await res.json();
@@ -4535,6 +4557,17 @@
     function hpdSave(k,d){try{localStorage.setItem(k,JSON.stringify(d));}catch(e){}}
     function hpdLoad(k){try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;}}
 
+    /* ---- Haptic bridge (safe no-op when Flutter handler not ready) ---- */
+    function hpdHaptic(type) {
+        try {
+            if (window.flutter_inappwebview) {
+                window.flutter_inappwebview.callHandler(type);
+            }
+        } catch(e) {}
+    }
+    // Expose globally so socket handlers (defined earlier) can call it
+    window.hpdHaptic = hpdHaptic;
+
     function hpdTimeAgoShort(ts){
         if(!ts) return '';
         const d=Math.round((Date.now()-ts)/1000);
@@ -4738,6 +4771,8 @@
                 indicator.style.height = PTR_MAX_SHOW + 'px';
                 arrow.classList.add('ptr-spinning');
                 label.textContent = 'Refreshing...';
+                // Haptic: medium pulse when user releases to refresh
+                hpdHaptic('hapticMedium');
                 window.helpidoRefresh().finally(endPtr);
                 setTimeout(endPtr, 5000);
             } else { endPtr(); }
