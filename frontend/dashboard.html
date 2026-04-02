@@ -2313,7 +2313,7 @@
                             ${task.taskType === 'ride' ? `<span style="background: #E3F2FD; color: #1976D2; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 6px;">🚗 RIDE</span>` : ''}
                             <span class="poster-badge ${task.posterStatus}" style="margin-left:auto;">${task.posterStatus.toUpperCase()}</span>
                         </div>
-                        ${task.taskType === 'ride' && task.destination ? `<p style="font-size: 0.85rem; color: #D32F2F; margin: 4px 0 0 0; font-weight: 600;">📍 To: ${task.destination.name}</p>` : ''}
+
                         <p class="time-ago-label" 
                        data-timestamp="${task.createdAt}" 
                        data-prefix="Uploaded"
@@ -2484,7 +2484,7 @@
                     <h4 style="margin:0;">${task.title} <span style="font-size:0.8rem; color:gray; font-weight:normal;">(₹${task.reward})</span></h4>
                     ${task.taskType === 'ride' ? `<span style="background: #E3F2FD; color: #1976D2; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">🚗 RIDE</span>` : ''}
                 </div>
-                ${task.taskType === 'ride' && task.destination ? `<p style="font-size: 0.85rem; color: #D32F2F; margin: 4px 0 0 0; font-weight: 600;">📍 To: ${task.destination.name}</p>` : ''}
+
                 <p class="time-ago-label" 
                    data-timestamp="${task.createdAt}" 
                    data-prefix="Uploaded"
@@ -2572,7 +2572,7 @@
                     <h4 style="margin:0;">${task.title} ${task.isPrioritized && !isCompleted ? '<span style="color:#F57F17; font-size:0.8rem; margin-left:6px;">★ Priority</span>' : ''}</h4>
                     ${task.taskType === 'ride' ? `<span style="background: #E3F2FD; color: #1976D2; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">🚗 RIDE</span>` : ''}
                 </div>
-                ${task.taskType === 'ride' && task.destination ? `<p style="font-size: 0.85rem; color: #D32F2F; margin: 4px 0 0 0; font-weight: 600;">📍 To: ${task.destination.name}</p>` : ''}
+
                <p class="time-ago-label" 
                data-timestamp="${task.updatedAt}" 
                data-prefix="${isCompleted ? 'Completed' : 'Accepted'}"
