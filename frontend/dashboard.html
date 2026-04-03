@@ -4786,9 +4786,28 @@
 
         document.addEventListener('touchstart', function(e) {
             if (ptrTriggered) return;
-            const main = document.getElementById('main-dash');
-            const atTop = (main ? main.scrollTop : window.scrollY) <= 0;
-            if (atTop) { ptrStartY = e.touches[0].clientY; ptrPulling = true; }
+            
+            // 1. Only allow PTR on Home or Tasks tab (as requested)
+            if (activeTab !== 'home' && activeTab !== 'tasks') {
+                ptrPulling = false;
+                return;
+            }
+
+            // 2. Ensure NO modal or chat drawer is open
+            const isModalOpen = !!document.querySelector('.modal-overlay:not(.hidden), .chat-overlay:not(.hidden), #radius-modal:not(.hidden)');
+            if (isModalOpen) {
+                ptrPulling = false;
+                return;
+            }
+
+            // 3. Proper check for scroll top - window.scrollY is the standard for the root scroller
+            const atTop = window.scrollY <= 0;
+            if (atTop) { 
+                ptrStartY = e.touches[0].clientY; 
+                ptrPulling = true; 
+            } else {
+                ptrPulling = false;
+            }
         }, { passive: true });
 
         document.addEventListener('touchmove', function(e) {
