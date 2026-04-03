@@ -132,10 +132,10 @@
            ========================================= */
         .bottom-nav {
             position: fixed !important;
-            bottom: 0 !important; /* Fixed to absolute bottom for keyboard stability */
+            bottom: 0 !important;
             left: 50% !important;
             transform: translateX(-50%) !important;
-            width: 100%; /* Full width for better mobile experience */
+            width: 100%;
             max-width: 500px;
             z-index: 9000 !important;
             height: auto;
@@ -149,9 +149,32 @@
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border-top: 1px solid rgba(0, 0, 0, 0.1);
-            border-radius: 0; /* Remove rounded corners when fixed to bottom */
+            border-radius: 0;
             box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
         }
+
+        /* --- SKELETON SHIMMER ANIMATION --- */
+        .skeleton-loader {
+            display: inline-flex;
+            flex-direction: column;
+            gap: 8px;
+            vertical-align: middle;
+        }
+        .skeleton-block {
+            height: 24px;
+            background: #eee;
+            background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%);
+            border-radius: 4px;
+            background-size: 200% 100%;
+            animation: shine-animation 1.5s linear infinite;
+        }
+        .skeleton-block.title { width: 140px; height: 32px; }
+        .skeleton-block.sub { width: 100px; height: 18px; opacity: 0.7; }
+        
+        @keyframes shine-animation {
+            to { background-position-x: -200%; }
+        }
+
 
         .nav-item {
             flex: 1;
@@ -1112,7 +1135,12 @@
         📡 You're offline — showing cached data
     </div>
     <div id="splash-screen" class="splash-screen">
-        <h2 id="splash-greeting" class="splash-greeting">Loading...</h2>
+        <div id="splash-greeting" class="splash-greeting">
+            <div class="skeleton-loader">
+                <div class="skeleton-block title"></div>
+                <div class="skeleton-block sub"></div>
+            </div>
+        </div>
     </div>
 
     <!-- ===== PULL-TO-REFRESH INDICATOR ===== -->
