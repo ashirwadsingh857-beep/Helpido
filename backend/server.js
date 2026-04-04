@@ -23,6 +23,7 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT) {
 
 
 
+
 if (!firebaseServiceAccount) {
     try {
         firebaseServiceAccount = require("./helpido-1610f-firebase-adminsdk-fbsvc-d0e05ccb04.json");
