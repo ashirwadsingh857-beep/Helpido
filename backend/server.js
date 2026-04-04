@@ -21,6 +21,8 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT) {
     }
 }
 
+
+
 if (!firebaseServiceAccount) {
     try {
         firebaseServiceAccount = require("./helpido-1610f-firebase-adminsdk-fbsvc-d0e05ccb04.json");
@@ -308,8 +310,8 @@ app.post('/api/chat/send', async (req, res) => {
             }
         }
         res.status(201).json({ message: "Message sent", data: newMsg });
-    } catch (err) { 
-        console.error("REST Message save error", err); 
+    } catch (err) {
+        console.error("REST Message save error", err);
         res.status(500).json({ message: "Error saving message" });
     }
 });
@@ -534,7 +536,7 @@ app.post('/api/tasks', async (req, res) => {
                 type: 'task',
                 taskId: newTask._id.toString()
             };
-            
+
             if (taskType === 'ride') {
                 payloadData = {
                     title: `New Ride Request 🚗`,
