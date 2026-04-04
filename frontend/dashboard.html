@@ -93,18 +93,44 @@
         }
 
         /* ---- Native feel: disable text selection on interactive UI ---- */
-        .task-card, .task-card-wrapper, .nav-item, .bottom-nav,
-        .dash-header, .section-title, .btn, .accept-btn, .decline-btn,
-        .fab, .speed-dial-item, .status-btn, .reward-tag, .status-badge,
-        .modal-header, .app-notification, .ptr-indicator,
-        .card-header-clickable, .task-top, h2, h3, h4,
-        button, label, .toggle-row, .radius-btn {
+        .task-card,
+        .task-card-wrapper,
+        .nav-item,
+        .bottom-nav,
+        .dash-header,
+        .section-title,
+        .btn,
+        .accept-btn,
+        .decline-btn,
+        .fab,
+        .speed-dial-item,
+        .status-btn,
+        .reward-tag,
+        .status-badge,
+        .modal-header,
+        .app-notification,
+        .ptr-indicator,
+        .card-header-clickable,
+        .task-top,
+        h2,
+        h3,
+        h4,
+        button,
+        label,
+        .toggle-row,
+        .radius-btn {
             -webkit-user-select: none;
             user-select: none;
-            -webkit-touch-callout: none; /* suppress iOS long-press popover */
+            -webkit-touch-callout: none;
+            /* suppress iOS long-press popover */
         }
+
         /* Keep text fields and message bubbles selectable */
-        input, textarea, .task-desc, .msg-bubble, p.task-desc {
+        input,
+        textarea,
+        .task-desc,
+        .msg-bubble,
+        p.task-desc {
             -webkit-user-select: text;
             user-select: text;
         }
@@ -160,6 +186,7 @@
             gap: 8px;
             vertical-align: middle;
         }
+
         .skeleton-block {
             height: 24px;
             background: #eee;
@@ -168,11 +195,22 @@
             background-size: 200% 100%;
             animation: shine-animation 1.5s linear infinite;
         }
-        .skeleton-block.title { width: 140px; height: 32px; }
-        .skeleton-block.sub { width: 100px; height: 18px; opacity: 0.7; }
-        
+
+        .skeleton-block.title {
+            width: 140px;
+            height: 32px;
+        }
+
+        .skeleton-block.sub {
+            width: 100px;
+            height: 18px;
+            opacity: 0.7;
+        }
+
         @keyframes shine-animation {
-            to { background-position-x: -200%; }
+            to {
+                background-position-x: -200%;
+            }
         }
 
 
@@ -356,9 +394,9 @@
             opacity: 0;
             overflow: hidden;
             transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                        opacity 0.3s ease,
-                        margin 0.3s ease,
-                        padding 0.3s ease;
+                opacity 0.3s ease,
+                margin 0.3s ease,
+                padding 0.3s ease;
         }
 
         .dark-mode .task-card.expanded .expandable-description {
@@ -374,7 +412,8 @@
             background: transparent;
             z-index: 1000;
             display: none;
-            pointer-events: none; /* User requested non-clickable overlay */
+            pointer-events: none;
+            /* User requested non-clickable overlay */
         }
 
         .card-glass-overlay.active {
@@ -639,7 +678,8 @@
         /* --- 6. FLOATING ACTION BUTTON --- */
         .fab-wrapper {
             position: fixed !important;
-            bottom: 80px !important; /* Moved closer to the bottom nav (formerly 115px) */
+            bottom: 80px !important;
+            /* Moved closer to the bottom nav (formerly 115px) */
             right: 20px !important;
             z-index: 9500 !important;
         }
@@ -811,7 +851,8 @@
         }
 
         #ride-modal {
-            z-index: 40000 !important; /* Forces it above everything else */
+            z-index: 40000 !important;
+            /* Forces it above everything else */
         }
 
         #chat-modal {
@@ -1131,7 +1172,8 @@
 
 <body>
     <!-- Offline status banner -->
-    <div id="offline-banner" style="display:none; position:fixed; top:0; left:0; right:0; z-index:99999; background:#1a1a2e; color:#fff; text-align:center; padding:8px 16px; font-size:0.78rem; font-weight:600; letter-spacing:0.3px; box-shadow:0 2px 8px rgba(0,0,0,0.3);">
+    <div id="offline-banner"
+        style="display:none; position:fixed; top:0; left:0; right:0; z-index:99999; background:#1a1a2e; color:#fff; text-align:center; padding:8px 16px; font-size:0.78rem; font-weight:600; letter-spacing:0.3px; box-shadow:0 2px 8px rgba(0,0,0,0.3);">
         📡 You're offline — showing cached data
     </div>
     <div id="splash-screen" class="splash-screen">
@@ -1152,11 +1194,13 @@
         transition: height 0.15s ease;
         pointer-events: none;
     ">
-        <svg id="ptr-arrow-svg" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="white"
-            style="transition: transform 0.2s ease; transform-origin: center; will-change: transform;">
-            <path d="M17.65 6.35A7.958 7.958 0 0 0 12 4C7.58 4 4 7.58 4 12s3.58 8 8 8 8-3.58 8-8h-2c0 3.31-2.69 6-6 6s-6-2.69-6-6 2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L11 11h6V5l-2.12 2.12z"/>
+        <svg id="ptr-arrow-svg" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+            fill="white" style="transition: transform 0.2s ease; transform-origin: center; will-change: transform;">
+            <path
+                d="M17.65 6.35A7.958 7.958 0 0 0 12 4C7.58 4 4 7.58 4 12s3.58 8 8 8 8-3.58 8-8h-2c0 3.31-2.69 6-6 6s-6-2.69-6-6 2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L11 11h6V5l-2.12 2.12z" />
         </svg>
-        <span id="ptr-label" style="font-size:0.78rem; font-weight:700; color:white; letter-spacing:0.5px;">Pull to refresh</span>
+        <span id="ptr-label" style="font-size:0.78rem; font-weight:700; color:white; letter-spacing:0.5px;">Pull to
+            refresh</span>
     </div>
 
     <main id="main-dash" class="app-container dashboard-layout blur-start">
@@ -1175,7 +1219,8 @@
             <div style="display: flex; justify-content: space-between; align-items: center; padding-right: 20px;">
                 <div style="display:flex; align-items:center; gap:8px;">
                     <h3 class="section-title" style="margin-bottom: 0;">Help Needed Nearby</h3>
-                    <span id="home-cache-label" style="display:none; font-size:0.68rem; color:#9E9E9E; background:#F5F5F5; border-radius:10px; padding:2px 8px; font-weight:500;"></span>
+                    <span id="home-cache-label"
+                        style="display:none; font-size:0.68rem; color:#9E9E9E; background:#F5F5F5; border-radius:10px; padding:2px 8px; font-weight:500;"></span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <span style="font-size: 0.8rem; color: #757575; font-weight: 600;">Radius:</span>
@@ -1315,7 +1360,8 @@
             </header>
             <div style="display:flex; align-items:center; gap:8px; padding: 0 20px 0 0;">
                 <h3 class="section-title" style="margin-bottom:0;">My Uploaded Requests</h3>
-                <span id="tasks-cache-label" style="display:none; font-size:0.68rem; color:#9E9E9E; background:#F5F5F5; border-radius:10px; padding:2px 8px; font-weight:500;"></span>
+                <span id="tasks-cache-label"
+                    style="display:none; font-size:0.68rem; color:#9E9E9E; background:#F5F5F5; border-radius:10px; padding:2px 8px; font-weight:500;"></span>
             </div>
             <div id="my-requests-feed" style="margin-bottom: 30px;"></div>
             <h3 class="section-title">Tasks I Accepted</h3>
@@ -1434,12 +1480,14 @@
 
             <div style="position: relative; margin-bottom: 12px;">
                 <div style="display: flex; align-items: center;">
-                    <input type="text" id="ride-destination" autocomplete="off" placeholder="Where to? (Search location)" required
+                    <input type="text" id="ride-destination" autocomplete="off"
+                        placeholder="Where to? (Search location)" required
                         style="margin-bottom: 0; flex: 1; padding-right: 40px;">
                     <button type="button" onclick="openMapPicker()"
                         style="position: absolute; right: 5px; background: none; border: none; font-size: 1.4rem; cursor: pointer; padding: 5px;">📍</button>
                 </div>
-                <div id="osm-autocomplete-results" style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,0.12); z-index: 1000; max-height: 220px; overflow-y: auto; display: none; margin-top: 4px;">
+                <div id="osm-autocomplete-results"
+                    style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,0.12); z-index: 1000; max-height: 220px; overflow-y: auto; display: none; margin-top: 4px;">
                 </div>
             </div>
 
@@ -1523,7 +1571,8 @@
     </div>
 
     <div id="chat-modal" class="chat-overlay hidden" onclick="if(event.target === this) closeChat()">
-        <div class="chat-drawer" id="chat-drawer" style="height: auto; max-height: 65vh; display: flex; flex-direction: column;">
+        <div class="chat-drawer" id="chat-drawer"
+            style="height: auto; max-height: 65vh; display: flex; flex-direction: column;">
             <div class="chat-header">
                 <h3 id="chat-header-title" style="margin: 0; font-size: 1.2rem; color: var(--text-primary);">Task Chat
                 </h3>
@@ -1570,6 +1619,7 @@
             </div>
         </div>
     </div>
+
 
     <div id="radius-modal" class="modal-overlay hidden" onclick="if(event.target === this) closeRadiusModal()">
         <div class="modal-content" style="padding: 0; overflow: hidden; max-width: 300px;">
@@ -1644,15 +1694,18 @@
     </div>
     <nav class="bottom-nav">
         <div class="nav-item active" id="nav-home" onclick="switchTab('home')">
-            <span class="nav-icon-container"><img src="asset/home.png" alt="Home" onerror="this.style.display='none'; this.parentElement.innerHTML='🏠'"></span>
+            <span class="nav-icon-container"><img src="asset/home.png" alt="Home"
+                    onerror="this.style.display='none'; this.parentElement.innerHTML='🏠'"></span>
             <p>Home</p>
         </div>
         <div class="nav-item" id="nav-tasks" onclick="switchTab('tasks')">
-            <span class="nav-icon-container"><img src="asset/task.png" alt="Tasks" onerror="this.style.display='none'; this.parentElement.innerHTML='📋'"></span>
+            <span class="nav-icon-container"><img src="asset/task.png" alt="Tasks"
+                    onerror="this.style.display='none'; this.parentElement.innerHTML='📋'"></span>
             <p>Tasks</p>
         </div>
         <div class="nav-item" id="nav-profile" onclick="switchTab('profile')">
-            <span class="nav-icon-container"><img src="asset/profile.png" alt="Profile" onerror="this.style.display='none'; this.parentElement.innerHTML='👤'"></span>
+            <span class="nav-icon-container"><img src="asset/profile.png" alt="Profile"
+                    onerror="this.style.display='none'; this.parentElement.innerHTML='👤'"></span>
             <p>Profile</p>
         </div>
     </nav>
@@ -1906,7 +1959,7 @@
                             userLat = position.coords.latitude;
                             userLng = position.coords.longitude;
                             syncLocationWithServer(userLat, userLng);
-                            
+
                             // PROACTIVE BACKGROUND PRELOADING:
                             // Initialize ALL feeds simultaneously the moment GPS is acquired
                             // so that tabs switch instantly without waiting.
@@ -2785,11 +2838,11 @@
 </div></div>`).join('');
                     }
                     if (visReqs.length === 0 && visJobs.length === 0) {
-                        reqHeader.style.display='none'; jobsHeader.style.display='none';
-                        reqFeed.innerHTML='<div style="text-align:center;padding:40px 20px;"><div style="font-size:3rem;">📡</div><p style="color:#888;">You\'re offline — no cached activity.</p></div>';
+                        reqHeader.style.display = 'none'; jobsHeader.style.display = 'none';
+                        reqFeed.innerHTML = '<div style="text-align:center;padding:40px 20px;"><div style="font-size:3rem;">📡</div><p style="color:#888;">You\'re offline — no cached activity.</p></div>';
                     }
                 } else {
-                    reqFeed.innerHTML='<div style="text-align:center;padding:30px 20px;"><div style="font-size:3rem;">📡</div><p style="color:#888;">You\'re offline. Pull down to retry.</p></div>';
+                    reqFeed.innerHTML = '<div style="text-align:center;padding:30px 20px;"><div style="font-size:3rem;">📡</div><p style="color:#888;">You\'re offline. Pull down to retry.</p></div>';
                 }
             }
         }
@@ -3133,12 +3186,12 @@
 
         function updateStatusUI() {
             const btn = document.getElementById('availability-btn');
-            if (currentStatus === 'free') { 
-                btn.innerHTML = '<img src="asset/free.png" class="status-icon" alt="Free" onerror="this.style.display=\'none\'"> Free'; 
-                btn.className = 'status-btn free'; 
-            } else { 
-                btn.innerHTML = '<img src="asset/busy.png" class="status-icon" alt="Busy" onerror="this.style.display=\'none\'"> Busy'; 
-                btn.className = 'status-btn busy'; 
+            if (currentStatus === 'free') {
+                btn.innerHTML = '<img src="asset/free.png" class="status-icon" alt="Free" onerror="this.style.display=\'none\'"> Free';
+                btn.className = 'status-btn free';
+            } else {
+                btn.innerHTML = '<img src="asset/busy.png" class="status-icon" alt="Busy" onerror="this.style.display=\'none\'"> Busy';
+                btn.className = 'status-btn busy';
             }
         }
 
@@ -3521,23 +3574,23 @@
             // Custom OpenStreetMap Nominatim Autocomplete
             const input = document.getElementById('ride-destination');
             const resultsContainer = document.getElementById('osm-autocomplete-results');
-            
-            input.addEventListener('input', function() {
+
+            input.addEventListener('input', function () {
                 const query = this.value.trim();
                 clearTimeout(osmDebounceTimer);
                 // Reset location if they manually type to force a new geocode
                 selectedLocation = { lat: 0, lng: 0 };
-                
+
                 if (query.length < 3) {
                     resultsContainer.style.display = 'none';
                     return;
                 }
-                
+
                 osmDebounceTimer = setTimeout(async () => {
                     try {
                         const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5`);
                         const data = await res.json();
-                        
+
                         if (data && data.length > 0) {
                             resultsContainer.innerHTML = '';
                             data.forEach(place => {
@@ -3547,7 +3600,7 @@
                                 div.style.cursor = 'pointer';
                                 div.style.fontSize = '0.9rem';
                                 div.innerHTML = `<strong>${place.name || place.display_name.split(',')[0]}</strong><br><span style="font-size: 0.75rem; color: #777;">${place.display_name}</span>`;
-                                
+
                                 div.addEventListener('click', () => {
                                     input.value = place.display_name;
                                     selectedLocation = { lat: parseFloat(place.lat), lng: parseFloat(place.lon) };
@@ -3564,7 +3617,7 @@
                     }
                 }, 500);
             });
-            
+
             document.addEventListener('click', (e) => {
                 if (!input.contains(e.target) && !resultsContainer.contains(e.target)) {
                     resultsContainer.style.display = 'none';
@@ -3587,7 +3640,7 @@
             document.documentElement.classList.remove('no-scroll');
             document.getElementById('ride-modal').classList.add('hidden');
             document.getElementById('ride-map-container').style.display = 'none';
-            
+
             // Force hide Google Maps injected body elements (Autocomplete dropdowns & API error alerts)
             document.querySelectorAll('.pac-container').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.gm-err-container').forEach(el => el.style.display = 'none');
@@ -3682,7 +3735,7 @@
                         selectedLocation.lat = parseFloat(data[0].lat);
                         selectedLocation.lng = parseFloat(data[0].lon);
                     }
-                } catch(e) {
+                } catch (e) {
                     console.log("Forward geocoding fallback failed", e);
                 }
             }
@@ -4496,9 +4549,9 @@
 
             // 1. KEYBOARD DETECTION & GLOBAL CLASS TOGGLE
             // Robust detection: if viewport height is significantly less than window height
-            const isKeyboardActive = (window.innerHeight - viewport.height) > 60 || 
-                                     (viewport.height < window.screen.height * 0.7);
-            
+            const isKeyboardActive = (window.innerHeight - viewport.height) > 60 ||
+                (viewport.height < window.screen.height * 0.7);
+
             document.body.classList.toggle('keyboard-active', isKeyboardActive);
 
             const chatWrapper = document.getElementById('chat-input-wrapper');
@@ -4514,7 +4567,7 @@
 
                 if (isKeyboardActive) {
                     const kbHeight = window.innerHeight - viewport.height;
-                    
+
                     if (chatDrawer) {
                         // Translate the ENTIRE drawer up safely above the keyboard
                         chatDrawer.style.transform = `translateY(-${kbHeight}px)`;
@@ -4577,314 +4630,314 @@
     </script>
 
     <script>
-    /* =============================================================
-       HELPIDO OFFLINE-FIRST ENGINE
-    ============================================================= */
-    const HPD_CACHE = { home:'hpd_home_cache', tasks:'hpd_tasks_cache', pending:'hpd_pending_queue' };
+        /* =============================================================
+           HELPIDO OFFLINE-FIRST ENGINE
+        ============================================================= */
+        const HPD_CACHE = { home: 'hpd_home_cache', tasks: 'hpd_tasks_cache', pending: 'hpd_pending_queue' };
 
-    function hpdSave(k,d){try{localStorage.setItem(k,JSON.stringify(d));}catch(e){}}
-    function hpdLoad(k){try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;}}
+        function hpdSave(k, d) { try { localStorage.setItem(k, JSON.stringify(d)); } catch (e) { } }
+        function hpdLoad(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } }
 
-    /* ---- Haptic bridge (safe no-op when Flutter handler not ready) ---- */
-    /* Haptic intensity → vibration pattern map */
-    const HPD_VIBRATE = {
-        hapticLight:   [18],
-        hapticMedium:  [35],
-        hapticHeavy:   [60],
-        hapticSuccess: [35, 80, 18],  /* double-pulse like iOS success */
-    };
-
-    function hpdHaptic(type) {
-        // 1) Try Flutter bridge (native HapticFeedback — best quality)
-        try {
-            if (window.flutter_inappwebview) {
-                window.flutter_inappwebview.callHandler(type);
-                return;
-            }
-        } catch(e) {}
-        // 2) Fallback: Web Vibration API (works in Android WebView with VIBRATE permission)
-        try {
-            if (navigator.vibrate) {
-                navigator.vibrate(HPD_VIBRATE[type] || [30]);
-            }
-        } catch(e) {}
-    }
-    // Expose globally so socket handlers (defined earlier) can call it
-    window.hpdHaptic = hpdHaptic;
-
-    function hpdTimeAgoShort(ts){
-        if(!ts) return '';
-        const d=Math.round((Date.now()-ts)/1000);
-        if(d<60) return d+'s ago';
-        if(d<3600) return Math.floor(d/60)+'m ago';
-        return Math.floor(d/3600)+'h ago';
-    }
-    function hpdShowCacheLabel(id,ts){
-        const el=document.getElementById(id); if(!el) return;
-        if(ts && (Date.now()-ts)>2*60*1000){
-            el.textContent='\u23f1 '+hpdTimeAgoShort(ts);
-            el.style.display='inline-block';
-        } else { el.style.display='none'; }
-    }
-
-    /* ---- Offline / Online Banner ---- */
-    function hpdSetOfflineUI(off){
-        const b=document.getElementById('offline-banner');
-        if(b) b.style.display=off?'block':'none';
-    }
-    window.addEventListener('offline',()=>{ hpdSetOfflineUI(true); });
-    window.addEventListener('online',()=>{
-        hpdSetOfflineUI(false);
-        if(typeof loadTasks==='function') loadTasks();
-        if(typeof loadMyTasks==='function') loadMyTasks();
-        setTimeout(hpdProcessPendingQueue, 1500);
-    });
-    if(!navigator.onLine) hpdSetOfflineUI(true);
-
-    /* ---- Pending Action Queue ---- */
-    function hpdAddPending(action){
-        const q=hpdLoad(HPD_CACHE.pending)||[];
-        q.push({...action,id:Date.now()+Math.random().toString(36).slice(2),ts:Date.now()});
-        hpdSave(HPD_CACHE.pending,q);
-    }
-    async function hpdProcessPendingQueue(){
-        const q=hpdLoad(HPD_CACHE.pending)||[];
-        if(!q.length) return;
-        if(typeof showAppNotification==='function') showAppNotification('📤 Sending '+q.length+' pending action(s)...');
-        const failed=[];
-        for(const a of q){
-            try{
-                if(a.type==='chat'){
-                    if(typeof globalSocket!=='undefined'&&globalSocket.connected){
-                        globalSocket.emit('sendMessage',{taskId:a.taskId,senderPhone:a.senderPhone,targetPhone:a.targetPhone,text:a.text});
-                        const bbl=document.querySelector('[data-temp-id="'+a.tempId+'"]');
-                        if(bbl){const ic=bbl.querySelector('.pending-icon');if(ic)ic.textContent='✓';}
-                    } else { failed.push(a); }
-                } else if(a.type==='post_task'){
-                    const url=(typeof API_URL!=='undefined'?API_URL:'')+'/tasks';
-                    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(a.payload)});
-                    if(r.ok){
-                        if(typeof showAppNotification==='function') showAppNotification('✅ Pending task posted!');
-                        if(typeof loadTasks==='function') loadTasks();
-                        if(typeof loadMyTasks==='function') loadMyTasks();
-                    } else { failed.push(a); }
-                }
-            }catch(e){ failed.push(a); }
-        }
-        hpdSave(HPD_CACHE.pending,failed);
-        if(!failed.length&&q.length) if(typeof showAppNotification==='function') showAppNotification('✅ All pending messages sent!');
-    }
-
-    /* ---- Optimistic Chat + Offline Queue ---- */
-    window.addEventListener('load',()=>{
-        const chatInput=document.getElementById('chat-input');
-        const chatSendBtn=document.getElementById('chat-send-btn');
-        function hpdSendChat(){
-            if(!chatInput) return;
-            const text=chatInput.value.trim(); if(!text) return;
-            const phone=typeof myPhone!=='undefined'?myPhone:'';
-            const taskId=typeof currentChatTaskId!=='undefined'?currentChatTaskId:null;
-            const target=typeof currentChatTargetPhone!=='undefined'?currentChatTargetPhone:null;
-            if(!taskId) return;
-            const tempId=Date.now().toString(36)+Math.random().toString(36).slice(2);
-            // Optimistic bubble
-            const msgBox=document.getElementById('chat-messages');
-            if(msgBox){
-                const e=document.getElementById('empty-chat-msg'); if(e) e.remove();
-                const bbl=document.createElement('div');
-                bbl.className='msg-bubble msg-sent';
-                bbl.setAttribute('data-temp-id',tempId);
-                const td=document.createElement('div'); td.innerText=text;
-                const tim=document.createElement('div');
-                tim.className='msg-time';
-                tim.style.cssText='display:flex;align-items:center;justify-content:flex-end;gap:3px;';
-                tim.innerText=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-                const tk=document.createElement('span');
-                tk.className='pending-icon';
-                tk.style.cssText='font-size:0.7rem;color:'+(navigator.onLine?'#4FC3F7':'#aaa')+';';
-                tk.textContent=navigator.onLine?'✓':'⏰';
-                tim.appendChild(tk); bbl.appendChild(td); bbl.appendChild(tim);
-                msgBox.appendChild(bbl); msgBox.scrollTop=msgBox.scrollHeight;
-            }
-            chatInput.value='';
-            const sb=document.getElementById('chat-send-btn'); if(sb) sb.style.background='#E0E0E0';
-            if(!navigator.onLine){
-                hpdAddPending({type:'chat',tempId,taskId,senderPhone:phone,targetPhone:target,text});
-                return;
-            }
-            if(typeof globalSocket!=='undefined') globalSocket.emit('sendMessage',{taskId,senderPhone:phone,targetPhone:target,text});
-        }
-        if(chatSendBtn) chatSendBtn.addEventListener('click',e=>{e.stopPropagation();hpdSendChat();},true);
-        if(chatInput) chatInput.addEventListener('keypress',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();e.stopPropagation();hpdSendChat();}},true);
-    });
-
-    /* ---- Offline guard: camera & gallery ---- */
-    window.addEventListener('load',()=>{
-        ['img-btn-camera','img-btn-gallery','task-image-input'].forEach(id=>{
-            const el=document.getElementById(id);
-            if(el) el.addEventListener('click',e=>{
-                if(!navigator.onLine){
-                    e.stopImmediatePropagation();
-                    if(typeof showAppNotification==='function') showAppNotification('📡 You need an internet connection for uploading images','error');
-                }
-            },true);
-        });
-    });
-
-    /* ---- Offline task posting (text-only queue) ---- */
-    window.addEventListener('load',()=>{
-        const createModal=document.getElementById('create-modal');
-        if(!createModal) return;
-        createModal.querySelectorAll('.btn').forEach(btn=>{
-            if((btn.getAttribute('onclick')||'').includes('postHelpRequest')){
-                btn.addEventListener('click',e=>{
-                    if(!navigator.onLine){
-                        e.stopImmediatePropagation();
-                        const title=document.getElementById('task-title')?.value?.trim();
-                        const desc=document.getElementById('task-desc')?.value?.trim();
-                        const reward=parseInt(document.getElementById('task-reward')?.value)||0;
-                        if(!title||!desc) return;
-                        hpdAddPending({type:'post_task',payload:{title,description:desc,reward,postedBy:typeof myPhone!=='undefined'?myPhone:'',lat:typeof userLat!=='undefined'?userLat:null,lng:typeof userLng!=='undefined'?userLng:null,imageData:null}});
-                        if(typeof closeModal==='function') closeModal();
-                        if(typeof showAppNotification==='function') showAppNotification("📡 Task saved! Will post when you're back online.");
-                    }
-                },true);
-            }
-        });
-    });
-
-    /* ---- Feed Cache Write (intercept fetch) ---- */
-    (()=>{
-        const orig=window.fetch;
-        window.fetch=async function(url,opts){
-            const r=await orig.apply(this,arguments);
-            if(typeof url==='string'){
-                const m=(!opts||!opts.method||opts.method==='GET');
-                if(m&&url.includes('/tasks?lat=')){
-                    try{const c=r.clone();const d=await c.json();if(Array.isArray(d)){hpdSave(HPD_CACHE.home,{tasks:d,ts:Date.now()});hpdShowCacheLabel('home-cache-label',Date.now());}}catch(e){}
-                }
-                if(m&&url.includes('/tasks/my-tasks')){
-                    try{const c=r.clone();const d=await c.json();if(d&&(d.myRequests||d.myJobs)){hpdSave(HPD_CACHE.tasks,{myRequests:d.myRequests||[],myJobs:d.myJobs||[],ts:Date.now()});hpdShowCacheLabel('tasks-cache-label',Date.now());}}catch(e){}
-                }
-            }
-            return r;
+        /* ---- Haptic bridge (safe no-op when Flutter handler not ready) ---- */
+        /* Haptic intensity → vibration pattern map */
+        const HPD_VIBRATE = {
+            hapticLight: [18],
+            hapticMedium: [35],
+            hapticHeavy: [60],
+            hapticSuccess: [35, 80, 18],  /* double-pulse like iOS success */
         };
-    })();
 
-    /* ---- Pull-to-Refresh (Webapp touch gestures) ---- */
-    (function() {
-        const PTR_THRESHOLD = 75;
-        const PTR_MAX_SHOW  = 54;
-        let ptrStartY = 0, ptrPulling = false, ptrTriggered = false;
-        const indicator = document.getElementById('ptr-indicator');
-        const arrow = document.getElementById('ptr-arrow-svg');
-        const label = document.getElementById('ptr-label');
-
-        const style = document.createElement('style');
-        style.textContent = '@keyframes ptr-spin{to{transform:rotate(360deg);}} .ptr-spinning{animation:ptr-spin 0.65s linear infinite!important;transition:none!important;}';
-        document.head.appendChild(style);
-
-        document.addEventListener('touchstart', function(e) {
-            if (ptrTriggered) return;
-            
-            // 1. NEW: Pinch guard (disable on multi-touch)
-            if (e.touches.length > 1) {
-                ptrPulling = false;
-                return;
-            }
-
-            // 2. NEW: Map guard (disable on the Ride modal map picker)
-            if (e.target.closest('#ride-map, .leaflet-container')) {
-                ptrPulling = false;
-                return;
-            }
-
-            // 3. Only allow PTR on Home or Tasks tab (as requested)
-            if (activeTab !== 'home' && activeTab !== 'tasks') {
-                ptrPulling = false;
-                return;
-            }
-
-            // 4. Ensure NO modal or chat drawer is open
-            const isModalOpen = !!document.querySelector('.modal-overlay:not(.hidden), .chat-overlay:not(.hidden), #radius-modal:not(.hidden)');
-            if (isModalOpen) {
-                ptrPulling = false;
-                return;
-            }
-
-            // 5. Proper check for scroll top - window.scrollY is the standard for the root scroller
-            const atTop = window.scrollY <= 0;
-            if (atTop) { 
-                ptrStartY = e.touches[0].clientY; 
-                ptrPulling = true; 
-            } else {
-                ptrPulling = false;
-            }
-        }, { passive: true });
-
-        document.addEventListener('touchmove', function(e) {
-            if (!ptrPulling || ptrTriggered) return;
-
-            // NEW: Cancel if a second finger is added mid-pull (to start a pinch)
-            if (e.touches.length > 1) {
-                endPtr();
-                return;
-            }
-
-            const dy = e.touches[0].clientY - ptrStartY;
-            if (dy <= 0) { ptrPulling = false; return; }
-            // Block the browser from scrolling the page while we animate the PTR bar
-            e.preventDefault();
-            const progress = Math.min(dy / PTR_THRESHOLD, 1);
-            const height = Math.min(dy * 0.5, PTR_MAX_SHOW);
-            indicator.style.height = height + 'px';
-            arrow.style.transform = 'rotate(' + (progress * 200) + 'deg)';
-            label.textContent = progress >= 1 ? 'Release to refresh' : 'Pull to refresh';
-            label.style.opacity = Math.min(progress * 1.5, 1);
-        }, { passive: false }); // passive:false required to call preventDefault()
-
-        document.addEventListener('touchend', function(e) {
-            if (!ptrPulling) return;
-            ptrPulling = false;
-            const dy = e.changedTouches[0].clientY - ptrStartY;
-            if (dy >= PTR_THRESHOLD) {
-                ptrTriggered = true;
-                indicator.style.transition = 'none';
-                indicator.style.height = PTR_MAX_SHOW + 'px';
-                arrow.classList.add('ptr-spinning');
-                label.textContent = 'Refreshing...';
-                // Haptic: medium pulse when user releases to refresh
-                hpdHaptic('hapticMedium');
-                window.helpidoRefresh().finally(endPtr);
-                setTimeout(endPtr, 5000);
-            } else { endPtr(); }
-        }, { passive: true });
-
-        function endPtr() {
-            ptrTriggered = false; ptrPulling = false;
-            indicator.style.transition = 'height 0.3s ease';
-            indicator.style.height = '0';
-            arrow.classList.remove('ptr-spinning');
-            arrow.style.transform = 'rotate(0deg)';
-            label.textContent = 'Pull to refresh';
+        function hpdHaptic(type) {
+            // 1) Try Flutter bridge (native HapticFeedback — best quality)
+            try {
+                if (window.flutter_inappwebview) {
+                    window.flutter_inappwebview.callHandler(type);
+                    return;
+                }
+            } catch (e) { }
+            // 2) Fallback: Web Vibration API (works in Android WebView with VIBRATE permission)
+            try {
+                if (navigator.vibrate) {
+                    navigator.vibrate(HPD_VIBRATE[type] || [30]);
+                }
+            } catch (e) { }
         }
-    })();
+        // Expose globally so socket handlers (defined earlier) can call it
+        window.hpdHaptic = hpdHaptic;
 
-    /* ---- helpidoRefresh ---- */
-    window.helpidoRefresh = async function() {
-        try {
-            await Promise.allSettled([
-                typeof loadTasks === 'function' ? loadTasks() : Promise.resolve(),
-                typeof loadMyTasks === 'function' ? loadMyTasks() : Promise.resolve()
-            ]);
-        } catch(e) {}
-    };
+        function hpdTimeAgoShort(ts) {
+            if (!ts) return '';
+            const d = Math.round((Date.now() - ts) / 1000);
+            if (d < 60) return d + 's ago';
+            if (d < 3600) return Math.floor(d / 60) + 'm ago';
+            return Math.floor(d / 3600) + 'h ago';
+        }
+        function hpdShowCacheLabel(id, ts) {
+            const el = document.getElementById(id); if (!el) return;
+            if (ts && (Date.now() - ts) > 2 * 60 * 1000) {
+                el.textContent = '\u23f1 ' + hpdTimeAgoShort(ts);
+                el.style.display = 'inline-block';
+            } else { el.style.display = 'none'; }
+        }
 
-    /* ---- Refresh cache labels every minute ---- */
-    setInterval(()=>{
-        const h=hpdLoad(HPD_CACHE.home); if(h) hpdShowCacheLabel('home-cache-label',h.ts);
-        const t=hpdLoad(HPD_CACHE.tasks); if(t) hpdShowCacheLabel('tasks-cache-label',t.ts);
-    },60000);
+        /* ---- Offline / Online Banner ---- */
+        function hpdSetOfflineUI(off) {
+            const b = document.getElementById('offline-banner');
+            if (b) b.style.display = off ? 'block' : 'none';
+        }
+        window.addEventListener('offline', () => { hpdSetOfflineUI(true); });
+        window.addEventListener('online', () => {
+            hpdSetOfflineUI(false);
+            if (typeof loadTasks === 'function') loadTasks();
+            if (typeof loadMyTasks === 'function') loadMyTasks();
+            setTimeout(hpdProcessPendingQueue, 1500);
+        });
+        if (!navigator.onLine) hpdSetOfflineUI(true);
+
+        /* ---- Pending Action Queue ---- */
+        function hpdAddPending(action) {
+            const q = hpdLoad(HPD_CACHE.pending) || [];
+            q.push({ ...action, id: Date.now() + Math.random().toString(36).slice(2), ts: Date.now() });
+            hpdSave(HPD_CACHE.pending, q);
+        }
+        async function hpdProcessPendingQueue() {
+            const q = hpdLoad(HPD_CACHE.pending) || [];
+            if (!q.length) return;
+            if (typeof showAppNotification === 'function') showAppNotification('📤 Sending ' + q.length + ' pending action(s)...');
+            const failed = [];
+            for (const a of q) {
+                try {
+                    if (a.type === 'chat') {
+                        if (typeof globalSocket !== 'undefined' && globalSocket.connected) {
+                            globalSocket.emit('sendMessage', { taskId: a.taskId, senderPhone: a.senderPhone, targetPhone: a.targetPhone, text: a.text });
+                            const bbl = document.querySelector('[data-temp-id="' + a.tempId + '"]');
+                            if (bbl) { const ic = bbl.querySelector('.pending-icon'); if (ic) ic.textContent = '✓'; }
+                        } else { failed.push(a); }
+                    } else if (a.type === 'post_task') {
+                        const url = (typeof API_URL !== 'undefined' ? API_URL : '') + '/tasks';
+                        const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(a.payload) });
+                        if (r.ok) {
+                            if (typeof showAppNotification === 'function') showAppNotification('✅ Pending task posted!');
+                            if (typeof loadTasks === 'function') loadTasks();
+                            if (typeof loadMyTasks === 'function') loadMyTasks();
+                        } else { failed.push(a); }
+                    }
+                } catch (e) { failed.push(a); }
+            }
+            hpdSave(HPD_CACHE.pending, failed);
+            if (!failed.length && q.length) if (typeof showAppNotification === 'function') showAppNotification('✅ All pending messages sent!');
+        }
+
+        /* ---- Optimistic Chat + Offline Queue ---- */
+        window.addEventListener('load', () => {
+            const chatInput = document.getElementById('chat-input');
+            const chatSendBtn = document.getElementById('chat-send-btn');
+            function hpdSendChat() {
+                if (!chatInput) return;
+                const text = chatInput.value.trim(); if (!text) return;
+                const phone = typeof myPhone !== 'undefined' ? myPhone : '';
+                const taskId = typeof currentChatTaskId !== 'undefined' ? currentChatTaskId : null;
+                const target = typeof currentChatTargetPhone !== 'undefined' ? currentChatTargetPhone : null;
+                if (!taskId) return;
+                const tempId = Date.now().toString(36) + Math.random().toString(36).slice(2);
+                // Optimistic bubble
+                const msgBox = document.getElementById('chat-messages');
+                if (msgBox) {
+                    const e = document.getElementById('empty-chat-msg'); if (e) e.remove();
+                    const bbl = document.createElement('div');
+                    bbl.className = 'msg-bubble msg-sent';
+                    bbl.setAttribute('data-temp-id', tempId);
+                    const td = document.createElement('div'); td.innerText = text;
+                    const tim = document.createElement('div');
+                    tim.className = 'msg-time';
+                    tim.style.cssText = 'display:flex;align-items:center;justify-content:flex-end;gap:3px;';
+                    tim.innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const tk = document.createElement('span');
+                    tk.className = 'pending-icon';
+                    tk.style.cssText = 'font-size:0.7rem;color:' + (navigator.onLine ? '#4FC3F7' : '#aaa') + ';';
+                    tk.textContent = navigator.onLine ? '✓' : '⏰';
+                    tim.appendChild(tk); bbl.appendChild(td); bbl.appendChild(tim);
+                    msgBox.appendChild(bbl); msgBox.scrollTop = msgBox.scrollHeight;
+                }
+                chatInput.value = '';
+                const sb = document.getElementById('chat-send-btn'); if (sb) sb.style.background = '#E0E0E0';
+                if (!navigator.onLine) {
+                    hpdAddPending({ type: 'chat', tempId, taskId, senderPhone: phone, targetPhone: target, text });
+                    return;
+                }
+                if (typeof globalSocket !== 'undefined') globalSocket.emit('sendMessage', { taskId, senderPhone: phone, targetPhone: target, text });
+            }
+            if (chatSendBtn) chatSendBtn.addEventListener('click', e => { e.stopPropagation(); hpdSendChat(); }, true);
+            if (chatInput) chatInput.addEventListener('keypress', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.stopPropagation(); hpdSendChat(); } }, true);
+        });
+
+        /* ---- Offline guard: camera & gallery ---- */
+        window.addEventListener('load', () => {
+            ['img-btn-camera', 'img-btn-gallery', 'task-image-input'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('click', e => {
+                    if (!navigator.onLine) {
+                        e.stopImmediatePropagation();
+                        if (typeof showAppNotification === 'function') showAppNotification('📡 You need an internet connection for uploading images', 'error');
+                    }
+                }, true);
+            });
+        });
+
+        /* ---- Offline task posting (text-only queue) ---- */
+        window.addEventListener('load', () => {
+            const createModal = document.getElementById('create-modal');
+            if (!createModal) return;
+            createModal.querySelectorAll('.btn').forEach(btn => {
+                if ((btn.getAttribute('onclick') || '').includes('postHelpRequest')) {
+                    btn.addEventListener('click', e => {
+                        if (!navigator.onLine) {
+                            e.stopImmediatePropagation();
+                            const title = document.getElementById('task-title')?.value?.trim();
+                            const desc = document.getElementById('task-desc')?.value?.trim();
+                            const reward = parseInt(document.getElementById('task-reward')?.value) || 0;
+                            if (!title || !desc) return;
+                            hpdAddPending({ type: 'post_task', payload: { title, description: desc, reward, postedBy: typeof myPhone !== 'undefined' ? myPhone : '', lat: typeof userLat !== 'undefined' ? userLat : null, lng: typeof userLng !== 'undefined' ? userLng : null, imageData: null } });
+                            if (typeof closeModal === 'function') closeModal();
+                            if (typeof showAppNotification === 'function') showAppNotification("📡 Task saved! Will post when you're back online.");
+                        }
+                    }, true);
+                }
+            });
+        });
+
+        /* ---- Feed Cache Write (intercept fetch) ---- */
+        (() => {
+            const orig = window.fetch;
+            window.fetch = async function (url, opts) {
+                const r = await orig.apply(this, arguments);
+                if (typeof url === 'string') {
+                    const m = (!opts || !opts.method || opts.method === 'GET');
+                    if (m && url.includes('/tasks?lat=')) {
+                        try { const c = r.clone(); const d = await c.json(); if (Array.isArray(d)) { hpdSave(HPD_CACHE.home, { tasks: d, ts: Date.now() }); hpdShowCacheLabel('home-cache-label', Date.now()); } } catch (e) { }
+                    }
+                    if (m && url.includes('/tasks/my-tasks')) {
+                        try { const c = r.clone(); const d = await c.json(); if (d && (d.myRequests || d.myJobs)) { hpdSave(HPD_CACHE.tasks, { myRequests: d.myRequests || [], myJobs: d.myJobs || [], ts: Date.now() }); hpdShowCacheLabel('tasks-cache-label', Date.now()); } } catch (e) { }
+                    }
+                }
+                return r;
+            };
+        })();
+
+        /* ---- Pull-to-Refresh (Webapp touch gestures) ---- */
+        (function () {
+            const PTR_THRESHOLD = 75;
+            const PTR_MAX_SHOW = 54;
+            let ptrStartY = 0, ptrPulling = false, ptrTriggered = false;
+            const indicator = document.getElementById('ptr-indicator');
+            const arrow = document.getElementById('ptr-arrow-svg');
+            const label = document.getElementById('ptr-label');
+
+            const style = document.createElement('style');
+            style.textContent = '@keyframes ptr-spin{to{transform:rotate(360deg);}} .ptr-spinning{animation:ptr-spin 0.65s linear infinite!important;transition:none!important;}';
+            document.head.appendChild(style);
+
+            document.addEventListener('touchstart', function (e) {
+                if (ptrTriggered) return;
+
+                // 1. NEW: Pinch guard (disable on multi-touch)
+                if (e.touches.length > 1) {
+                    ptrPulling = false;
+                    return;
+                }
+
+                // 2. NEW: Map guard (disable on the Ride modal map picker)
+                if (e.target.closest('#ride-map, .leaflet-container')) {
+                    ptrPulling = false;
+                    return;
+                }
+
+                // 3. Only allow PTR on Home or Tasks tab (as requested)
+                if (activeTab !== 'home' && activeTab !== 'tasks') {
+                    ptrPulling = false;
+                    return;
+                }
+
+                // 4. Ensure NO modal or chat drawer is open
+                const isModalOpen = !!document.querySelector('.modal-overlay:not(.hidden), .chat-overlay:not(.hidden), #radius-modal:not(.hidden)');
+                if (isModalOpen) {
+                    ptrPulling = false;
+                    return;
+                }
+
+                // 5. Proper check for scroll top - window.scrollY is the standard for the root scroller
+                const atTop = window.scrollY <= 0;
+                if (atTop) {
+                    ptrStartY = e.touches[0].clientY;
+                    ptrPulling = true;
+                } else {
+                    ptrPulling = false;
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchmove', function (e) {
+                if (!ptrPulling || ptrTriggered) return;
+
+                // NEW: Cancel if a second finger is added mid-pull (to start a pinch)
+                if (e.touches.length > 1) {
+                    endPtr();
+                    return;
+                }
+
+                const dy = e.touches[0].clientY - ptrStartY;
+                if (dy <= 0) { ptrPulling = false; return; }
+                // Block the browser from scrolling the page while we animate the PTR bar
+                e.preventDefault();
+                const progress = Math.min(dy / PTR_THRESHOLD, 1);
+                const height = Math.min(dy * 0.5, PTR_MAX_SHOW);
+                indicator.style.height = height + 'px';
+                arrow.style.transform = 'rotate(' + (progress * 200) + 'deg)';
+                label.textContent = progress >= 1 ? 'Release to refresh' : 'Pull to refresh';
+                label.style.opacity = Math.min(progress * 1.5, 1);
+            }, { passive: false }); // passive:false required to call preventDefault()
+
+            document.addEventListener('touchend', function (e) {
+                if (!ptrPulling) return;
+                ptrPulling = false;
+                const dy = e.changedTouches[0].clientY - ptrStartY;
+                if (dy >= PTR_THRESHOLD) {
+                    ptrTriggered = true;
+                    indicator.style.transition = 'none';
+                    indicator.style.height = PTR_MAX_SHOW + 'px';
+                    arrow.classList.add('ptr-spinning');
+                    label.textContent = 'Refreshing...';
+                    // Haptic: medium pulse when user releases to refresh
+                    hpdHaptic('hapticMedium');
+                    window.helpidoRefresh().finally(endPtr);
+                    setTimeout(endPtr, 5000);
+                } else { endPtr(); }
+            }, { passive: true });
+
+            function endPtr() {
+                ptrTriggered = false; ptrPulling = false;
+                indicator.style.transition = 'height 0.3s ease';
+                indicator.style.height = '0';
+                arrow.classList.remove('ptr-spinning');
+                arrow.style.transform = 'rotate(0deg)';
+                label.textContent = 'Pull to refresh';
+            }
+        })();
+
+        /* ---- helpidoRefresh ---- */
+        window.helpidoRefresh = async function () {
+            try {
+                await Promise.allSettled([
+                    typeof loadTasks === 'function' ? loadTasks() : Promise.resolve(),
+                    typeof loadMyTasks === 'function' ? loadMyTasks() : Promise.resolve()
+                ]);
+            } catch (e) { }
+        };
+
+        /* ---- Refresh cache labels every minute ---- */
+        setInterval(() => {
+            const h = hpdLoad(HPD_CACHE.home); if (h) hpdShowCacheLabel('home-cache-label', h.ts);
+            const t = hpdLoad(HPD_CACHE.tasks); if (t) hpdShowCacheLabel('tasks-cache-label', t.ts);
+        }, 60000);
 
     </script>
 
