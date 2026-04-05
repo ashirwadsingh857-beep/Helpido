@@ -3792,8 +3792,8 @@
 
             document.getElementById('ride-destination').value = "Identifying pinpoint...";
 
-            rideGeocoder.geocode({ location: { lat, lng } }, (results, status) => {
-                if (status === "OK" && results.length > 0) {
+            rideGeocoder.geocode({ location: center }, (results, status) => {
+                if (status === google.maps.GeocoderStatus.OK && results.length > 0) {
                     // GLOBAL HIGH-PRECISION LOGIC:
                     // Prioritize specific buildings or landmarks over general areas
                     let bestMatch = null;
@@ -3822,6 +3822,7 @@
                     if (!bestMatch && results[0]) bestMatch = results[0];
 
                     if (bestMatch) {
+                        // Ensure we use the formatted_address
                         selectSuggestion(`📍 Pinned: ${bestMatch.formatted_address}`, lat, lng);
                     } else {
                         selectSuggestion(`📍 Pinned Location (${lat.toFixed(5)}, ${lng.toFixed(5)})`, lat, lng);
