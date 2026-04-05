@@ -1482,7 +1482,9 @@
                 <div style="display: flex; align-items: center;">
                     <input type="text" id="ride-destination" autocomplete="off"
                         placeholder="Where to? (Search location)" required
-                        style="margin-bottom: 0; flex: 1; border-radius: 12px; border: 1.5px solid var(--border-color); padding: 14px 16px; font-size: 0.95rem; background: var(--bg-input);">
+                        style="margin-bottom: 0; flex: 1; padding-right: 48px; border-radius: 12px; border: 1.5px solid var(--border-color); padding: 14px 16px; font-size: 0.95rem; background: var(--bg-input);">
+                    <button type="button" onclick="openMapPicker()"
+                        style="position: absolute; right: 8px; background: var(--bg-card); border: 1px solid var(--border-color); font-size: 1.3rem; cursor: pointer; padding: 6px; border-radius: 8px; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">📍</button>
                 </div>
                 <div id="location-suggest-box" class="location-suggest-box"></div>
             </div>
@@ -3606,23 +3608,7 @@
             const suggestBox = document.getElementById('location-suggest-box');
             suggestBox.innerHTML = '';
             
-            // 1. "Set Location on Map" Item (Replacement for the icon button)
-            const mapItem = document.createElement('div');
-            mapItem.className = 'suggest-item';
-            mapItem.innerHTML = `
-                <div class="suggest-icon">📍</div>
-                <div class="suggest-details">
-                    <span class="suggest-name">Set location on map</span>
-                    <span class="suggest-address">Tap to pick a pinpoint manually</span>
-                </div>
-            `;
-            mapItem.onclick = () => {
-                hpdHaptic('hapticLight');
-                openMapPicker();
-            };
-            suggestBox.appendChild(mapItem);
-
-            // 2. History Items (Filtered)
+            // 1. History Items (Filtered)
             const filteredHistory = locationHistory.filter(h => 
                 h.name.toLowerCase().includes(query.toLowerCase()) || 
                 h.address.toLowerCase().includes(query.toLowerCase())
@@ -3832,10 +3818,14 @@
                         }
                     }
 
-                    // Final Fallback
-                    if (!bestMatch) bestMatch = results[0];
+                    // Final Fallback: use first result if pass 1 and 2 fail
+                    if (!bestMatch && results[0]) bestMatch = results[0];
 
-                    selectSuggestion(`📍 Pinned: ${bestMatch.formatted_address}`, lat, lng);
+                    if (bestMatch) {
+                        selectSuggestion(`📍 Pinned: ${bestMatch.formatted_address}`, lat, lng);
+                    } else {
+                        selectSuggestion(`📍 Pinned Location (${lat.toFixed(5)}, ${lng.toFixed(5)})`, lat, lng);
+                    }
                 } else {
                     selectSuggestion(`📍 Pinned Location (${lat.toFixed(5)}, ${lng.toFixed(5)})`, lat, lng);
                 }
