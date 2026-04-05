@@ -3649,8 +3649,7 @@
                 // GOOGLE MAPS SEARCH
                 const request = {
                     input: query,
-                    locationBias: (userLat && userLng) ? new google.maps.LatLng(userLat, userLng) : null,
-                    radius: 50000 // Bias to 50km
+                    locationBias: (userLat && userLng) ? { radius: 10000, center: { lat: userLat, lng: userLng } } : null
                 };
 
                 rideAutocompleteService.getPlacePredictions(request, (predictions, status) => {
@@ -3812,15 +3811,32 @@
             rideGeocoder.geocode({ location: { lat, lng } }, (results, status) => {
                 if (status === "OK" && results.length > 0) {
                     // GLOBAL HIGH-PRECISION LOGIC:
-                    // Loop through results to find the first one that is NOT just a locality/city
-                    let bestMatch = results[0];
-                    for (let i = 0; i < results.length; i++) {
-                        const types = results[i].types;
-                        if (types.includes('premise') || types.includes('point_of_interest') || types.includes('establishment') || types.includes('street_address')) {
-                            bestMatch = results[i];
+                    // Prioritize specific buildings or landmarks over general areas
+                    let bestMatch = null;
+                    
+                    // 1st Pass: Look for highly specific landmarks/places
+                    for (const res of results) {
+                        const t = res.types;
+                        if (t.includes('point_of_interest') || t.includes('establishment') || t.includes('premise') || t.includes('subpremise')) {
+                            bestMatch = res;
                             break;
                         }
                     }
+
+                    // 2nd Pass: Fallback to street address or neighborhood
+                    if (!bestMatch) {
+                        for (const res of results) {
+                            const t = res.types;
+                            if (t.includes('street_address') || t.includes('route') || t.includes('neighborhood')) {
+                                bestMatch = res;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Final Fallback
+                    if (!bestMatch) bestMatch = results[0];
+
                     selectSuggestion(`📍 Pinned: ${bestMatch.formatted_address}`, lat, lng);
                 } else {
                     selectSuggestion(`📍 Pinned Location (${lat.toFixed(5)}, ${lng.toFixed(5)})`, lat, lng);
