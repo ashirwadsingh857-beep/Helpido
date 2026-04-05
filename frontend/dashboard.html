@@ -1484,7 +1484,7 @@
                         placeholder="Where to? (Search location)" required
                         style="margin-bottom: 0; flex: 1; padding-right: 48px; border-radius: 12px; border: 1.5px solid var(--border-color); padding: 14px 16px; font-size: 0.95rem; background: var(--bg-input);">
                     <button type="button" onclick="openMapPicker()"
-                        style="position: absolute; right: 8px; background: var(--bg-card); border: 1px solid var(--border-color); font-size: 1.3rem; cursor: pointer; padding: 6px; border-radius: 8px; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">📍</button>
+                        style="position: absolute; right: 10px; background: transparent; border: none; font-size: 1.4rem; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; opacity: 0.7; transition: opacity 0.2s;">📍</button>
                 </div>
                 <div id="location-suggest-box" class="location-suggest-box"></div>
             </div>
@@ -3576,6 +3576,7 @@
             }
 
             input.addEventListener('focus', () => {
+                document.getElementById('ride-map-container').style.display = 'none';
                 showSuggestions(""); 
             });
 
@@ -3583,6 +3584,9 @@
                 const query = this.value.trim();
                 clearTimeout(debounceTimer);
                 selectedLocation = { lat: 0, lng: 0 }; // Reset on manual type
+                
+                // Hide map when typing
+                document.getElementById('ride-map-container').style.display = 'none';
 
                 if (!query) {
                     showSuggestions("");
@@ -3665,7 +3669,7 @@
                 if (data && data.length > 0) {
                     data.forEach(place => {
                         const name = place.name || place.display_name.split(',')[0];
-                        const div = createSuggestItem(name, place.display_name, '🌍', query);
+                        const div = createSuggestItem(name, place.display_name, '📍', query);
                         div.onclick = () => selectSuggestion(place.display_name, parseFloat(place.lat), parseFloat(place.lon));
                         suggestBox.appendChild(div);
                     });
@@ -3750,6 +3754,9 @@
         }
 
         function openMapPicker() {
+            // Hide suggestions when opening map picker
+            document.getElementById('location-suggest-box').style.display = 'none';
+
             const mapContainer = document.getElementById('ride-map-container');
             if (mapContainer.style.display === 'block') {
                 mapContainer.style.display = 'none';
