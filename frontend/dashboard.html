@@ -3643,7 +3643,7 @@
                 rideAutocompleteService.getPlacePredictions(request, (predictions, status) => {
                     if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
                         predictions.forEach(p => {
-                            const div = createSuggestItem(p.structured_formatting.main_text, p.description, '📍', query);
+                            const div = createSuggestItem(p.structured_formatting.main_text, p.description, '', query);
                             div.onclick = () => {
                                 hpdHaptic('hapticLight');
                                 getGooglePlaceDetails(p.place_id, p.description);
@@ -3669,7 +3669,7 @@
                 if (data && data.length > 0) {
                     data.forEach(place => {
                         const name = place.name || place.display_name.split(',')[0];
-                        const div = createSuggestItem(name, place.display_name, '📍', query);
+                        const div = createSuggestItem(name, place.display_name, '', query);
                         div.onclick = () => selectSuggestion(place.display_name, parseFloat(place.lat), parseFloat(place.lon));
                         suggestBox.appendChild(div);
                     });
@@ -3688,8 +3688,10 @@
                 highlightedName = name.replace(regex, '<span class="match-highlight">$1</span>');
             }
 
+            const iconHtml = icon ? `<div class="suggest-icon">${icon}</div>` : '';
+
             div.innerHTML = `
-                <div class="suggest-icon">${icon}</div>
+                ${iconHtml}
                 <div class="suggest-details">
                     <span class="suggest-name">${highlightedName}</span>
                     <span class="suggest-address">${address}</span>
