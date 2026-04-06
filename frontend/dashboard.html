@@ -2254,6 +2254,11 @@
                     user = await res.json();
                     const firstName = user.name.split(' ')[0];
 
+                    // SYNC PHONE TO FLUTTER: This ensures the app can handle notification replies or accepts correctly (even in background)
+                    if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
+                        window.flutter_inappwebview.callHandler('syncUserPhone', user.phone);
+                    }
+
                     document.getElementById('splash-greeting').innerText = `Hi, ${firstName} 👋`;
                     document.getElementById('profile-name').innerText = user.name;
                     document.getElementById('profile-phone').innerText = "+91 " + user.phone;
@@ -4816,6 +4821,53 @@
         }
         // Expose globally so socket handlers (defined earlier) can call it
         window.hpdHaptic = hpdHaptic;
+
+        // --- NEW: IN-APP (FOREGROUND) NOTIFICATION ACTIONS ---
+        window.handleNotificationReply = function (taskId, text) {
+            console.log('Foreground notification reply:', taskId, text);
+            const myPhone = localStorage.getItem('helpido_phone');
+            if (!myPhone) return;
+
+            if (typeof globalSocket !== 'undefined') {
+                globalSocket.emit('sendMessage', {
+                    taskId: taskId,
+                    senderPhone: myPhone,
+                    text: text
+                });
+                if (typeof showAppNotification === 'function') {
+                    showAppNotification('✉️ Reply sent successfully');
+                }
+            } else {
+                // Fallback to REST API if socket is down
+                fetch('/api/chat/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ taskId, senderPhone: myPhone, text })
+                });
+            }
+        };
+
+        window.handleNotificationAction = async function (taskId, action) {
+            console.log('Foreground notification action:', taskId, action);
+            if (action === 'accept') {
+                const myPhone = localStorage.getItem('helpido_phone');
+                if (!myPhone) return;
+
+                try {
+                    const res = await fetch('/api/tasks/accept', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ taskId, helperPhone: myPhone })
+                    });
+                    if (res.ok) {
+                        if (typeof showAppNotification === 'function') showAppNotification('✅ Task accepted!');
+                        if (typeof loadTasks === 'function') loadTasks();
+                    }
+                } catch (e) {
+                    console.error('Accept action failed:', e);
+                }
+            }
+        };
 
         function hpdTimeAgoShort(ts) {
             if (!ts) return '';
