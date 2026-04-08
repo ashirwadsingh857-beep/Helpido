@@ -4118,14 +4118,20 @@
             _imgShowState('choice');
         }
         function logout() {
-            // 1. Wipe everything web-side instantly
-            localStorage.clear();
-            sessionStorage.clear();
-            
-            // 2. Signal native side to wipe and navigate
+            // 1. Signal native side FIRST to ensure it catches the state change
             if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
                 window.flutter_inappwebview.callHandler('logout');
-            } else {
+            }
+            
+            // 2. Halt everything immediately to prevent the browser from redirecting
+            window.stop();
+
+            // 3. Wipe everything web-side as a thorough backup
+            localStorage.clear();
+            sessionStorage.clear();
+
+            // 4. Fallback redirect for pure web environment
+            if (!(window.flutter_inappwebview && window.flutter_inappwebview.callHandler)) {
                 window.location.replace('index.html');
             }
         }
