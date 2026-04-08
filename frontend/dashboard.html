@@ -1827,9 +1827,9 @@
         let currentChatTargetPhone = null;
 
         if (!myPhone || myPhone === "undefined" || myPhone === "null") {
-            if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
-                window.flutter_inappwebview.callHandler('logout');
-            } else {
+            // Soften guard for Flutter: The native app handles session injection.
+            // Only redirect to login page if we are in a standard web browser.
+            if (!window.flutter_inappwebview) {
                 window.location.replace('/index.html');
             }
         }
