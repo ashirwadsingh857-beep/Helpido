@@ -215,7 +215,9 @@
         // --- NEW: Auto-Skip Login ---
         // If the browser remembers them, instantly jump to the dashboard!
         const savedPhone = localStorage.getItem('helpido_phone');
-        if (savedPhone && savedPhone !== "undefined" && savedPhone !== "null") {
+        // If we are in Flutter, we don't want the WebApp to auto-redirect.
+        // Flutter handles its own navigation between IndexScreen and WebViewScreen.
+        if (savedPhone && savedPhone !== "undefined" && savedPhone !== "null" && !window.flutter_inappwebview) {
             window.location.replace('/dashboard.html');
         }
 

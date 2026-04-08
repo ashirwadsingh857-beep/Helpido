@@ -1827,7 +1827,11 @@
         let currentChatTargetPhone = null;
 
         if (!myPhone || myPhone === "undefined" || myPhone === "null") {
-            window.location.replace('/index.html');
+            if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
+                window.flutter_inappwebview.callHandler('logout');
+            } else {
+                window.location.replace('/index.html');
+            }
         }
 
         /* =========================================
@@ -4113,7 +4117,18 @@
             if (fileInput) fileInput.value = '';
             _imgShowState('choice');
         }
-        function logout() { localStorage.removeItem('helpido_phone'); window.location.href = 'index.html'; }
+        function logout() {
+            // 1. Wipe everything web-side instantly
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            // 2. Signal native side to wipe and navigate
+            if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
+                window.flutter_inappwebview.callHandler('logout');
+            } else {
+                window.location.replace('index.html');
+            }
+        }
 
         /* =========================================
            7. GESTURES & ANIMATIONS
