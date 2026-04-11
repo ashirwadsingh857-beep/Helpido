@@ -507,9 +507,9 @@ body {
 
 .btn:hover {
     background-color: var(--primary-hover);
-
-    margin-top: 10px;
-    transition: background-color 0.2s ease;
+    box-shadow: 0 6px 20px rgba(255, 87, 34, 0.35);
+    filter: brightness(1.05);
+    transition: background-color 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 
 .primary-btn:active {
@@ -2085,7 +2085,6 @@ input:checked+.slider:before {
 .suggest-item:hover {
     background: #fff;
     border-color: var(--primary-color);
-    transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
