@@ -510,6 +510,15 @@
       window.location.replace('/dashboard.html');
     }
 
+    // --- Hide Navbar in Flutter App ---
+    // The native app doesn't need a "Back to Home" button since it bypasses the landing page.
+    if (navigator.userAgent.includes("HelpidoApp")) {
+      document.addEventListener('DOMContentLoaded', () => {
+        const nav = document.querySelector('.navbar');
+        if (nav) nav.style.display = 'none';
+      });
+    }
+
     // --- Check URL mode (e.g. ?mode=signup) ---
     window.onload = () => {
       const mode = new URLSearchParams(window.location.search).get('mode');
