@@ -768,11 +768,15 @@ body {
     z-index: 10;
 }
 
-@media (min-width: 481px) {
+/* On tablets 481px-1099px: bottom-nav stays fixed at bottom, centered */
+@media (min-width: 481px) and (max-width: 1099px) {
     .bottom-nav {
-        position: absolute;
+        position: fixed;
         border-bottom-left-radius: 24px;
         border-bottom-right-radius: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        max-width: 580px;
     }
 }
 
@@ -1754,12 +1758,9 @@ input:checked+.slider:before {
 }
 
 /* ==========================================================
-   RESPONSIVE: TABLET  (768px – 1199px)
+   RESPONSIVE: TABLET  (481px – 1099px)
    ========================================================== */
-/* ==========================================================
-   RESPONSIVE: TABLET  (≥ 768px)
-   ========================================================== */
-@media (min-width: 768px) {
+@media (min-width: 768px) and (max-width: 1099px) {
     body {
         background: var(--bg-app);
         display: flex;
@@ -1768,55 +1769,56 @@ input:checked+.slider:before {
         min-height: 100vh;
     }
 
-    /* Constrain app shell on tablet */
     #main-dash.app-container {
-        max-width: 680px;
+        max-width: 640px;
         width: 100%;
         min-height: 100vh;
         margin: 0 auto;
         box-shadow: 0 0 60px rgba(0,0,0,0.08);
+        border-radius: 0;
     }
 
-    /* Keep bottom nav centered on tablet */
-    .bottom-nav {
-        max-width: 620px;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-    }
-
-    /* Slightly larger modals on tablet */
     .modal-content {
         max-width: 520px !important;
     }
 
-    /* Chat drawer wider */
     .chat-drawer {
         max-width: 640px;
+    }
+
+    /* Sticky header on tablet */
+    .dash-header {
+        position: sticky;
+        top: 0;
+        z-index: 500;
     }
 }
 
 /* ==========================================================
    RESPONSIVE: DESKTOP  (≥ 1100px)
-   Full sidebar + content layout — like Linear / Notion
+   True sidebar + main content layout
    ========================================================== */
 @media (min-width: 1100px) {
 
-    /* ---- ROOT GRID: Sidebar | Content ---- */
-    body {
-        display: flex;
-        flex-direction: row;
-        align-items: stretch;
-        min-height: 100vh;
-        padding: 0;
-        background: var(--bg-app);
+    /* ---- ROOT: full-viewport flex row ---- */
+    html, body {
+        height: 100%;
         overflow: hidden;
+    }
+    body {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: stretch !important;
+        background: var(--bg-app) !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        justify-content: flex-start !important;
     }
 
     /* ============================================
-       LEFT SIDEBAR (replaces mobile bottom nav)
+       LEFT SIDEBAR — fixed, full height
        ============================================ */
     .bottom-nav {
-        /* Reset mobile positioning */
         position: fixed !important;
         left: 0 !important;
         top: 0 !important;
@@ -1824,35 +1826,39 @@ input:checked+.slider:before {
         right: auto !important;
         transform: none !important;
 
-        /* Sidebar dimensions */
         width: 220px !important;
         max-width: 220px !important;
         height: 100vh !important;
         min-height: 100vh !important;
 
-        /* Layout */
+        /* Vertical stacking */
         flex-direction: column !important;
         justify-content: flex-start !important;
         align-items: stretch !important;
-        gap: 4px !important;
-        padding: 0 12px 24px 12px !important;
+        gap: 2px !important;
+        padding: 0 12px 80px 12px !important;
 
         /* Appearance */
         background: var(--bg-elevated) !important;
         border-right: 1px solid var(--border-color) !important;
         border-top: none !important;
         border-radius: 0 !important;
-        box-shadow: 2px 0 20px rgba(0,0,0,0.04) !important;
-        backdrop-filter: none;
+        box-shadow: 2px 0 16px rgba(0,0,0,0.04) !important;
         z-index: 900 !important;
-        overflow: hidden;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+
+        /* Reset mobile nav width constraint */
+        max-width: 220px !important;
     }
 
-    /* Sidebar brand wordmark (pseudo-element) */
+    /* Sidebar gradient wordmark */
     .bottom-nav::before {
         content: "Helpido";
-        display: block;
-        position: relative;
+        display: block !important;
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
         font-size: 1.5rem;
         font-weight: 900;
         letter-spacing: -0.8px;
@@ -1860,13 +1866,14 @@ input:checked+.slider:before {
         -webkit-background-clip: text;
         background-clip: text;
         -webkit-text-fill-color: transparent;
-        padding: 28px 8px 20px 8px;
-        margin-bottom: 4px;
+        padding: 26px 4px 18px 4px;
+        margin-bottom: 8px;
         border-bottom: 1px solid var(--border-color);
-        margin-bottom: 12px;
+        pointer-events: none;
+        flex-shrink: 0;
     }
 
-    /* Nav items become full-width horizontal rows */
+    /* Nav item rows */
     .nav-item {
         flex-direction: row !important;
         justify-content: flex-start !important;
@@ -1876,10 +1883,13 @@ input:checked+.slider:before {
         border-radius: 10px !important;
         width: 100% !important;
         color: var(--text-secondary) !important;
+        font-size: 0.9rem !important;
+        cursor: pointer;
         transition: background 0.15s ease, color 0.15s ease !important;
+        transform: none !important;
     }
     .nav-item:hover {
-        background: rgba(255,87,34,0.06) !important;
+        background: rgba(255,87,34,0.07) !important;
         color: var(--primary-color) !important;
     }
     .nav-item.active {
@@ -1889,81 +1899,95 @@ input:checked+.slider:before {
         font-weight: 600 !important;
     }
 
-    /* Icon size */
-    .nav-item > span:first-child {
-        font-size: 1.25rem !important;
-        flex-shrink: 0;
-        width: 24px;
-        text-align: center;
+    /* Icon */
+    .nav-item > span:first-child,
+    .nav-item span {
+        font-size: 1.2rem !important;
         margin-bottom: 0 !important;
         background: none !important;
         padding: 0 !important;
-        border-radius: 0 !important;
         box-shadow: none !important;
+        border-radius: 0 !important;
         transform: none !important;
+        width: 24px !important;
+        flex-shrink: 0 !important;
+        text-align: center !important;
+        display: inline-block !important;
     }
-    .nav-item.active > span:first-child {
+    .nav-item.active span {
         background: none !important;
         transform: none !important;
+        margin-bottom: 0 !important;
     }
 
-    /* Label text */
-    .nav-item p,
-    .nav-item > *:not(:first-child) {
-        font-size: 0.9rem !important;
-        font-weight: 500;
+    /* Label */
+    .nav-item p {
+        font-size: 0.88rem !important;
+        font-weight: 500 !important;
         display: block !important;
-        white-space: nowrap;
+        margin: 0 !important;
+        color: inherit !important;
+        white-space: nowrap !important;
     }
 
-    /* Active indicator bar (remove mobile styles) */
+    /* Hide mobile-only animated pill */
     .nav-active-pill { display: none !important; }
 
     /* ============================================
-       MAIN CONTENT AREA
+       MAIN CONTENT — offset to right of sidebar
        ============================================ */
     #main-dash.app-container {
-        margin-left: 220px;
-        width: calc(100% - 220px);
-        max-width: none;
-        min-height: 100vh;
-        height: 100vh;
-        overflow-y: auto;
-        box-shadow: none;
-        padding-bottom: 40px;
-        scroll-behavior: smooth;
+        margin-left: 220px !important;
+        width: calc(100vw - 220px) !important;
+        max-width: none !important;
+        min-height: 100vh !important;
+        height: 100vh !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        padding-bottom: 40px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        background: var(--bg-app) !important;
     }
 
-    /* Constrain readable content width and center it */
-    .feed-section {
-        max-width: 960px;
-        margin: 0 auto;
-        padding: 0 32px;
-    }
-
-    /* Dash header spans full width, no rounding */
+    /* ---- STICKY HEADER ---- */
     .dash-header {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 500 !important;
         border-radius: 0 !important;
         margin: 0 !important;
-        padding-left: 36px !important;
-        padding-right: 36px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        padding-left: 32px !important;
+        padding-right: 32px !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
     }
 
-    /* Section title has more breathing room */
+    /* ---- CONTENT WIDTH CONSTRAINT ---- */
+    .feed-section {
+        max-width: 940px;
+        margin: 0 auto;
+        padding: 0 32px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
     .section-title {
-        padding: 28px 0 8px 0;
-        font-size: 1.1rem !important;
+        padding: 24px 0 12px 0 !important;
     }
 
-    /* ---- TASK CARD GRIDS ---- */
+    /* ---- 2-COL TASK GRIDS ---- */
     #task-feed {
         display: grid !important;
         grid-template-columns: repeat(2, 1fr) !important;
         gap: 18px !important;
-        margin-top: 16px !important;
         padding: 0 !important;
+        margin-top: 16px !important;
     }
-
     #my-requests-feed,
     #my-jobs-feed {
         display: grid !important;
@@ -1971,59 +1995,45 @@ input:checked+.slider:before {
         gap: 14px !important;
         padding: 0 !important;
     }
-
-    /* 3-column on wide screens */
-    @media (min-width: 1440px) {
-        #task-feed {
-            grid-template-columns: repeat(3, 1fr) !important;
-        }
-        #my-requests-feed,
-        #my-jobs-feed {
-            grid-template-columns: repeat(3, 1fr) !important;
-        }
-    }
-
     .task-card {
         margin-bottom: 0 !important;
     }
-
-    /* Expanded card in grid occupies both columns */
     .task-card.expanded {
         grid-column: span 2;
     }
 
-    /* ---- FAB: tucked into sidebar bottom ---- */
+    /* ---- FAB in sidebar ---- */
     .fab-wrapper {
         position: fixed !important;
-        bottom: 24px !important;
+        bottom: 20px !important;
         left: 12px !important;
         right: auto !important;
         width: 196px !important;
-        height: 48px !important;
-        z-index: 1000 !important;
+        height: 46px !important;
+        z-index: 950 !important;
     }
     .fab-btn {
         width: 100% !important;
         height: 100% !important;
         border-radius: 10px !important;
-        font-size: 0.95rem !important;
-        padding: 0 18px !important;
+        font-size: 0.92rem !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         gap: 8px !important;
+        padding: 0 !important;
     }
-    .fab-btn::after { display: none !important; }
+    .fab-btn::after,
+    .fab-btn::before { display: none !important; animation: none !important; }
 
-    /* FAB speed dial opens upward */
     .fab-speed-dial {
-        bottom: 60px !important;
+        bottom: 54px !important;
         left: 0 !important;
         right: auto !important;
         width: 196px !important;
     }
 
-    /* ---- MODALS: centered dialog (not bottom sheet) ---- */
+    /* ---- MODALS: centered dialogs ---- */
     .modal-overlay {
         align-items: center !important;
         justify-content: center !important;
@@ -2033,9 +2043,9 @@ input:checked+.slider:before {
         max-width: 500px !important;
         width: 90% !important;
         border-radius: 20px !important;
-        max-height: 85vh !important;
-        overflow-y: auto;
-        margin: 0 auto;
+        max-height: 88vh !important;
+        overflow-y: auto !important;
+        margin: 0 auto !important;
     }
 
     /* ---- CHAT DRAWER: centered dialog ---- */
@@ -2044,10 +2054,10 @@ input:checked+.slider:before {
         align-items: center !important;
     }
     .chat-drawer {
-        max-width: 620px !important;
+        max-width: 640px !important;
         width: 90% !important;
-        max-height: 80vh !important;
-        height: 80vh !important;
+        height: 78vh !important;
+        max-height: 78vh !important;
         border-radius: 20px !important;
         transform: scale(0.93) !important;
         transition: transform 0.25s cubic-bezier(0.32, 1.15, 0.25, 1) !important;
@@ -2056,10 +2066,9 @@ input:checked+.slider:before {
         transform: scale(1) !important;
     }
 
-    /* ---- HISTORY DRAWER: centered dialog ---- */
+    /* ---- HISTORY DRAWER ---- */
     #history-modal .chat-drawer {
         max-width: 660px !important;
-        width: 90% !important;
         height: 82vh !important;
         max-height: 82vh !important;
         border-radius: 20px !important;
@@ -2069,47 +2078,55 @@ input:checked+.slider:before {
         transform: scale(1) !important;
     }
 
-    /* ---- History button: proper desktop placement ---- */
+    /* ---- History button ---- */
     #history-btn-container {
         position: fixed !important;
-        bottom: 24px !important;
+        bottom: 20px !important;
         left: 50% !important;
         transform: translateX(calc(-50% + 110px)) !important;
         width: auto !important;
-        max-width: 300px !important;
+        max-width: 280px !important;
         z-index: 800 !important;
     }
 
-    /* ---- Profile section: constrain width ---- */
+    /* ---- Profile ---- */
     #profile-view {
-        max-width: 640px;
+        max-width: 660px;
         margin: 0 auto;
         width: 100%;
-    }
-    #profile-view .task-card {
-        max-width: none;
+        padding: 0 32px;
+        box-sizing: border-box;
     }
 
-    /* ---- Splash stays full screen ---- */
+    /* ---- Splash + offline always full-screen ---- */
     .splash-screen {
         left: 0 !important;
         width: 100vw !important;
         z-index: 99999 !important;
     }
-
-    /* ---- Offline banner full width ---- */
     #offline-banner {
         left: 0 !important;
         width: 100% !important;
     }
 
-    /* ---- Dark mode sidebar ---- */
+    /* ---- Dark mode ---- */
     .dark-mode .bottom-nav {
         background: var(--bg-elevated) !important;
         border-right-color: var(--border-color) !important;
     }
     .dark-mode .bottom-nav::before {
         border-bottom-color: var(--border-color);
+    }
+}
+
+/* ---- 3-column on ultrawide ---- */
+@media (min-width: 1440px) {
+    #task-feed {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+    #my-requests-feed,
+    #my-jobs-feed {
+        grid-template-columns: repeat(3, 1fr) !important;
     }
 }
 
