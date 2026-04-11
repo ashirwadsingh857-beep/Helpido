@@ -3983,22 +3983,20 @@
             _imgShowState('choice');
         }
         function logout() {
-            // 1. Signal native side FIRST to ensure it catches the state change
-            if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
-                window.flutter_inappwebview.callHandler('logout');
-            }
-            
-            // 2. Halt everything immediately to prevent the browser from redirecting
-            window.stop();
+            // Un-press the button visually if needed
+            const btn = document.querySelector('.logout-btn');
+            if (btn) btn.style.pointerEvents = 'none';
 
-            // 3. Wipe everything web-side as a thorough backup
+            // 1. Wipe everything web-side
             localStorage.clear();
             sessionStorage.clear();
 
-            // 4. Fallback redirect for pure web environment
-            if (!(window.flutter_inappwebview && window.flutter_inappwebview.callHandler)) {
-                window.location.replace('index.html');
-            }
+            // 2. Redirect to root. 
+            // Web browser -> Lands on Marketing Page (index.html)
+            // Flutter App -> Lands on index.html -> instantly detects App -> auto-routes to auth.html
+            setTimeout(() => {
+                window.location.replace('/');
+            }, 100);
         }
 
         /* =========================================
