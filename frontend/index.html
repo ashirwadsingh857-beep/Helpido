@@ -1086,12 +1086,11 @@
       reveals.forEach(el => observer.observe(el));
 
       // =============================================
-      // 4. APK DOWNLOAD LINK
+      // 4. APK DOWNLOAD LOGIC (Removed)
+      // The href is set directly into the HTML. 
+      // Do NOT set the 'download' attribute on a cross-origin Github link 
+      // or the browser will block the download request.
       // =============================================
-      const APK_URL = 'https://github.com/ashirwadsingh857-beep/Helpido/releases/download/v1.0.9/Helpido.apk';
-      const apkBtn = document.getElementById('download-apk-btn');
-      apkBtn.href = APK_URL;
-      apkBtn.setAttribute('download', 'Helpido.apk');
     })();
   </script>
 </body>
