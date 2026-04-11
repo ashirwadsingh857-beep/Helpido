@@ -8,7 +8,7 @@
    - Push notifications: handled here
 ============================================================= */
 
-const SHELL_CACHE = 'helpido-shell-v4';
+const SHELL_CACHE = 'helpido-shell-v5';
 
 // Only cache files we FULLY control (self-hosted on render.com)
 const SHELL_ASSETS = [
