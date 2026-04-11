@@ -570,6 +570,16 @@ body {
     border-bottom: 1px solid #E0E0E0;
     margin-bottom: 20px;
     margin-top: 0;
+    
+    /* Make it sticky and animated for scroll-hide */
+    position: sticky;
+    top: 0;
+    z-index: 500;
+    transition: transform 0.3s cubic-bezier(0.32, 1.15, 0.25, 1);
+}
+
+.dash-header.hide-header {
+    transform: translateY(-100%);
 }
 
 .user-greeting h2 {

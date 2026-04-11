@@ -1802,6 +1802,7 @@
             if (myPhone) {
                 loadProfile();
                 initScrollAnimation(); // Removed premature loadTasks()
+                initHeaderScroll();
 
                 // 1. Notification Button Check
                 if ('Notification' in window && Notification.permission !== 'granted') {
@@ -4054,6 +4055,58 @@
             // Run once immediately
             onScroll();
         }
+
+        // --- NEW: YOUTUBE-STYLE HEADER AUTO-HIDE ---
+        function initHeaderScroll() {
+            const header = document.querySelector('.dash-header');
+            if (!header) return;
+
+            // We must track both window and main container since desktop layout uses internal scroll
+            let lastScrollY = window.scrollY || document.documentElement.scrollTop;
+            let ticking = false;
+
+            function updateHeader(currentScrollY) {
+                // If we are at the very top, always show
+                if (currentScrollY <= 20) {
+                    header.classList.remove('hide-header');
+                    return;
+                }
+
+                // If scrolling DOWN, slide it up out of view
+                if (currentScrollY > lastScrollY + 5) {
+                    header.classList.add('hide-header');
+                } 
+                // If scrolling UP, bring it back
+                else if (currentScrollY < lastScrollY - 5) {
+                    header.classList.remove('hide-header');
+                }
+                
+                lastScrollY = currentScrollY;
+                ticking = false;
+            }
+
+            // Bind to window for mobile
+            window.addEventListener('scroll', () => {
+                let sy = window.scrollY;
+                if (!ticking) {
+                    window.requestAnimationFrame(() => updateHeader(sy));
+                    ticking = true;
+                }
+            }, { passive: true });
+
+            // Bind to desktop container
+            const mainDash = document.getElementById('main-dash');
+            if (mainDash) {
+                mainDash.addEventListener('scroll', () => {
+                    let sy = mainDash.scrollTop;
+                    if (!ticking) {
+                        window.requestAnimationFrame(() => updateHeader(sy));
+                        ticking = true;
+                    }
+                }, { passive: true });
+            }
+        }
+
 
 
 
