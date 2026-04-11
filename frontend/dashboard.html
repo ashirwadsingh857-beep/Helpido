@@ -3992,11 +3992,15 @@
             localStorage.clear();
             sessionStorage.clear();
 
-            // 2. Redirect to root. 
-            // Web browser -> Lands on Marketing Page (index.html)
-            // Flutter App -> Lands on index.html -> instantly detects App -> auto-routes to auth.html
+            // 2. Direct route based on platform
             setTimeout(() => {
-                window.location.replace('/');
+                if (navigator.userAgent.includes("HelpidoApp")) {
+                    // Native Flutter App: direct to login screen
+                    window.location.replace('/auth.html');
+                } else {
+                    // Web Browser: direct to marketing landing page
+                    window.location.replace('/index.html');
+                }
             }, 100);
         }
 
