@@ -1086,10 +1086,12 @@
       reveals.forEach(el => observer.observe(el));
 
       // =============================================
-      // 4. APK DOWNLOAD LINK — Replace '#' with your link
+      // 4. APK DOWNLOAD LINK
       // =============================================
-      const APK_URL = '#'; // TODO: Update with your actual APK URL
-      document.getElementById('download-apk-btn').href = APK_URL;
+      const APK_URL = 'https://github.com/ashirwadsingh857-beep/Helpido/releases/download/v1.0.9/Helpido.apk';
+      const apkBtn = document.getElementById('download-apk-btn');
+      apkBtn.href = APK_URL;
+      apkBtn.setAttribute('download', 'Helpido.apk');
     })();
   </script>
 </body>
