@@ -855,8 +855,12 @@
   <nav class="navbar" id="navbar">
     <a href="/" class="nav-logo">Helpido</a>
     <div class="nav-actions">
-      <a href="/auth.html" class="btn-outline" id="nav-login-btn">Login</a>
-      <a href="/auth.html?mode=signup" class="btn-primary" id="nav-signup-btn">Get Started →</a>
+      <a href="/auth.html" class="btn-outline" id="nav-login-btn" style="display:inline-flex;align-items:center;gap:7px;">
+        <i data-lucide="log-in" style="width:16px;height:16px;"></i> Login
+      </a>
+      <a href="/auth.html?mode=signup" class="btn-primary" id="nav-signup-btn" style="display:inline-flex;align-items:center;gap:7px;">
+        Get Started <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
+      </a>
     </div>
   </nav>
 
@@ -878,11 +882,11 @@
     </p>
 
     <div class="hero-cta-group">
-      <a href="/auth.html?mode=signup" class="btn-hero btn-hero-primary" id="hero-signup-btn">
-        🚀 Start for Free
+      <a href="/auth.html?mode=signup" class="btn-hero btn-hero-primary" id="hero-signup-btn" style="display:inline-flex;align-items:center;gap:10px;">
+        <i data-lucide="rocket" style="width:20px;height:20px;"></i> Start for Free
       </a>
-      <a href="/auth.html" class="btn-hero btn-hero-secondary" id="hero-login-btn">
-        Login →
+      <a href="/auth.html" class="btn-hero btn-hero-secondary" id="hero-login-btn" style="display:inline-flex;align-items:center;gap:8px;">
+        Login <i data-lucide="arrow-right" style="width:18px;height:18px;"></i>
       </a>
     </div>
 
