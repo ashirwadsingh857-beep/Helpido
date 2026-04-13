@@ -1092,6 +1092,24 @@ input[type="number"] {
     object-fit: contain;
 }
 
+/* SVG icons inside speed dial — orange on white background */
+.speed-dial-btn > .speed-dial-icon-wrapper svg {
+    width: 28px;
+    height: 28px;
+    stroke: #FF5722;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    display: block;
+    flex-shrink: 0;
+}
+
+/* Dark mode: use lighter orange */
+.dark-mode .speed-dial-btn > .speed-dial-icon-wrapper svg {
+    stroke: #FF8A65;
+}
+
 /* Completely hide text nodes inside button */
 .speed-dial-btn > *:not(.speed-dial-icon-wrapper) {
     display: none !important;
