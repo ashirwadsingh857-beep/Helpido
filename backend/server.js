@@ -61,6 +61,21 @@ const { Server } = require("socket.io");
 
 const Task = require("./models/Task.js");
 const User = require("./models/User.js");
+const Transaction = require("./models/Transaction.js");
+
+// --- RAZORPAY SETUP ---
+const Razorpay = require('razorpay');
+const crypto = require('crypto');
+
+let razorpay;
+if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+    razorpay = new Razorpay({
+        key_id: process.env.RAZORPAY_KEY_ID,
+        key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+} else {
+    console.warn("⚠️ Razorpay keys missing! Payments will not work.");
+}
 
 const app = express();
 app.use(express.json());
@@ -192,6 +207,75 @@ io.on('connection', (socket) => {
     socket.on('stopTyping', (data) => {
         socket.to(data.taskId).emit('userStoppedTyping', data);
     });
+});
+
+// --- NEW ROUTES: WALLET & PAYMENTS ---
+
+// 1. Create Razorpay Order
+app.post('/api/wallet/create-order', async (req, res) => {
+    try {
+        if (!razorpay) return res.status(500).json({ message: "Razorpay not configured" });
+        
+        const { amount } = req.body; // Amount in INR
+        if (!amount || amount < 10) return res.status(400).json({ message: "Minimum top-up is ₹10" });
+
+        const options = {
+            amount: amount * 100, // Razorpay takes amount in paise (1 INR = 100 paise)
+            currency: "INR",
+            receipt: `receipt_${Date.now()}`
+        };
+
+        const order = await razorpay.orders.create(options);
+        if (!order) return res.status(500).json({ message: "Error creating order" });
+
+        res.json({ order });
+    } catch (err) {
+        console.error("Razorpay Create Order Error:", err);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+// 2. Verify Payment and Add to Wallet
+app.post('/api/wallet/verify', async (req, res) => {
+    try {
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature, phone, amount } = req.body;
+
+        const body = razorpay_order_id + "|" + razorpay_payment_id;
+        const expectedSignature = crypto
+            .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+            .update(body.toString())
+            .digest("hex");
+
+        const isAuthentic = expectedSignature === razorpay_signature;
+
+        if (isAuthentic) {
+            // Add funds to user wallet
+            const user = await User.findOneAndUpdate(
+                { phone },
+                { $inc: { walletBalance: amount } },
+                { new: true }
+            );
+
+            if (!user) return res.status(404).json({ message: "User not found" });
+
+            // Log Transaction
+            await Transaction.create({
+                userPhone: phone,
+                amount: amount,
+                type: 'credit',
+                purpose: 'topup',
+                status: 'completed',
+                referenceId: razorpay_payment_id
+            });
+
+            res.json({ message: "Payment verified successfully", newBalance: user.walletBalance });
+        } else {
+            res.status(400).json({ message: "Invalid Signature" });
+        }
+    } catch (err) {
+        console.error("Razorpay Verification Error:", err);
+        res.status(500).json({ message: "Internal server error" });
+    }
 });
 
 // --- NEW API ROUTE: Get Chat History ---
@@ -511,11 +595,35 @@ app.post('/api/tasks', async (req, res) => {
     const { title, description, postedBy, reward, lat, lng, imageData, taskType, destination } = req.body;
 
     try {
+        const user = await User.findOne({ phone: postedBy });
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        // Calculate Fees
+        const numericReward = Number(reward);
+        const platformFee = Math.max(5, Math.floor(numericReward * 0.10)); // 10% fee, minimum ₹5
+        const totalBudget = numericReward + platformFee;
+
+        if (user.walletBalance < totalBudget) {
+            return res.status(400).json({ 
+                message: "Insufficient funds.", 
+                errorCode: "INSUFFICIENT_FUNDS",
+                required: totalBudget,
+                balance: user.walletBalance
+            });
+        }
+
+        // Deduct from wallet
+        user.walletBalance -= totalBudget;
+        await user.save();
+
         const newTask = new Task({
             title,
             description,
             postedBy,
-            reward,
+            reward: numericReward,
+            platformFee,
+            totalBudget,
+            escrowStatus: 'locked',
             taskType: taskType || 'help',
             destination: destination || null,
             imageData: imageData || null,
@@ -527,6 +635,16 @@ app.post('/api/tasks', async (req, res) => {
         });
 
         await newTask.save();
+
+        // Log Transaction
+        await Transaction.create({
+            userPhone: postedBy,
+            amount: totalBudget,
+            type: 'debit',
+            purpose: 'task_escrow',
+            status: 'completed',
+            referenceId: newTask._id.toString()
+        });
 
         // ... (Keep your existing io.emit and web-push notification logic below this line) ...
         io.emit('refreshFeed'); // Broadcast new task
@@ -814,6 +932,41 @@ app.post("/api/tasks/complete", async (req, res) => {
         // Mark task as completed
         task.status = 'completed';
         task.completedAt = new Date(); // Triggers 10-minute TTL auto-delete
+        
+        // --- PAYMENT SYSTEM: ESCROW RELEASE ---
+        if (task.escrowStatus === 'locked' && helperPhone) {
+            // Find helper and give them the reward ONLY (Helpido keeps the platformFee)
+            const helperUser = await User.findOneAndUpdate(
+                { phone: helperPhone },
+                { $inc: { walletBalance: task.reward } },
+                { new: true }
+            );
+
+            if (helperUser) {
+                task.escrowStatus = 'released';
+
+                // Log the payout to helper
+                await Transaction.create({
+                    userPhone: helperPhone,
+                    amount: task.reward,
+                    type: 'credit',
+                    purpose: 'task_reward',
+                    status: 'completed',
+                    referenceId: taskId.toString()
+                });
+
+                // Log the fee retention for Helpido
+                await Transaction.create({
+                    userPhone: task.postedBy,
+                    amount: task.platformFee,
+                    type: 'debit',
+                    purpose: 'platform_fee',
+                    status: 'completed',
+                    referenceId: taskId.toString()
+                });
+            }
+        }
+        
         await task.save();
 
         // 3. Set expiration for messages as well

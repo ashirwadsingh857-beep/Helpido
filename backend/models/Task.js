@@ -10,6 +10,11 @@ const taskSchema = new mongoose.Schema({
     helperMarkedDone: { type: Boolean, default: false },
     isPrioritized: { type: Boolean, default: false },
 
+    // PAYMENT SYSTEM
+    platformFee: { type: Number, default: 0 },
+    totalBudget: { type: Number, default: 0 },
+    escrowStatus: { type: String, enum: ['none', 'locked', 'released', 'refunded', 'disputed'], default: 'none' },
+
     // Optional compressed Base64 image attached to the task
     imageData: { type: String, default: null },
 

@@ -28,6 +28,9 @@
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Razorpay Checkout SDK -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
     <!-- Google Maps API (Placeholder Key, Replace later) -->
     <script async defer
@@ -1308,6 +1311,22 @@
                             No ratings yet</p>
                     </div>
 
+                    <!-- HELPIDO WALLET SECTON -->
+                    <div style="background: linear-gradient(135deg, var(--bg-card, #2A2A2A), var(--bg-card, #1A1A1A)); border: 1px solid var(--border-color); border-radius: 14px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-align: center; position: relative; overflow: hidden;">
+                        <!-- Soft ambient glow -->
+                        <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: rgba(255, 87, 34, 0.2); filter: blur(50px); border-radius: 50%;"></div>
+                        
+                        <p style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Helpido Balance</p>
+                        <div style="display: flex; justify-content: center; align-items: baseline; gap: 4px; margin-bottom: 16px;">
+                            <span style="font-size: 1.2rem; color: var(--text-secondary); font-weight: 500;">₹</span>
+                            <h2 id="wallet-balance-amount" style="font-size: 2.8rem; font-weight: 800; color: var(--text-dark); margin: 0; line-height: 1;">0</h2>
+                        </div>
+                        <button onclick="openWalletTopup()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #FF5722, #FF3D00); border: none; border-radius: 12px; color: white; font-weight: 700; font-size: 1rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(255, 87, 34, 0.3);">
+                            <i data-lucide="wallet" style="width: 20px; height: 20px; stroke: white;"></i> Add Funds
+                        </button>
+                    </div>
+
+
                     <div
                         style="background-color: var(--bg-light); padding: 16px; border-radius: 12px; text-align: left; margin-bottom: 24px;">
                         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">
@@ -1759,6 +1778,9 @@
         let isStatusToggling = false; // LOCK to prevent rapid-click lag
         let isInitialHomeLoad = true;
         let isInitialTasksLoad = true;
+
+        // --- WALLET STATE ---
+        let userWalletBalance = 0;
 
         // --- DARK MODE STATE ---
         let isDarkModeRequested = localStorage.getItem('helpido_dark_mode') === '1';
@@ -2235,6 +2257,11 @@
                     if (dmCheckbox) dmCheckbox.checked = isDarkActive;
                     if (dmIcon) dmIcon.textContent = isDarkActive ? '☀️' : '🌙';
                     if (user.availability) { currentStatus = user.availability; updateStatusUI(); }
+                    
+                    // --- WALLET SYNC ---
+                    userWalletBalance = user.walletBalance || 0;
+                    const walletEl = document.getElementById('wallet-balance-amount');
+                    if (walletEl) walletEl.innerText = userWalletBalance.toLocaleString('en-IN');
 
                     // Sync theme on load
                     if (isDarkModeRequested) {
@@ -3392,7 +3419,18 @@
             const description = document.getElementById('task-desc').value.trim();
             const reward = parseInt(document.getElementById('task-reward').value) || 0;
 
-            if (!title || !description) return showAppNotification("Please fill all fields!", "error");
+            if (!title || !description || reward <= 0) return showAppNotification("Please fill all fields and set a reward!", "error");
+
+            // --- WALLET ESCROW VALIDATION ---
+            const platformFee = Math.max(5, Math.floor(reward * 0.10)); // 10% fee
+            const totalBudget = reward + platformFee;
+            if (userWalletBalance < totalBudget) {
+                return showConfirm("Insufficient Balance", `This task requires ₹${totalBudget} (₹${reward} Reward + ₹${platformFee} Platform Fee). Your balance is ₹${userWalletBalance}. Please add funds to continue.`, "Add Funds", () => {
+                    closeModal();
+                    switchTab('profile');
+                    openWalletTopup();
+                });
+            }
 
             // --- NEW: GEOSPATIAL VALIDATION ---
             if (userLat === null || userLng === null) {
@@ -3424,6 +3462,11 @@
             postBtn.disabled = false;
 
             if (res.ok) {
+                // Deduct locally for instant UI update
+                userWalletBalance -= totalBudget;
+                const walletEl = document.getElementById('wallet-balance-amount');
+                if (walletEl) walletEl.innerText = userWalletBalance.toLocaleString('en-IN');
+                showAppNotification(`Task Posted! ₹${totalBudget} locked in Escrow.`, "success");
                 closeModal();
                 loadTasks();
                 document.getElementById('task-title').value = "";
@@ -3813,8 +3856,19 @@
             const reward = parseInt(document.getElementById('ride-reward').value);
 
             if (!destName || !title || !desc || isNaN(reward) || reward <= 0) {
-                showAppNotification('Please fill all requirements.', 'error');
+                showAppNotification('Please fill all requirements and set a valid reward.', 'error');
                 return;
+            }
+
+            // --- WALLET ESCROW VALIDATION ---
+            const platformFee = Math.max(5, Math.floor(reward * 0.10)); // 10% fee
+            const totalBudget = reward + platformFee;
+            if (userWalletBalance < totalBudget) {
+                return showConfirm("Insufficient Balance", `This ride requires ₹${totalBudget} (₹${reward} Reward + ₹${platformFee} Platform Fee). Your balance is ₹${userWalletBalance}. Please add funds to continue.`, "Add Funds", () => {
+                    closeRideModal();
+                    switchTab('profile');
+                    openWalletTopup();
+                });
             }
 
             // Forward Geocode Fallback if user just typed text manually without choosing a suggestion
@@ -3828,10 +3882,10 @@
                 if (rideGeocoder) {
                     try {
                         const results = await new Promise((resolve) => {
-                           rideGeocoder.geocode({ address: destName }, (res, status) => {
-                               if (status === "OK") resolve(res);
-                               else resolve(null);
-                           });
+                            rideGeocoder.geocode({ address: destName }, (res, status) => {
+                                if (status === "OK") resolve(res);
+                                else resolve(null);
+                            });
                         });
                         if (results && results[0]) {
                             selectedLocation.lat = results[0].geometry.location.lat();
@@ -3849,17 +3903,19 @@
                             selectedLocation.lat = parseFloat(data[0].lat);
                             selectedLocation.lng = parseFloat(data[0].lon);
                         }
-                    } catch (e) {
-                         console.log("Forward geocoding fallback failed", e);
-                    }
+                    } catch (err) {}
                 }
             }
 
-            // Create destination object
-            const destinationObj = {
-                name: destName,
-                location: { type: 'Point', coordinates: [selectedLocation.lng, selectedLocation.lat] }
-            };
+            // --- NEW: GEOSPATIAL VALIDATION (Start Location) ---
+            if (userLat === null || userLng === null) {
+                btn.innerText = originalText;
+                btn.disabled = false;
+                return showConfirm("Location Missing", "We need your current GPS location to find drivers nearby.", "OK", () => {
+                    switchTab('profile');
+                    closeRideModal();
+                });
+            }
 
             btn.innerText = "Requesting...";
 
@@ -3872,28 +3928,124 @@
                         description: desc,
                         postedBy: myPhone,
                         reward: reward,
-                        taskType: 'ride',
                         lat: userLat,
                         lng: userLng,
-                        destination: destinationObj
+                        taskType: 'ride',
+                        destination: {
+                            name: destName,
+                            location: {
+                                type: 'Point',
+                                coordinates: [selectedLocation.lng, selectedLocation.lat]
+                            }
+                        }
                     })
                 });
 
                 if (res.ok) {
+                    userWalletBalance -= totalBudget;
+                    const walletEl = document.getElementById('wallet-balance-amount');
+                    if (walletEl) walletEl.innerText = userWalletBalance.toLocaleString('en-IN');
+                    showAppNotification(`Ride Requested! ₹${totalBudget} locked in Escrow.`, 'success');
                     closeRideModal();
+                    loadTasks();
                     document.getElementById('ride-title').value = '';
                     document.getElementById('ride-desc').value = '';
+                    document.getElementById('ride-reward').value = '';
                     document.getElementById('ride-destination').value = '';
-                    loadTasks();
-                    showAppNotification('Ride Request Posted!');
+                    selectedLocation = { lat: 0, lng: 0 };
+                    document.getElementById('location-suggest-box').style.display = 'none';
                 } else {
-                    showAppNotification('Failed to post ride.', 'error');
+                    const data = await res.json();
+                    if (data.errorCode === 'INSUFFICIENT_FUNDS') {
+                        showAppNotification("Insufficient Helpido Balance", "error");
+                    } else {
+                        showAppNotification('Failed to post ride.', 'error');
+                    }
                 }
             } catch (err) {
+                console.error(err);
                 showAppNotification('Network error.', 'error');
             } finally {
                 btn.innerText = originalText;
                 btn.disabled = false;
+            }
+        }
+
+        // --- NEW: RAZORPAY WALLET TOP-UP LOGIC ---
+        async function openWalletTopup() {
+            // Ask user for amount. In a real app, you'd have a nicer UI for this.
+            const amountStr = prompt("Enter amount to add to your Helpido Wallet (in ₹):", "500");
+            if (!amountStr) return; // User cancelled
+            const amount = parseInt(amountStr);
+            if (isNaN(amount) || amount < 10) {
+                return showAppNotification("Minimum top-up is ₹10", "error");
+            }
+
+            try {
+                // 1. Create Order on Backend
+                const orderRes = await fetch(`${API_URL}/wallet/create-order`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount })
+                });
+                
+                if (!orderRes.ok) throw new Error("Failed to create order");
+                const { order } = await orderRes.json();
+
+                // 2. Open Razorpay Custom Overlay
+                const options = {
+                    "key": "rzp_test_Scv7qpbxJW4O9M", // Replace with your key in production
+                    "amount": order.amount,
+                    "currency": "INR",
+                    "name": "Helpido",
+                    "description": "Wallet Top-up",
+                    "image": "asset/192.png",
+                    "order_id": order.id,
+                    "handler": async function (response) {
+                        try {
+                            // 3. Verify Payment Signature
+                            const verifyRes = await fetch(`${API_URL}/wallet/verify`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_signature: response.razorpay_signature,
+                                    phone: myPhone,
+                                    amount: amount
+                                })
+                            });
+
+                            if (verifyRes.ok) {
+                                const verifyData = await verifyRes.json();
+                                userWalletBalance = verifyData.newBalance;
+                                document.getElementById('wallet-balance-amount').innerText = userWalletBalance.toLocaleString('en-IN');
+                                showAppNotification(`Successfully added ₹${amount} to Wallet!`, "success");
+                            } else {
+                                showAppNotification("Payment verification failed", "error");
+                            }
+                        } catch (err) {
+                            showAppNotification("Error verifying payment", "error");
+                        }
+                    },
+                    "prefill": {
+                        "name": document.getElementById('profile-name') ? document.getElementById('profile-name').innerText : "Helpido User",
+                        "contact": "+91" + myPhone
+                    },
+                    "theme": {
+                        "color": "#FF5722"
+                    }
+                };
+                
+                const rzp1 = new Razorpay(options);
+                rzp1.on('payment.failed', function (response){
+                    showAppNotification("Payment Failed", "error");
+                });
+                rzp1.open();
+                
+            } catch (err) {
+                console.error(err);
+                showAppNotification("Payment gateway error", "error");
             }
         }
 

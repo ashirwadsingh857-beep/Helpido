@@ -12,6 +12,7 @@ const userSchema = new mongoose.Schema({
     fcmToken: { type: String, default: null },
     notifyNewTasks: { type: Boolean, default: true },
     notifyChatMessages: { type: Boolean, default: true },
+    walletBalance: { type: Number, default: 0 },
 
     // --- RATING SYSTEM ---
     ratings: [{
