@@ -4001,6 +4001,15 @@
                     "description": "Wallet Top-up",
                     "image": "asset/192.png",
                     "order_id": order.id,
+                    "retry": { "enabled": true, "max_count": 1 },
+                    "timeout": 300,
+                    "method": {
+                        "netbanking": true,
+                        "card": true,
+                        "wallet": true,
+                        "upi": true,
+                        "paylater": true
+                    },
                     "handler": async function (response) {
                         try {
                             // 3. Verify Payment Signature
