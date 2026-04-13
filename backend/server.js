@@ -351,6 +351,15 @@ app.post('/api/login/step1', async (req, res) => {
     const { phone } = req.body;
     console.log(`Phone: ${phone}`);
     try {
+        // --- TEST ACCOUNT OVERRIDE FOR RAZORPAY VERIFICATION ---
+        if (phone === '9999999999') {
+            return res.json({
+                message: "Test mode active. Use fixed OTP: 1234",
+                otp: "1234",
+                email: "test@helpido.com"
+            });
+        }
+
         const user = await User.findOne({ phone });
         if (!user) return res.status(404).json({ message: "User not found! Please sign up." });
 
@@ -382,6 +391,21 @@ app.post('/api/login/step1', async (req, res) => {
 app.post('/api/login/step2', async (req, res) => {
     const { phone, otp } = req.body;
     try {
+        // --- TEST ACCOUNT OVERRIDE FOR RAZORPAY VERIFICATION ---
+        if (phone === '9999999999' && otp === '1234') {
+            let testUser = await User.findOne({ phone: '9999999999' });
+            if (!testUser) {
+                testUser = new User({
+                    phone: '9999999999',
+                    name: 'Razorpay Reviewer',
+                    address: 'Helpido HQ, Verification St.',
+                    email: 'test@helpido.com'
+                });
+                await testUser.save();
+            }
+            return res.json({ message: "Success!", userId: testUser._id });
+        }
+
         const user = await User.findOne({ phone });
         if (user && user.otp === otp) {
             await User.updateOne({ phone }, { $set: { otp: null } });
