@@ -814,7 +814,7 @@
     /* ---- LUCIDE ICON STYLING ---- */
     .feature-icon svg,
     .step-circle svg {
-      stroke: var(--primary);
+      stroke: #ffffff;
       fill: none;
       stroke-width: 1.75;
       stroke-linecap: round;
@@ -830,6 +830,17 @@
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+    /* Button icon alignment */
+    .btn-hero svg,
+    .btn-download .dl-icon svg {
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      display: inline-block;
+      vertical-align: middle;
     }
   </style>
 </head>
@@ -1054,18 +1065,18 @@
         <h2 class="cta-title">Be part of the<br><span style="background: linear-gradient(135deg, #FF5722, #FF9800); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">helpful revolution.</span></h2>
         <p class="cta-sub">Sign up free in 30 seconds. No credit card. No fake promises. Just community-powered help.</p>
         <div class="cta-buttons">
-          <a href="/auth.html?mode=signup" class="btn-hero btn-hero-primary" style="padding: 14px 32px;" id="cta-signup-btn">
-            🚀 Create Free Account
+          <a href="/auth.html?mode=signup" class="btn-hero btn-hero-primary" style="padding: 14px 32px; display:inline-flex; align-items:center; gap:10px;" id="cta-signup-btn">
+            <i data-lucide="rocket" style="width:20px;height:20px;"></i> Create Free Account
           </a>
           <a href="https://github.com/ashirwadsingh857-beep/Helpido/releases/download/v1.0.9/Helpido.apk" class="btn-download" title="Download Helpido APK" id="download-apk-btn">
-            <span class="dl-icon">📱</span>
+            <span class="dl-icon"><i data-lucide="smartphone" style="width:22px;height:22px;stroke:#fff;"></i></span>
             <span>
               <span class="dl-text-small">Download</span>
               <span class="dl-text-big">Android APK</span>
             </span>
           </a>
           <a href="#" class="btn-download" title="Play Store — Coming Soon" id="playstore-btn">
-            <span class="dl-icon">▶</span>
+            <span class="dl-icon"><i data-lucide="play" style="width:22px;height:22px;stroke:#fff;"></i></span>
             <span>
               <span class="dl-text-small">Coming Soon</span>
               <span class="dl-text-big">Play Store</span>
