@@ -11,6 +11,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
     /* =============================================
@@ -808,6 +810,27 @@
       33% { transform: translate(20px, -30px) scale(1.05); }
       66% { transform: translate(-15px, 20px) scale(0.95); }
     }
+
+    /* ---- LUCIDE ICON STYLING ---- */
+    .feature-icon svg,
+    .step-circle svg {
+      stroke: var(--primary);
+      fill: none;
+      stroke-width: 1.75;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      display: block;
+    }
+    .feature-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .step-circle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
   </style>
 </head>
 
@@ -886,42 +909,42 @@
 
       <div class="features-grid">
         <div class="feature-card reveal">
-          <div class="feature-icon">🚗</div>
+          <div class="feature-icon"><i data-lucide="car" style="width:28px;height:28px;"></i></div>
           <div class="feature-title">Rides on Demand</div>
           <p class="feature-desc">Need a quick lift? Ask neighbours for a ride without the surge pricing of taxi apps. Hyper-local, trusted, and instant.</p>
           <span class="feature-tag">Geo-matched</span>
         </div>
 
         <div class="feature-card reveal" style="transition-delay: 0.1s;">
-          <div class="feature-icon">🛠</div>
+          <div class="feature-icon"><i data-lucide="wrench" style="width:28px;height:28px;"></i></div>
           <div class="feature-title">Task Assistance</div>
           <p class="feature-desc">Post any task — groceries, repairs, deliveries — and watch real helpers respond within minutes. Full chat & photo support.</p>
           <span class="feature-tag">Real-time Chat</span>
         </div>
 
         <div class="feature-card reveal" style="transition-delay: 0.2s;">
-          <div class="feature-icon">🚨</div>
+          <div class="feature-icon"><i data-lucide="siren" style="width:28px;height:28px;"></i></div>
           <div class="feature-title">SOS Emergency Mode</div>
           <p class="feature-desc">One big red button. Broadcasts priority alerts to all available helpers within a 10km radius with an alarm sound. Because some moments can't wait.</p>
           <span class="feature-tag">Coming Soon</span>
         </div>
 
         <div class="feature-card reveal" style="transition-delay: 0.3s;">
-          <div class="feature-icon">⭐</div>
+          <div class="feature-icon"><i data-lucide="shield-check" style="width:28px;height:28px;"></i></div>
           <div class="feature-title">Verified Community</div>
           <p class="feature-desc">Every helper is rated by people in your neighbourhood. Build your reputation, earn reviews, and become a trusted member of your community.</p>
           <span class="feature-tag">Star Ratings</span>
         </div>
 
         <div class="feature-card reveal" style="transition-delay: 0.4s;">
-          <div class="feature-icon">👥</div>
+          <div class="feature-icon"><i data-lucide="users" style="width:28px;height:28px;"></i></div>
           <div class="feature-title">Group Tasks</div>
           <p class="feature-desc">Need multiple people? "3/5 helpers confirmed." Set a headcount, track progress, and get everyone coordinated automatically.</p>
           <span class="feature-tag">Coming Soon</span>
         </div>
 
         <div class="feature-card reveal" style="transition-delay: 0.5s;">
-          <div class="feature-icon">💬</div>
+          <div class="feature-icon"><i data-lucide="message-circle" style="width:28px;height:28px;"></i></div>
           <div class="feature-title">Inline Chat</div>
           <p class="feature-desc">Every task has a built-in chat. Coordinate in real-time, share live locations, and even reply directly from your notification tray.</p>
           <span class="feature-tag">Live Location</span>
@@ -939,17 +962,17 @@
 
       <div class="steps-row">
         <div class="step reveal">
-          <div class="step-circle">📝</div>
+          <div class="step-circle"><i data-lucide="file-pen" style="width:26px;height:26px;"></i></div>
           <div class="step-title">Post a Task</div>
           <p class="step-desc">Describe what you need, set a reward (optional), and hit post. Your task is instantly geo-matched to people nearby.</p>
         </div>
         <div class="step reveal" style="transition-delay: 0.15s;">
-          <div class="step-circle">🔔</div>
+          <div class="step-circle"><i data-lucide="bell-ring" style="width:26px;height:26px;"></i></div>
           <div class="step-title">Get Matched</div>
           <p class="step-desc">Nearby helpers receive a push notification instantly. The first one to accept locks in and starts chatting with you.</p>
         </div>
         <div class="step reveal" style="transition-delay: 0.3s;">
-          <div class="step-circle">✅</div>
+          <div class="step-circle"><i data-lucide="circle-check-big" style="width:26px;height:26px;"></i></div>
           <div class="step-title">Done & Rated</div>
           <p class="step-desc">Mark the task complete, rate your helper, and build a mutually trusted community. One task at a time.</p>
         </div>
@@ -966,22 +989,22 @@
 
       <div class="steps-row" style="margin-top: 40px;">
         <div class="step reveal">
-          <div class="step-circle">🏦</div>
+          <div class="step-circle"><i data-lucide="wallet" style="width:26px;height:26px;"></i></div>
           <div class="step-title">1. Wallet Top-Up</div>
           <p class="step-desc">Add funds to your secure Helpido Wallet using Razorpay. Your money is ready whenever you need help.</p>
         </div>
         <div class="step reveal" style="transition-delay: 0.1s;">
-          <div class="step-circle">🔒</div>
+          <div class="step-circle"><i data-lucide="lock" style="width:26px;height:26px;"></i></div>
           <div class="step-title">2. Held in Escrow</div>
           <p class="step-desc">When you post a task, the reward is held safely by Helpido. The helper sees the guaranteed payout.</p>
         </div>
         <div class="step reveal" style="transition-delay: 0.1s;">
-          <div class="step-circle">🤝</div>
+          <div class="step-circle"><i data-lucide="handshake" style="width:26px;height:26px;"></i></div>
           <div class="step-title">3. Approve & Pay</div>
           <p class="step-desc">Once the task is done, you release the funds to the helper. If you forget, funds auto-release after 24 hours.</p>
         </div>
         <div class="step reveal" style="transition-delay: 0.1s;">
-          <div class="step-circle">📈</div>
+          <div class="step-circle"><i data-lucide="trending-up" style="width:26px;height:26px;"></i></div>
           <div class="step-title">4. Minimal Fee</div>
           <p class="step-desc">Your first 5 requests are 100% free! After that, we take a tiny 7% platform fee only on successful tasks.</p>
         </div>
@@ -1116,6 +1139,11 @@
       }, { threshold: 0.1 });
 
       reveals.forEach(el => observer.observe(el));
+
+      // =============================================
+      // 5. INITIALIZE LUCIDE SVG ICONS
+      // =============================================
+      lucide.createIcons();
 
       // =============================================
       // 4. APK DOWNLOAD LOGIC (Removed)
