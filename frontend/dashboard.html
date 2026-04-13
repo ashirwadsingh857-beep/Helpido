@@ -516,6 +516,106 @@
         }
 
         /* =========================================
+           TOP-UP WALLET MODAL (MODERN)
+           ========================================= */
+        .topup-modal-content {
+            background: #fff;
+            padding: 30px 24px;
+            border-radius: 28px;
+            width: 85%;
+            max-width: 340px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+            animation: modalPopUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            z-index: 10001;
+            /* Prevent keyboard overlap issues in WebView */
+            margin-bottom: constant(safe-area-inset-bottom);
+            margin-bottom: env(safe-area-inset-bottom);
+        }
+
+        .dark-mode .topup-modal-content {
+            background: #1e1e1e;
+            border: 1px solid #333;
+        }
+
+        .topup-input-container {
+            position: relative;
+            margin: 25px 0;
+            background: #f5f5f5;
+            border-radius: 16px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            border: 2px solid transparent;
+            transition: border-color 0.3s ease;
+        }
+
+        .dark-mode .topup-input-container {
+            background: #2a2a2a;
+        }
+
+        .topup-input-container:focus-within {
+            border-color: var(--primary);
+        }
+
+        .topup-currency {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-right: 10px;
+        }
+
+        .topup-input {
+            border: none !important;
+            background: transparent !important;
+            font-size: 1.8rem !important;
+            font-weight: 700 !important;
+            width: 100% !important;
+            color: var(--text-dark) !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            outline: none !important;
+        }
+
+        .dark-mode .topup-input {
+            color: #fff !important;
+        }
+
+        .topup-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .topup-btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .topup-btn.cancel {
+            background: #eee;
+            color: #555;
+        }
+
+        .topup-btn.confirm {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(255, 87, 34, 0.3);
+        }
+
+        @keyframes modalPopUp {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* =========================================
            5. IN-APP CHAT UI & ANIMATIONS
            ========================================= */
         /* =========================================
@@ -1584,6 +1684,25 @@
         </div>
     </div>
 
+    <!-- MODAL: TOP-UP WALLET (MODERN) -->
+    <div id="topup-modal" class="modal-overlay hidden" onclick="handleTopupBackgroundClick(event)">
+        <div class="topup-modal-content">
+            <h3 style="margin: 0; color: var(--text-dark); font-size: 1.3rem;">Top-up Wallet</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 8px 0 20px 0;">Enter amount to add to your Helpido Wallet</p>
+            
+            <div class="topup-input-container">
+                <span class="topup-currency">₹</span>
+                <input type="number" id="topup-amount-input" class="topup-input" placeholder="500" inputmode="numeric">
+            </div>
+
+            <div class="topup-actions">
+                <button class="topup-btn cancel" ontouchstart="closeTopupModal()" onclick="closeTopupModal()">CANCEL</button>
+                <button class="topup-btn confirm" ontouchstart="confirmTopup()" onclick="confirmTopup()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: EXIT APP CONFIRMATION -->
     <div id="confirm-modal" class="modal-overlay hidden" onclick="if(event.target === this) closeConfirm()">
         <div class="modal-content" style="text-align: center; max-width: 320px;">
             <div style="font-size: 2.5rem; margin-bottom: 10px;">⚠️</div>
@@ -3972,14 +4091,47 @@
         }
 
         // --- NEW: RAZORPAY WALLET TOP-UP LOGIC ---
-        async function openWalletTopup() {
-            // Ask user for amount. In a real app, you'd have a nicer UI for this.
-            const amountStr = prompt("Enter amount to add to your Helpido Wallet (in ₹):", "500");
-            if (!amountStr) return; // User cancelled
+        function closeTopupModal() {
+            document.getElementById('topup-modal').classList.add('hidden');
+            document.getElementById('topup-amount-input').blur();
+        }
+
+        function handleTopupBackgroundClick(e) {
+            if (e.target.id === 'topup-modal') {
+                const input = document.getElementById('topup-amount-input');
+                // If keyboard is open (input focused), just close keyboard
+                if (document.activeElement === input) {
+                    input.blur();
+                } else {
+                    // Otherwise close modal
+                    closeTopupModal();
+                }
+            }
+        }
+
+        function openWalletTopup() {
+            document.getElementById('topup-modal').classList.remove('hidden');
+            const input = document.getElementById('topup-amount-input');
+            input.value = "500";
+            // Focus and select for quick editing
+            setTimeout(() => {
+                input.focus();
+                input.setSelectionRange(0, input.value.length);
+            }, 100);
+        }
+
+        async function confirmTopup() {
+            const amountInput = document.getElementById('topup-amount-input');
+            const amountStr = amountInput.value;
             const amount = parseInt(amountStr);
+
             if (isNaN(amount) || amount < 10) {
                 return showAppNotification("Minimum top-up is ₹10", "error");
             }
+
+            // Close modal immediately to avoid double clicks
+            closeTopupModal();
+            showAppNotification("Initializing Payment...", "success");
 
             try {
                 // 1. Create Order on Backend
@@ -4001,6 +4153,9 @@
                     "description": "Wallet Top-up",
                     "image": "asset/192.png",
                     "order_id": order.id,
+                    "modal": {
+                        "confirm_close": true
+                    },
                     "retry": { "enabled": true, "max_count": 1 },
                     "timeout": 300,
                     "method": {
