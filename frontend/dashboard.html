@@ -236,11 +236,15 @@
         }
 
         .nav-item.active span {
-            background: #E0F2F1;
+            background: rgba(255, 87, 34, 0.12);
             border-radius: 50%;
-            padding: 8px;
-            box-shadow: 0 4px 10px rgba(0, 229, 255, 0.2);
-            margin-bottom: 4px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 14px rgba(255, 87, 34, 0.2);
+            margin-bottom: 2px;
         }
 
         /* ---- LUCIDE NAV & SPEED DIAL ICONS ---- */
@@ -1594,7 +1598,7 @@
                 <div class="speed-dial-icon-wrapper"><i data-lucide="car" style="width:26px;height:26px;"></i></div>
             </button>
             <button class="speed-dial-btn" onclick="openModal()" title="Normal Help">
-                <div class="speed-dial-icon-wrapper"><i data-lucide="hand-helping" style="width:26px;height:26px;"></i></div>
+                <div class="speed-dial-icon-wrapper"><i data-lucide="life-buoy" style="width:26px;height:26px;"></i></div>
             </button>
         </div>
         <button class="fab-btn" id="main-fab" onclick="toggleFabSpeedDial()">
