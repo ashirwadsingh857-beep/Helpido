@@ -756,26 +756,108 @@
       transform: translateY(0);
     }
 
-    /* ---- MOBILE RESPONSIVE ---- */
-    @media (max-width: 768px) {
-      .navbar { padding: 14px 20px; }
-      .navbar.scrolled { padding: 10px 20px; }
+    /* ================================================
+       RESPONSIVE SYSTEM — Mobile First
+       ================================================ */
+
+    /* ---- SMALL MOBILE (≤ 480px) ---- */
+    @media (max-width: 480px) {
+      /* Navbar */
+      .navbar { padding: 12px 16px; }
+      .navbar.scrolled { padding: 10px 16px; }
+      .nav-actions .btn-outline { display: none; }
+      .btn-primary { padding: 8px 16px; font-size: 0.82rem; }
+      .nav-logo { font-size: 1.3rem; }
+
+      /* Hero */
+      .hero { padding: 100px 20px 60px; }
+      .hero-title { font-size: 2.4rem; letter-spacing: -1.5px; }
+      .hero-sub { font-size: 0.95rem; margin-bottom: 32px; }
+      .hero-badge { font-size: 0.72rem; padding: 5px 12px; }
+      .btn-hero { padding: 13px 24px; font-size: 0.92rem; width: 100%; justify-content: center; }
+      .hero-cta-group { flex-direction: column; gap: 10px; width: 100%; }
+
+      /* Stats */
+      .stats-strip { gap: 12px; margin-top: 48px; padding-top: 28px; flex-wrap: wrap; }
+      .stat-divider { display: none; }
+      .stat-item { flex: 1 1 40%; }
+      .stat-value { font-size: 1.6rem; }
+
+      /* Section spacing */
+      section { padding: 60px 16px; }
+
+      /* Features */
+      .features-grid { grid-template-columns: 1fr; gap: 14px; margin-top: 36px; }
+      .feature-card { padding: 24px 20px; border-radius: 18px; }
+      .section-title { font-size: 1.7rem; letter-spacing: -0.8px; }
+
+      /* Steps */
+      .steps-row { flex-direction: column; gap: 24px; margin-top: 36px; }
+      .steps-row::before { display: none; }
+      .step { padding: 0; flex-direction: row; align-items: flex-start; text-align: left; gap: 16px; }
+      .step-circle { width: 52px; height: 52px; flex-shrink: 0; margin-bottom: 0; font-size: 1.3rem; }
+      .step-title { font-size: 0.95rem; margin-bottom: 4px; }
+      .step-desc { font-size: 0.83rem; }
+
+      /* Trust */
+      .trust-grid { grid-template-columns: 1fr; }
+      .trust-card-big { grid-row: auto; padding: 28px 22px; }
+      .trust-quote { font-size: 1.05rem; }
+      .trust-card-small { padding: 22px; }
+
+      /* CTA */
+      .cta-card { padding: 36px 20px; border-radius: 22px; }
+      .cta-title { font-size: 1.7rem; }
+      .cta-sub { font-size: 0.92rem; }
+      .cta-buttons { flex-direction: column; align-items: center; }
+      .btn-download { width: 100%; justify-content: flex-start; }
+      .btn-hero-primary.cta-signup { width: 100%; }
+
+      /* Footer */
+      footer { flex-direction: column; text-align: center; align-items: center; padding: 32px 20px; }
+      .footer-links { flex-wrap: wrap; justify-content: center; gap: 16px; }
+
+      /* Money flow — stack to 2 cols on tiny screens */
+      #payments .steps-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+      #payments .step { flex-direction: column; align-items: center; text-align: center; }
+      #payments .step-circle { margin-bottom: 12px; }
+    }
+
+    /* ---- TABLET (481px – 768px) ---- */
+    @media (min-width: 481px) and (max-width: 768px) {
+      .navbar { padding: 14px 24px; }
+      .navbar.scrolled { padding: 10px 24px; }
       .nav-actions .btn-outline { display: none; }
 
-      .steps-row { flex-direction: column; gap: 32px; }
+      .hero { padding: 110px 32px 72px; }
+      .hero-title { font-size: 3rem; }
+      .btn-hero { padding: 14px 28px; }
+
+      section { padding: 72px 32px; }
+      .features-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+      .section-title { font-size: 2rem; }
+
+      .steps-row { flex-direction: column; gap: 28px; }
       .steps-row::before { display: none; }
-      .step { padding: 0; }
+      .step { flex-direction: row; align-items: flex-start; text-align: left; gap: 16px; padding: 0; }
+      .step-circle { flex-shrink: 0; margin-bottom: 0; }
 
       .trust-grid { grid-template-columns: 1fr; }
       .trust-card-big { grid-row: auto; }
 
-      .cta-card { padding: 48px 28px; }
+      .cta-card { padding: 52px 36px; }
+      .cta-buttons { flex-wrap: wrap; justify-content: center; }
 
-      footer { flex-direction: column; text-align: center; align-items: center; }
-      .features-grid { grid-template-columns: 1fr; }
+      footer { flex-direction: column; text-align: center; align-items: center; padding: 36px 24px; }
 
-      .stats-strip { gap: 24px; }
-      .stat-divider { width: 32px; height: 1px; }
+      .stats-strip { gap: 20px; }
+      .stat-divider { width: 1px; height: 28px; }
+    }
+
+    /* ---- LARGE DESKTOP (≥ 1280px) ---- */
+    @media (min-width: 1280px) {
+      .features-grid { grid-template-columns: repeat(3, 1fr); }
+      #payments .steps-row { max-width: 1000px; margin-left: auto; margin-right: auto; }
     }
 
     /* ---- FLOATING ORBS (Decorative) ---- */
