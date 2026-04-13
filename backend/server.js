@@ -278,6 +278,198 @@ app.post('/api/wallet/verify', async (req, res) => {
     }
 });
 
+// --- NEW: 3. Create UPI Payment Link ---
+app.post('/api/wallet/create-upi-link', async (req, res) => {
+    try {
+        if (!razorpay) return res.status(500).json({ message: "Razorpay not configured" });
+        
+        const { amount, phone } = req.body; // Amount in INR
+        if (!amount || amount < 10) return res.status(400).json({ message: "Minimum top-up is ₹10" });
+        if (!phone) return res.status(400).json({ message: "Phone number required" });
+
+        // Verify user exists
+        const user = await User.findOne({ phone });
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        // Create Payment Link for UPI
+        const paymentLinkOptions = {
+            amount: amount * 100, // Razorpay takes amount in paise
+            currency: "INR",
+            accept_partial: false,
+            first_min_partial_amount: amount * 100,
+            description: `Helpido Wallet Top-up - ₹${amount}`,
+            customer_notify: 1,
+            notify: {
+                sms: true,
+                email: true
+            },
+            reminder_enable: true,
+            notes: {
+                phone: phone,
+                userId: user._id.toString(),
+                type: 'wallet_topup'
+            },
+            callback_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment-success`,
+            callback_method: "get"
+        };
+
+        const paymentLink = await razorpay.paymentLink.create(paymentLinkOptions);
+        
+        if (!paymentLink) return res.status(500).json({ message: "Error creating payment link" });
+
+        console.log(`UPI Payment Link created for ${phone}: ${paymentLink.id}`);
+
+        res.json({ 
+            success: true,
+            paymentLink: paymentLink.id,
+            shortUrl: paymentLink.short_url,
+            upiString: paymentLink.upi_link,
+            amount: amount,
+            message: "Payment link created successfully"
+        });
+    } catch (err) {
+        console.error("Razorpay UPI Payment Link Error:", err);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+// --- NEW: 4. Verify UPI Payment (Webhook or Direct Check) ---
+app.post('/api/wallet/verify-upi', async (req, res) => {
+    try {
+        const { payment_link_id, phone, amount } = req.body;
+
+        if (!payment_link_id || !phone || !amount) {
+            return res.status(400).json({ message: "Missing payment details" });
+        }
+
+        // Fetch payment link details from Razorpay
+        const paymentLink = await razorpay.paymentLink.fetch(payment_link_id);
+
+        if (!paymentLink) {
+            return res.status(404).json({ message: "Payment link not found" });
+        }
+
+        // Check if payment was successful
+        if (paymentLink.status === 'paid') {
+            // Get the associated payment
+            const payments = await razorpay.paymentLink.notifyBy(payment_link_id, 'payment_authorized');
+            
+            // Add funds to user wallet
+            const user = await User.findOneAndUpdate(
+                { phone },
+                { $inc: { walletBalance: amount } },
+                { new: true }
+            );
+
+            if (!user) return res.status(404).json({ message: "User not found" });
+
+            // Get payment ID from link
+            const paymentId = paymentLink.payments?.[0] || payment_link_id;
+
+            // Log Transaction
+            await Transaction.create({
+                userPhone: phone,
+                amount: amount,
+                type: 'credit',
+                purpose: 'topup',
+                status: 'completed',
+                referenceId: paymentId,
+                description: `UPI Payment - Link: ${payment_link_id}`
+            });
+
+            res.json({ 
+                success: true,
+                message: "UPI Payment verified successfully", 
+                newBalance: user.walletBalance,
+                amount: amount 
+            });
+        } else if (paymentLink.status === 'expired' || paymentLink.status === 'cancelled') {
+            res.status(400).json({ 
+                success: false,
+                message: `Payment link is ${paymentLink.status}` 
+            });
+        } else {
+            res.status(400).json({ 
+                success: false,
+                message: "Payment pending or failed",
+                status: paymentLink.status 
+            });
+        }
+    } catch (err) {
+        console.error("UPI Verification Error:", err);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+// --- NEW: 5. Razorpay Webhook Handler for Payment Links ---
+app.post('/api/wallet/webhook', async (req, res) => {
+    try {
+        const signature = req.headers['x-razorpay-signature'];
+        const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+
+        if (!webhookSecret) {
+            console.warn("⚠️ RAZORPAY_WEBHOOK_SECRET not configured");
+            return res.status(400).json({ message: "Webhook not configured" });
+        }
+
+        const body = JSON.stringify(req.body);
+        const expectedSignature = crypto
+            .createHmac('sha256', webhookSecret)
+            .update(body)
+            .digest('hex');
+
+        if (signature !== expectedSignature) {
+            console.warn("Invalid webhook signature");
+            return res.status(400).json({ message: "Invalid signature" });
+        }
+
+        const event = req.body.event;
+        const payload = req.body.payload;
+
+        if (event === 'payment_link.paid') {
+            const paymentLink = payload.payment_link;
+            const phone = paymentLink.notes?.phone;
+            const amount = paymentLink.amount / 100; // Convert from paise to INR
+
+            if (phone && amount) {
+                // Add funds to user wallet
+                const user = await User.findOneAndUpdate(
+                    { phone },
+                    { $inc: { walletBalance: amount } },
+                    { new: true }
+                );
+
+                if (user) {
+                    // Log Transaction
+                    await Transaction.create({
+                        userPhone: phone,
+                        amount: amount,
+                        type: 'credit',
+                        purpose: 'topup',
+                        status: 'completed',
+                        referenceId: paymentLink.id,
+                        description: `UPI Payment via Webhook - Link: ${paymentLink.id}`
+                    });
+
+                    console.log(`✓ UPI Payment confirmed via webhook for ${phone}: ₹${amount}`);
+
+                    // Notify user in real-time
+                    io.to(phone).emit('walletToppedUp', {
+                        amount: amount,
+                        newBalance: user.walletBalance,
+                        method: 'upi'
+                    });
+                }
+            }
+        }
+
+        res.json({ received: true });
+    } catch (err) {
+        console.error("Webhook Handler Error:", err);
+        res.status(500).json({ message: "Webhook processing error" });
+    }
+});
+
 // --- NEW API ROUTE: Get Chat History ---
 // Add this right above your /* ---------------- AUTH ROUTES ---------------- */
 app.post('/api/signup', async (req, res) => {
@@ -436,7 +628,9 @@ app.post('/api/login/step1', async (req, res) => {
     console.log(`Phone: ${phone}`);
     try {
         // --- TEST ACCOUNT OVERRIDE FOR RAZORPAY VERIFICATION ---
+        // Only override for test phone, NEVER for real users
         if (phone === '9999999999') {
+            console.log("Test account detected - returning fixed OTP");
             return res.json({
                 message: "Test mode active. Use fixed OTP: 1234",
                 otp: "1234",
@@ -444,6 +638,7 @@ app.post('/api/login/step1', async (req, res) => {
             });
         }
 
+        // --- REAL USER OTP FLOW ---
         const user = await User.findOne({ phone });
         if (!user) return res.status(404).json({ message: "User not found! Please sign up." });
 
@@ -452,8 +647,13 @@ app.post('/api/login/step1', async (req, res) => {
             return res.status(400).json({ message: "No email linked to this account. Please re-register or contact support." });
         }
 
+        // Generate a fresh OTP for every request
         const otp = Math.floor(1000 + Math.random() * 9000).toString();
-        await User.updateOne({ phone }, { $set: { otp } });
+        console.log(`Generated OTP for ${phone}: ${otp}`);
+        
+        // Save OTP to database
+        const updateResult = await User.updateOne({ phone }, { $set: { otp } });
+        console.log(`OTP saved for ${phone}, matched: ${updateResult.matchedCount}, modified: ${updateResult.modifiedCount}`);
 
         // Send OTP via Email in the background (Don't await it to avoid blocking UI)
         console.log(`Preparing to send OTP to ${user.email}...`);
@@ -461,9 +661,10 @@ app.post('/api/login/step1', async (req, res) => {
             .then(() => console.log(`Background Success: OTP sent to ${user.email}`))
             .catch((emailErr) => console.error("Background Email Service Error:", emailErr));
 
+        // DON'T send OTP in response for real users (security best practice)
+        // The OTP should only arrive via email
         res.json({
             message: "OTP sent to your registered email address.",
-            otp,
             email: user.email
         });
     } catch (err) {
@@ -476,7 +677,9 @@ app.post('/api/login/step2', async (req, res) => {
     const { phone, otp } = req.body;
     try {
         // --- TEST ACCOUNT OVERRIDE FOR RAZORPAY VERIFICATION ---
+        // Only override for test phone with test OTP
         if (phone === '9999999999' && otp === '1234') {
+            console.log("Test account verification");
             let testUser = await User.findOne({ phone: '9999999999' });
             if (!testUser) {
                 testUser = new User({
@@ -490,14 +693,32 @@ app.post('/api/login/step2', async (req, res) => {
             return res.json({ message: "Success!", userId: testUser._id });
         }
 
+        // --- REAL USER OTP VERIFICATION ---
         const user = await User.findOne({ phone });
-        if (user && user.otp === otp) {
+        if (!user) {
+            console.log(`OTP verification failed: User ${phone} not found`);
+            return res.status(401).json({ message: "Invalid OTP" });
+        }
+
+        // Compare OTP (trim whitespace to prevent issues)
+        const storedOtp = (user.otp || '').trim();
+        const providedOtp = (otp || '').trim();
+        
+        console.log(`OTP verification for ${phone}: provided='${providedOtp}', stored='${storedOtp}'`);
+
+        if (storedOtp === providedOtp && storedOtp !== '') {
+            console.log(`OTP verified successfully for ${phone}`);
+            // Clear OTP after successful verification
             await User.updateOne({ phone }, { $set: { otp: null } });
             res.json({ message: "Success!", userId: user._id });
         } else {
+            console.log(`OTP verification FAILED for ${phone}`);
             res.status(401).json({ message: "Invalid OTP" });
         }
-    } catch (err) { res.status(500).json({ message: "Verification error" }); }
+    } catch (err) { 
+        console.error("OTP verification error:", err);
+        res.status(500).json({ message: "Verification error" }); 
+    }
 });
 
 /* ---------------- PROFILE & STATUS ROUTES ---------------- */
@@ -598,9 +819,32 @@ app.post('/api/tasks', async (req, res) => {
         const user = await User.findOne({ phone: postedBy });
         if (!user) return res.status(404).json({ message: "User not found" });
 
-        // Calculate Fees
+        // Calculate Fees with Tiered System
         const numericReward = Number(reward);
-        const platformFee = Math.max(5, Math.floor(numericReward * 0.10)); // 10% fee, minimum ₹5
+        
+        // Minimum reward validation
+        if (numericReward < 10) {
+            return res.status(400).json({ 
+                message: "Minimum reward for 'Ask for Help' is ₹10",
+                errorCode: "REWARD_TOO_LOW",
+                minReward: 10,
+                provided: numericReward
+            });
+        }
+
+        // Tiered platform fee calculation
+        // Rewards < ₹20: 20% platform fee
+        // Rewards >= ₹20: 10% platform fee
+        let platformFee;
+        if (numericReward < 20) {
+            platformFee = Math.floor(numericReward * 0.20); // 20% for rewards < ₹20
+        } else {
+            platformFee = Math.floor(numericReward * 0.10); // 10% for rewards >= ₹20
+        }
+        
+        // Ensure minimum platform fee of ₹2
+        platformFee = Math.max(2, platformFee);
+        
         const totalBudget = numericReward + platformFee;
 
         if (user.walletBalance < totalBudget) {
@@ -1064,11 +1308,61 @@ app.get("/api/tasks/my-tasks", async (req, res) => {
 
 app.delete('/api/tasks/:id', async (req, res) => {
     try {
-        const task = await Task.findByIdAndDelete(req.params.id);
+        // 1. Fetch the task before deletion
+        const task = await Task.findById(req.params.id);
         if (!task) return res.status(404).json({ message: "Task not found" });
+
+        const taskId = req.params.id;
+        const posterPhone = task.postedBy;
+
+        // 2. If escrow is locked, refund the entire amount
+        if (task.escrowStatus === 'locked') {
+            console.log(`Refunding ₹${task.totalBudget} to ${posterPhone} for task ${taskId}`);
+            
+            // Find and update the poster's wallet
+            const posterUser = await User.findOneAndUpdate(
+                { phone: posterPhone },
+                { $inc: { walletBalance: task.totalBudget } },
+                { new: true }
+            );
+
+            if (posterUser) {
+                // 3. Create a refund transaction
+                await Transaction.create({
+                    userPhone: posterPhone,
+                    amount: task.totalBudget,
+                    type: 'credit',
+                    purpose: 'task_refund',
+                    status: 'completed',
+                    referenceId: taskId,
+                    description: `Refund for deleted task: ${task.title}`
+                });
+
+                console.log(`Refund completed for ${posterPhone}. New balance: ₹${posterUser.walletBalance}`);
+
+                // 4. Emit socket event to update user's balance in real-time if online
+                io.to(posterPhone).emit('balanceUpdated', {
+                    newBalance: posterUser.walletBalance,
+                    refundAmount: task.totalBudget,
+                    taskTitle: task.title
+                });
+            }
+        }
+
+        // 5. Delete all associated messages
         await Message.deleteMany({ taskId: req.params.id });
+
+        // 6. Delete the task
+        await Task.findByIdAndDelete(req.params.id);
+
+        // 7. Broadcast refresh to all connected users
         io.emit('taskRemoved', req.params.id);
-        res.json({ message: "Task and associated chats wiped successfully" });
+
+        res.json({ 
+            message: "Task and associated chats deleted successfully",
+            refunded: task.escrowStatus === 'locked',
+            refundAmount: task.escrowStatus === 'locked' ? task.totalBudget : 0
+        });
     } catch (err) {
         console.error("Delete error:", err);
         res.status(500).json({ message: "Error deleting task" });
