@@ -26,6 +26,8 @@
     <title>Helpido | Dashboard</title>
     <link rel="stylesheet" href="style.css?v=2">
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- Google Maps API (Placeholder Key, Replace later) -->
     <script async defer
@@ -239,6 +241,48 @@
             padding: 8px;
             box-shadow: 0 4px 10px rgba(0, 229, 255, 0.2);
             margin-bottom: 4px;
+        }
+
+        /* ---- LUCIDE NAV & SPEED DIAL ICONS ---- */
+        .nav-icon-container svg {
+            width: 24px;
+            height: 24px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            display: block;
+        }
+        .speed-dial-icon-wrapper svg {
+            width: 26px;
+            height: 26px;
+            stroke: #fff;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            display: block;
+        }
+        .fab-btn svg {
+            width: 28px;
+            height: 28px;
+            stroke: #fff;
+            fill: none;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .status-icon-svg {
+            width: 14px;
+            height: 14px;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 4px;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
         }
 
         /* =========================================
@@ -1547,28 +1591,27 @@
     <div class="fab-wrapper" id="fab-wrapper">
         <div class="speed-dial-menu" id="speed-dial-menu">
             <button class="speed-dial-btn" onclick="openRideModal()" title="Ask for Ride">
-                <div class="speed-dial-icon-wrapper"><img src="asset/ride.png" alt="Ride"></div>
+                <div class="speed-dial-icon-wrapper"><i data-lucide="car" style="width:26px;height:26px;"></i></div>
             </button>
             <button class="speed-dial-btn" onclick="openModal()" title="Normal Help">
-                <div class="speed-dial-icon-wrapper"><img src="asset/help.png" alt="Help"></div>
+                <div class="speed-dial-icon-wrapper"><i data-lucide="hand-helping" style="width:26px;height:26px;"></i></div>
             </button>
         </div>
-        <button class="fab-btn" id="main-fab" onclick="toggleFabSpeedDial()">+</button>
+        <button class="fab-btn" id="main-fab" onclick="toggleFabSpeedDial()">
+            <i data-lucide="plus" style="width:28px;height:28px;"></i>
+        </button>
     </div>
     <nav class="bottom-nav">
         <div class="nav-item active" id="nav-home" onclick="switchTab('home')">
-            <span class="nav-icon-container"><img src="asset/home.png" alt="Home"
-                    onerror="this.style.display='none'; this.parentElement.innerHTML='🏠'"></span>
+            <span class="nav-icon-container"><i data-lucide="home" style="width:24px;height:24px;"></i></span>
             <p>Home</p>
         </div>
         <div class="nav-item" id="nav-tasks" onclick="switchTab('tasks')">
-            <span class="nav-icon-container"><img src="asset/task.png" alt="Tasks"
-                    onerror="this.style.display='none'; this.parentElement.innerHTML='📋'"></span>
+            <span class="nav-icon-container"><i data-lucide="clipboard-list" style="width:24px;height:24px;"></i></span>
             <p>Tasks</p>
         </div>
         <div class="nav-item" id="nav-profile" onclick="switchTab('profile')">
-            <span class="nav-icon-container"><img src="asset/profile.png" alt="Profile"
-                    onerror="this.style.display='none'; this.parentElement.innerHTML='👤'"></span>
+            <span class="nav-icon-container"><i data-lucide="circle-user" style="width:24px;height:24px;"></i></span>
             <p>Profile</p>
         </div>
     </nav>
@@ -1763,6 +1806,9 @@
 
         applyDesktopLayout();
         window.addEventListener('resize', applyDesktopLayout);
+
+        // Initialize all Lucide SVG icons in the dashboard
+        if (typeof lucide !== 'undefined') lucide.createIcons();
 
         /* =========================================
            EXPANDABLE CARD HELPER
@@ -3060,10 +3106,10 @@
         function updateStatusUI() {
             const btn = document.getElementById('availability-btn');
             if (currentStatus === 'free') {
-                btn.innerHTML = '<img src="asset/free.png" class="status-icon" alt="Free" onerror="this.style.display=\'none\'"> Free';
+                btn.innerHTML = '<svg class="status-icon-svg" style="stroke:#4ade80;" data-lucide="circle-dot"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg> Free';
                 btn.className = 'status-btn free';
             } else {
-                btn.innerHTML = '<img src="asset/busy.png" class="status-icon" alt="Busy" onerror="this.style.display=\'none\'"> Busy';
+                btn.innerHTML = '<svg class="status-icon-svg" style="stroke:#f87171;" data-lucide="slash"><circle cx="12" cy="12" r="10"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/></svg> Busy';
                 btn.className = 'status-btn busy';
             }
         }
