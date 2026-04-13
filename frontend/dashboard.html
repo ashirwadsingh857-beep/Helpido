@@ -3533,21 +3533,6 @@
             }
         }
 
-        // --- HELPER: Calculate Platform Fee (Tiered System) ---
-        function calculatePlatformFee(reward) {
-            const numReward = parseInt(reward) || 0;
-            if (numReward < 10) return { error: "Minimum reward for 'Ask for Help' is ₹10", fee: 0, total: 0 };
-            
-            let fee;
-            if (numReward < 20) {
-                fee = Math.floor(numReward * 0.20); // 20% for rewards < ₹20
-            } else {
-                fee = Math.floor(numReward * 0.10); // 10% for rewards >= ₹20
-            }
-            fee = Math.max(2, fee); // Minimum ₹2
-            return { fee, total: numReward + fee, percentage: numReward < 20 ? 20 : 10 };
-        }
-
         async function postHelpRequest() {
             const title = document.getElementById('task-title').value.trim();
             const description = document.getElementById('task-desc').value.trim();
@@ -3555,19 +3540,9 @@
 
             if (!title || !description || reward <= 0) return showAppNotification("Please fill all fields and set a reward!", "error");
 
-            // --- MINIMUM REWARD VALIDATION ---
-            if (reward < 10) {
-                return showAppNotification("Minimum reward for 'Ask for Help' is ₹10", "error");
-            }
-
-            // --- CALCULATE TIERED PLATFORM FEE ---
-            const feeData = calculatePlatformFee(reward);
-            if (feeData.error) {
-                return showAppNotification(feeData.error, "error");
-            }
-
-            const platformFee = feeData.fee;
-            const totalBudget = feeData.total;
+            // --- WALLET ESCROW VALIDATION ---
+            const platformFee = Math.max(5, Math.floor(reward * 0.10)); // 10% fee
+            const totalBudget = reward + platformFee;
             if (userWalletBalance < totalBudget) {
                 return showConfirm("Insufficient Balance", `This task requires ₹${totalBudget} (₹${reward} Reward + ₹${platformFee} Platform Fee). Your balance is ₹${userWalletBalance}. Please add funds to continue.`, "Add Funds", () => {
                     closeModal();
@@ -3583,35 +3558,6 @@
                 });
             }
 
-            // --- SHOW CONFIRMATION MODAL WITH FEE BREAKDOWN ---
-            const feePercentage = reward < 20 ? "20%" : "10%";
-            const confirmMsg = `<div style="text-align: left; font-size: 14px; line-height: 1.8;">
-                <strong>Reward:</strong> ₹${reward}<br>
-                <strong>Platform Fee (${feePercentage}):</strong> ₹${platformFee}<br>
-                <strong>Total Locked:</strong> <span style="color: var(--primary); font-weight: bold;">₹${totalBudget}</span>
-            </div>`;
-
-            // Store task data for confirmation
-            window.pendingTaskData = {
-                title, description, reward, platformFee, totalBudget,
-                lat: userLat, lng: userLng
-            };
-
-            // Show custom confirmation
-            document.getElementById('confirm-title').innerText = 'Confirm Task Creation';
-            document.getElementById('confirm-message').innerHTML = confirmMsg;
-            const actionBtn = document.getElementById('confirm-action-btn');
-            actionBtn.innerText = 'Confirm & Post';
-            actionBtn.onclick = async () => {
-                closeConfirm();
-                await submitTaskConfirmed();
-            };
-            document.getElementById('confirm-modal').classList.remove('hidden');
-        }
-
-        async function submitTaskConfirmed() {
-            if (!window.pendingTaskData) return;
-            const data = window.pendingTaskData;
             const postBtn = document.querySelector('#create-modal .btn');
             const origText = postBtn.innerText;
             postBtn.innerText = 'Posting...';
@@ -3621,12 +3567,12 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    title: data.title,
-                    description: data.description,
+                    title,
+                    description,
                     postedBy: myPhone,
-                    reward: data.reward,
-                    lat: data.lat,
-                    lng: data.lng,
+                    reward,
+                    lat: userLat,
+                    lng: userLng,
                     imageData: imageDataBase64 || null
                 })
             });
@@ -3636,22 +3582,22 @@
 
             if (res.ok) {
                 // Deduct locally for instant UI update
-                userWalletBalance -= data.totalBudget;
+                userWalletBalance -= totalBudget;
                 const walletEl = document.getElementById('wallet-balance-amount');
                 if (walletEl) walletEl.innerText = userWalletBalance.toLocaleString('en-IN');
-                showAppNotification(`Task Posted! ₹${data.totalBudget} locked in Escrow.`, "success");
+                showAppNotification(`Task Posted! ₹${totalBudget} locked in Escrow.`, "success");
                 closeModal();
                 loadTasks();
                 document.getElementById('task-title').value = "";
                 document.getElementById('task-desc').value = "";
                 document.getElementById('task-reward').value = "";
-                window.pendingTaskData = null;
             } else {
-                const errData = await res.json().catch(() => ({}));
-                const errMsg = errData.message || "Failed to post task.";
-                showAppNotification(errMsg, "error");
+                showAppNotification("Failed to post task.", "error");
             }
         }
+        /* =========================================
+           6. MODAL & SESSION UTILITIES
+           ========================================= */
         let pendingConfirmAction = null;
         function showConfirm(title, message, buttonText, actionCallback) {
             document.getElementById('confirm-title').innerText = title; document.getElementById('confirm-message').innerText = message;
@@ -4033,19 +3979,9 @@
                 return;
             }
 
-            // --- MINIMUM REWARD VALIDATION ---
-            if (reward < 10) {
-                return showAppNotification("Minimum reward is ₹10", "error");
-            }
-
-            // --- CALCULATE TIERED PLATFORM FEE ---
-            const feeData = calculatePlatformFee(reward);
-            if (feeData.error) {
-                return showAppNotification(feeData.error, "error");
-            }
-
-            const platformFee = feeData.fee;
-            const totalBudget = feeData.total;
+            // --- WALLET ESCROW VALIDATION ---
+            const platformFee = Math.max(5, Math.floor(reward * 0.10)); // 10% fee
+            const totalBudget = reward + platformFee;
             if (userWalletBalance < totalBudget) {
                 return showConfirm("Insufficient Balance", `This ride requires ₹${totalBudget} (₹${reward} Reward + ₹${platformFee} Platform Fee). Your balance is ₹${userWalletBalance}. Please add funds to continue.`, "Add Funds", () => {
                     closeRideModal();
@@ -4100,71 +4036,35 @@
                 });
             }
 
-            // --- SHOW CONFIRMATION MODAL WITH FEE BREAKDOWN ---
-            btn.innerText = originalText;
-            btn.disabled = false;
-
-            const feePercentage = reward < 20 ? "20%" : "10%";
-            const confirmMsg = `<div style="text-align: left; font-size: 14px; line-height: 1.8;">
-                <strong>Reward:</strong> ₹${reward}<br>
-                <strong>Platform Fee (${feePercentage}):</strong> ₹${platformFee}<br>
-                <strong>Total Locked:</strong> <span style="color: var(--primary); font-weight: bold;">₹${totalBudget}</span>
-            </div>`;
-
-            // Store ride data for confirmation
-            window.pendingRideData = {
-                destName, title, desc, reward, platformFee, totalBudget,
-                lat: userLat, lng: userLng, selectedLocation: { ...selectedLocation }
-            };
-
-            // Show custom confirmation
-            document.getElementById('confirm-title').innerText = 'Confirm Ride Request';
-            document.getElementById('confirm-message').innerHTML = confirmMsg;
-            const actionBtn = document.getElementById('confirm-action-btn');
-            actionBtn.innerText = 'Confirm & Request';
-            actionBtn.onclick = async () => {
-                closeConfirm();
-                await submitRideConfirmed();
-            };
-            document.getElementById('confirm-modal').classList.remove('hidden');
-        }
-
-        async function submitRideConfirmed() {
-            if (!window.pendingRideData) return;
-            const data = window.pendingRideData;
-
-            const btn = document.getElementById('submit-ride-btn');
-            const originalText = btn.innerText;
             btn.innerText = "Requesting...";
-            btn.disabled = true;
 
             try {
                 const res = await fetch(`${API_URL}/tasks`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        title: data.title,
-                        description: data.desc,
+                        title: title,
+                        description: desc,
                         postedBy: myPhone,
-                        reward: data.reward,
-                        lat: data.lat,
-                        lng: data.lng,
+                        reward: reward,
+                        lat: userLat,
+                        lng: userLng,
                         taskType: 'ride',
                         destination: {
-                            name: data.destName,
+                            name: destName,
                             location: {
                                 type: 'Point',
-                                coordinates: [data.selectedLocation.lng, data.selectedLocation.lat]
+                                coordinates: [selectedLocation.lng, selectedLocation.lat]
                             }
                         }
                     })
                 });
 
                 if (res.ok) {
-                    userWalletBalance -= data.totalBudget;
+                    userWalletBalance -= totalBudget;
                     const walletEl = document.getElementById('wallet-balance-amount');
                     if (walletEl) walletEl.innerText = userWalletBalance.toLocaleString('en-IN');
-                    showAppNotification(`Ride Requested! ₹${data.totalBudget} locked in Escrow.`, 'success');
+                    showAppNotification(`Ride Requested! ₹${totalBudget} locked in Escrow.`, 'success');
                     closeRideModal();
                     loadTasks();
                     document.getElementById('ride-title').value = '';
@@ -4173,13 +4073,12 @@
                     document.getElementById('ride-destination').value = '';
                     selectedLocation = { lat: 0, lng: 0 };
                     document.getElementById('location-suggest-box').style.display = 'none';
-                    window.pendingRideData = null;
                 } else {
-                    const errData = await res.json().catch(() => ({}));
-                    if (errData.errorCode === 'INSUFFICIENT_FUNDS') {
+                    const data = await res.json();
+                    if (data.errorCode === 'INSUFFICIENT_FUNDS') {
                         showAppNotification("Insufficient Helpido Balance", "error");
                     } else {
-                        showAppNotification(errData.message || 'Failed to post ride.', 'error');
+                        showAppNotification('Failed to post ride.', 'error');
                     }
                 }
             } catch (err) {
@@ -4200,19 +4099,11 @@
         function handleTopupBackgroundClick(e) {
             if (e.target.id === 'topup-modal') {
                 const input = document.getElementById('topup-amount-input');
-                const amountStr = (input.value || '').trim();
-                
-                // Detect if keyboard is open in WebView
-                // When keyboard is visible, visualViewport.height will be less than innerHeight
-                const isKeyboardOpen = window.visualViewport && 
-                                       window.visualViewport.height < window.innerHeight;
-                
-                if (isKeyboardOpen || document.activeElement === input) {
-                    // Keyboard is open or input is focused - just blur the input
+                // If keyboard is open (input focused), just close keyboard
+                if (document.activeElement === input) {
                     input.blur();
-                    // Don't close modal, let user continue or dismiss themselves
                 } else {
-                    // Keyboard is not open, input is not focused - close the modal
+                    // Otherwise close modal
                     closeTopupModal();
                 }
             }
@@ -4231,152 +4122,14 @@
 
         async function confirmTopup() {
             const amountInput = document.getElementById('topup-amount-input');
-            const amountStr = amountInput.value.trim();
+            const amountStr = amountInput.value;
             const amount = parseInt(amountStr);
-
-            // Suppress error flash if input is empty - just blur instead
-            if (amountStr === '' && document.activeElement === amountInput) {
-                amountInput.blur();
-                return;
-            }
 
             if (isNaN(amount) || amount < 10) {
                 return showAppNotification("Minimum top-up is ₹10", "error");
             }
 
-            // Show payment method selector
-            showPaymentMethodSelector(amount);
-        }
-
-        // --- NEW: Payment Method Selector ---
-        function showPaymentMethodSelector(amount) {
-            const methodTitle = document.createElement('div');
-            methodTitle.innerHTML = `
-                <div style="text-align: center; margin-bottom: 15px;">
-                    <h4 style="margin: 0 0 5px 0;">Choose Payment Method</h4>
-                    <p style="color: var(--text-muted); font-size: 13px; margin: 0;">₹${amount} to add to your wallet</p>
-                </div>
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <button onclick="proceedWithUPI(${amount})" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px;">
-                        📱 UPI Payment
-                    </button>
-                    <button onclick="proceedWithCard(${amount})" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #4facfe, #00f2fe); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px;">
-                        💳 Card / NetBanking
-                    </button>
-                </div>
-            `;
-
-            document.getElementById('confirm-title').innerHTML = '';
-            document.getElementById('confirm-message').innerHTML = '';
-            const confirmModal = document.getElementById('confirm-modal');
-            confirmModal.innerHTML = `
-                <div class="modal-content" onclick="event.stopPropagation()">
-                    <div style="padding: 20px;">
-                        ${methodTitle.innerHTML}
-                        <button onclick="closeConfirm()" style="width: 100%; margin-top: 10px; padding: 10px; background: var(--text-muted); color: white; border: none; border-radius: 8px; cursor: pointer;">Cancel</button>
-                    </div>
-                </div>
-            `;
-            confirmModal.classList.remove('hidden');
-        }
-
-        // --- NEW: UPI Payment Flow ---
-        async function proceedWithUPI(amount) {
-            closeConfirm();
-            closeTopupModal();
-            showAppNotification("Generating UPI Link...", "success");
-
-            try {
-                // Create UPI Payment Link
-                const linkRes = await fetch(`${API_URL}/wallet/create-upi-link`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ amount, phone: myPhone })
-                });
-
-                if (!linkRes.ok) {
-                    const err = await linkRes.json();
-                    throw new Error(err.message || "Failed to create UPI link");
-                }
-
-                const linkData = await linkRes.json();
-
-                // Display UPI options
-                showUPIModal(linkData, amount);
-            } catch (err) {
-                console.error("UPI Error:", err);
-                showAppNotification(err.message || "Failed to generate UPI link", "error");
-            }
-        }
-
-        // --- NEW: UPI Modal with QR Code and Link ---
-        function showUPIModal(linkData, amount) {
-            const confirmModal = document.getElementById('confirm-modal');
-            
-            // Generate QR Code URL using external API
-            const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(linkData.shortUrl)}`;
-            
-            confirmModal.innerHTML = `
-                <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 400px;">
-                    <div style="padding: 20px; text-align: center;">
-                        <h3 style="margin-bottom: 10px;">₹${amount} UPI Payment</h3>
-                        <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 15px;">Scan the QR or use the link below</p>
-                        
-                        <img src="${qrCodeUrl}" alt="UPI QR Code" style="width: 250px; height: 250px; margin-bottom: 15px; border-radius: 8px; border: 2px solid var(--primary);">
-                        
-                        <button onclick="window.open('${linkData.shortUrl}', '_blank')" style="width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 10px;">
-                            📲 Open Payment Link
-                        </button>
-                        
-                        <button onclick="window.open('upi://pay?pa=${encodeURIComponent(linkData.upiString || '')}', '_blank')" style="width: 100%; padding: 12px; background: #6F00D2; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 10px;">
-                            💜 Pay via UPI App
-                        </button>
-                        
-                        <button onclick="checkUPIStatus('${linkData.paymentLink}', ${amount})" style="width: 100%; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 10px;">
-                            ✓ I've Paid
-                        </button>
-                        
-                        <button onclick="closeConfirm()" style="width: 100%; padding: 10px; background: var(--text-muted); color: white; border: none; border-radius: 8px; cursor: pointer;">Cancel</button>
-                    </div>
-                </div>
-            `;
-            confirmModal.classList.remove('hidden');
-        }
-
-        // --- NEW: Check UPI Payment Status ---
-        async function checkUPIStatus(paymentLinkId, amount) {
-            showAppNotification("Checking payment status...", "success");
-
-            try {
-                const verifyRes = await fetch(`${API_URL}/wallet/verify-upi`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        payment_link_id: paymentLinkId,
-                        phone: myPhone,
-                        amount: amount
-                    })
-                });
-
-                if (verifyRes.ok) {
-                    const verifyData = await verifyRes.json();
-                    userWalletBalance = verifyData.newBalance;
-                    document.getElementById('wallet-balance-amount').innerText = userWalletBalance.toLocaleString('en-IN');
-                    closeConfirm();
-                    showAppNotification(`Successfully added ₹${amount} to Wallet! 🎉`, "success");
-                } else {
-                    const errData = await verifyRes.json();
-                    showAppNotification(errData.message || "Payment not completed yet", "error");
-                }
-            } catch (err) {
-                console.error("Status check error:", err);
-                showAppNotification("Error checking payment status", "error");
-            }
-        }
-
-        // --- NEW: Card/NetBanking Payment Flow (Existing Logic) ---
-        async function proceedWithCard(amount) {
-            closeConfirm();
+            // Close modal immediately to avoid double clicks
             closeTopupModal();
             showAppNotification("Initializing Payment...", "success");
 
