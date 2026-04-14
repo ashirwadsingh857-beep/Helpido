@@ -400,6 +400,359 @@ app.post('/api/chat/send', async (req, res) => {
         res.status(500).json({ message: "Error saving message" });
     }
 });
+// ============================================================
+// 1. ADVANCED SEARCH & FILTERING ENDPOINT
+// ============================================================
+app.get("/api/tasks/search", async (req, res) => {
+    try {
+        const {
+            q,                 // Keyword search
+            category,          // Filter by category
+            minReward,         // Min reward amount
+            maxReward,         // Max reward amount
+            status = 'open',   // Default: open tasks
+            sortBy = 'newest', // 'newest', 'distance', 'reward'
+            lat,               // User latitude for distance sorting
+            lng,               // User longitude for distance sorting
+            maxDistance = 10,  // Max distance in km (for geospatial queries)
+            page = 1,          // Pagination
+            limit = 20         // Results per page
+        } = req.query;
+
+        let query = {};
+
+        // ---- KEYWORD SEARCH (Case-insensitive text search) ----
+        if (q && q.trim()) {
+            query.$text = { $search: q.trim() };
+        }
+
+        // ---- CATEGORY FILTER ----
+        if (category && category !== 'all') {
+            query.category = category.toLowerCase();
+        }
+
+        // ---- STATUS FILTER ----
+        if (status) {
+            query.status = status.toLowerCase();
+        }
+
+        // ---- REWARD RANGE FILTER ----
+        if (minReward || maxReward) {
+            query.reward = {};
+            if (minReward) query.reward.$gte = Number(minReward);
+            if (maxReward) query.reward.$lte = Number(maxReward);
+        }
+
+        // ---- GEOSPATIAL FILTER (Optional - filter by max distance) ----
+        let baseQuery = query;
+        if (lat && lng && maxDistance) {
+            const earthRadiusKm = 6371;
+            const maxDistanceRadians = Number(maxDistance) / earthRadiusKm;
+
+            baseQuery = {
+                ...query,
+                location: {
+                    $near: {
+                        $geometry: {
+                            type: 'Point',
+                            coordinates: [Number(lng), Number(lat)]
+                        },
+                        $maxDistance: maxDistanceRadians * 1000 // Convert to meters for MongoDB
+                    }
+                }
+            };
+        }
+
+        // ---- PAGINATION SETUP ----
+        const pageNum = Math.max(1, Number(page));
+        const pageSize = Math.min(100, Math.max(1, Number(limit)));
+        const skip = (pageNum - 1) * pageSize;
+
+        // ---- SORTING LOGIC ----
+        let sortOptions = {};
+        switch (sortBy.toLowerCase()) {
+            case 'distance':
+                if (lat && lng) {
+                    sortOptions = {}; // $near already sorts by distance
+                } else {
+                    sortOptions = { createdAt: -1 }; // Fallback to newest
+                }
+                break;
+            case 'reward':
+                sortOptions = { reward: -1 }; 
+                break;
+            case 'oldest':
+                sortOptions = { createdAt: 1 }; 
+                break;
+            case 'newest':
+            default:
+                sortOptions = { createdAt: -1 }; 
+        }
+
+        // ---- EXECUTE QUERY ----
+        const tasks = await Task.find(baseQuery)
+            .sort(sortOptions)
+            .skip(skip)
+            .limit(pageSize)
+            .lean();
+
+        // ---- GET TOTAL COUNT FOR PAGINATION ----
+        const total = await Task.countDocuments(baseQuery);
+
+        res.json({
+            tasks,
+            pagination: {
+                page: pageNum,
+                limit: pageSize,
+                total,
+                pages: Math.ceil(total / pageSize)
+            },
+            meta: {
+                query: q || null,
+                category: category || null,
+                sortBy,
+                status
+            }
+        });
+    } catch (err) {
+        console.error("Search error:", err);
+        res.status(500).json({ message: "Error searching tasks", error: err.message });
+    }
+});
+
+// ============================================================
+// 2. GET RECOMMENDED TASKS (SKILL-BASED MATCHING)
+// ============================================================
+app.get("/api/tasks/recommend", async (req, res) => {
+    try {
+        const { phone, lat, lng, maxDistance = 10 } = req.query;
+
+        if (!phone) {
+            return res.status(400).json({ message: "Phone number required" });
+        }
+
+        const user = await User.findOne({ phone }).lean();
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const { skills = [], location: userLocation } = user;
+        const [userLng, userLat] = userLocation?.coordinates || [lng, lat];
+
+        let query = {
+            status: 'open',
+            helperPhone: { $ne: phone },
+            postedBy: { $ne: phone }     
+        };
+
+        if (skills.length > 0) {
+            query.requiredSkills = { $in: skills };
+        }
+
+        if (userLng && userLat) {
+            const earthRadiusKm = 6371;
+            const maxDistanceRadians = Number(maxDistance) / earthRadiusKm;
+
+            query.location = {
+                $near: {
+                    $geometry: {
+                        type: 'Point',
+                        coordinates: [Number(userLng), Number(userLat)]
+                    },
+                    $maxDistance: maxDistanceRadians * 1000
+                }
+            };
+        }
+
+        const recommendations = await Task.find(query)
+            .limit(20)
+            .lean();
+
+        res.json({
+            recommendations,
+            userSkills: skills,
+            meta: {
+                matchCount: recommendations.length
+            }
+        });
+    } catch (err) {
+        console.error("Recommendation error:", err);
+        res.status(500).json({ message: "Error fetching recommendations" });
+    }
+});
+
+// ============================================================
+// 3. ENDORSE A USER'S SKILL (AFTER TASK COMPLETION)
+// ============================================================
+app.post("/api/users/endorse", async (req, res) => {
+    try {
+        const { userPhone, skill, endorserPhone, taskId } = req.body;
+
+        if (!userPhone || !skill || !endorserPhone || !taskId) {
+            return res.status(400).json({ 
+                message: "Missing required fields: userPhone, skill, endorserPhone, taskId" 
+            });
+        }
+
+        const task = await Task.findById(taskId).lean();
+        if (!task || task.postedBy !== endorserPhone) {
+            return res.status(403).json({ 
+                message: "Only the task poster can endorse skills" 
+            });
+        }
+
+        if (userPhone === endorserPhone) {
+            return res.status(403).json({ 
+                message: "Cannot endorse yourself" 
+            });
+        }
+
+        const helperUser = await User.findOne({ phone: userPhone });
+        if (!helperUser) {
+            return res.status(404).json({ message: "Helper user not found" });
+        }
+
+        if (!helperUser.skills.includes(skill)) {
+            helperUser.skills.push(skill);
+        }
+
+        const endorsementExists = helperUser.endorsements.some(
+            e => e.skill === skill && e.taskId === taskId && e.endorsedBy === endorserPhone
+        );
+
+        if (!endorsementExists) {
+            helperUser.endorsements.push({
+                skill,
+                endorsedBy: endorserPhone,
+                taskId,
+                createdAt: new Date()
+            });
+        }
+
+        await helperUser.save();
+
+        io.to(userPhone).emit('skillEndorsed', {
+            skill,
+            endorserName: task.posterName || 'A user',
+            endorserPhone
+        });
+
+        res.json({ 
+            message: "Skill endorsement added",
+            userSkills: helperUser.skills,
+            endorsementCount: helperUser.endorsements.filter(e => e.skill === skill).length
+        });
+    } catch (err) {
+        console.error("Endorsement error:", err);
+        res.status(500).json({ message: "Error endorsing skill", error: err.message });
+    }
+});
+
+// ============================================================
+// 4. GET USER PROFILE WITH SKILLS & ENDORSEMENTS
+// ============================================================
+app.get("/api/users/:phone/profile", async (req, res) => {
+    try {
+        const { phone } = req.params;
+
+        const user = await User.findOne({ phone }).lean();
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const skillEndorsements = {};
+        if (user.endorsements && user.endorsements.length > 0) {
+            user.endorsements.forEach(e => {
+                if (!skillEndorsements[e.skill]) {
+                    skillEndorsements[e.skill] = [];
+                }
+                skillEndorsements[e.skill].push({
+                    endorsedBy: e.endorsedBy,
+                    createdAt: e.createdAt
+                });
+            });
+        }
+
+        const skillCounts = {};
+        Object.keys(skillEndorsements).forEach(skill => {
+            skillCounts[skill] = skillEndorsements[skill].length;
+        });
+
+        res.json({
+            name: user.name,
+            phone: user.phone,
+            address: user.address,
+            averageRating: user.averageRating,
+            totalRatings: user.ratings?.length || 0,
+            walletBalance: user.walletBalance,
+            skills: user.skills || [],
+            skillEndorsements: skillEndorsements,
+            skillCounts: skillCounts,
+            savedTasks: user.savedTasks || []
+        });
+    } catch (err) {
+        console.error("Profile fetch error:", err);
+        res.status(500).json({ message: "Error fetching profile" });
+    }
+});
+
+// ============================================================
+// 5. SAVE/UNSAVE A TASK (Heart System)
+// ============================================================
+app.post("/api/tasks/:id/save", async (req, res) => {
+    try {
+        const { taskId } = req.body;
+        const { phone } = req.query;
+
+        if (!phone) {
+            return res.status(400).json({ message: "Phone number required" });
+        }
+
+        const user = await User.findOne({ phone });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const taskIdStr = taskId || req.params.id;
+        const isSaved = user.savedTasks.includes(taskIdStr);
+
+        if (isSaved) {
+            user.savedTasks = user.savedTasks.filter(id => id !== taskIdStr);
+            await user.save();
+            res.json({ message: "Task unsaved", saved: false });
+        } else {
+            user.savedTasks.push(taskIdStr);
+            await user.save();
+            res.json({ message: "Task saved", saved: true });
+        }
+    } catch (err) {
+        console.error("Save task error:", err);
+        res.status(500).json({ message: "Error saving task" });
+    }
+});
+
+// ============================================================
+// 6. GET SAVED TASKS FOR USER
+// ============================================================
+app.get("/api/users/:phone/saved-tasks", async (req, res) => {
+    try {
+        const { phone } = req.params;
+
+        const user = await User.findOne({ phone }).lean();
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const savedTasks = await Task.find({
+            _id: { $in: user.savedTasks || [] }
+        }).lean();
+
+        res.json({ savedTasks });
+    } catch (err) {
+        console.error("Saved tasks error:", err);
+        res.status(500).json({ message: "Error fetching saved tasks" });
+    }
+});
 
 app.use(express.static(path.join(__dirname, '../frontend')));
 

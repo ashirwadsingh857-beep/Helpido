@@ -29,10 +29,31 @@ const userSchema = new mongoose.Schema({
     },
 
     // --- TASK DISMISSAL SYSTEM ---
-    dismissedTasks: [{ type: String }] // Array of Task IDs that user has dismissed
+    dismissedTasks: [{ type: String }], // Array of Task IDs that user has dismissed
+
+    // === NEW: SMART MARKETPLACE FEATURES ===
+
+    // Array of skills the user claims to have (e.g., ["Python", "Node.js", "React"])
+    skills: { type: [String], default: [] },
+
+    // Endorsements: Array of skill endorsements from other users
+    endorsements: [{
+        skill: { type: String, required: true },      // Name of the endorsed skill
+        endorsedBy: { type: String, required: true }, // Phone of the endorser
+        taskId: { type: String, required: true },     // Reference to the task where endorsement was given
+        createdAt: { type: Date, default: Date.now }
+    }],
+
+    // Saved tasks: Array of task IDs the user has "hearted" (client or server-side)
+    savedTasks: [{ type: String }], // Array of Task IDs
 });
 
-// CRITICAL: This index allows MongoDB to perform high-speed radius math!
+// ============= CRITICAL INDICES =============
+
+// This index allows MongoDB to perform high-speed radius math
 userSchema.index({ location: '2dsphere' });
+
+// Index for fast skill lookups
+userSchema.index({ skills: 1 });
 
 module.exports = mongoose.model('User', userSchema);

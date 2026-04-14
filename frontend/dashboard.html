@@ -29,8 +29,8 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <!-- Razorpay Checkout SDK -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="Marketplace.js"></script>
 
     <!-- Google Maps API (Placeholder Key, Replace later) -->
     <script async defer
@@ -1231,6 +1231,24 @@
                         onclick="toggleAvailability()" style="margin-top: 0; white-space: nowrap;"><span
                             class="status-dot-neon"></span> Free</button>
                 </div>
+                <!-- SEARCH BAR -->
+                <div class="marketplace-search-container" style="background:transparent; border:none; padding:12px 0 0 0;">
+                    <div class="search-bar-wrapper">
+                        <input 
+                            type="text" 
+                            id="marketplace-search" 
+                            class="search-input" 
+                            placeholder="Search tasks..."
+                            autocomplete="off"
+                        >
+                        <button class="search-icon-btn" id="marketplace-search-btn">
+                            <span class="lucide-icon" data-icon="search"></span>
+                        </button>
+                        <button class="filter-btn" id="filter-toggle">
+                            <span class="lucide-icon" data-icon="sliders-horizontal"></span>
+                        </button>
+                    </div>
+                </div>
             </header>
             <div style="display: flex; justify-content: space-between; align-items: center; padding-right: 20px;">
                 <div style="display:flex; align-items:center; gap:8px;">
@@ -1244,6 +1262,40 @@
                         <span id="radius-display-text">100 m</span>
                         <span style="font-size: 0.7rem; color: var(--primary);">▼</span>
                     </div>
+                </div>
+            </div>
+
+            <!-- CATEGORY CHIPS -->
+            <div class="category-chips-container" style="margin-bottom: 12px; background: transparent; border: none; padding-bottom: 0;">
+                <div class="category-chips">
+                    <button class="category-chip active" data-category="all">
+                        <span class="lucide-icon" data-icon="grid-3x3-gap"></span>
+                        All
+                    </button>
+                    <button class="category-chip" data-category="tutoring">
+                        <span class="lucide-icon" data-icon="book-open"></span>
+                        Tutoring
+                    </button>
+                    <button class="category-chip" data-category="delivery">
+                        <span class="lucide-icon" data-icon="truck"></span>
+                        Delivery
+                    </button>
+                    <button class="category-chip" data-category="cleaning">
+                        <span class="lucide-icon" data-icon="sparkles"></span>
+                        Cleaning
+                    </button>
+                    <button class="category-chip" data-category="tech-support">
+                        <span class="lucide-icon" data-icon="cpu"></span>
+                        Tech
+                    </button>
+                    <button class="category-chip" data-category="repairs">
+                        <span class="lucide-icon" data-icon="wrench"></span>
+                        Repairs
+                    </button>
+                    <button class="category-chip" data-category="errands">
+                        <span class="lucide-icon" data-icon="shopping-bag"></span>
+                        Errands
+                    </button>
                 </div>
             </div>
             <div id="task-feed" style="margin-top: 16px;">
@@ -1384,6 +1436,18 @@
             <div id="my-jobs-feed" style="margin-bottom: 40px;"></div>
         </section>
 
+        <section id="saved-view" class="feed-section hidden">
+            <header class="dash-header">
+                <div class="user-greeting">
+                    <h2>Saved Tasks ❤️</h2>
+                    <p>Tasks you want to keep an eye on.</p>
+                </div>
+            </header>
+            <div id="saved-tasks-container" class="task-list" style="padding: 0 24px;">
+                <p class="empty-state">No saved tasks yet. Heart tasks to save them!</p>
+            </div>
+        </section>
+
         <section id="profile-view" class="feed-section hidden"
             style="display: flex; flex-direction: column; justify-content: space-between;">
             <div>
@@ -1424,6 +1488,23 @@
                         <button onclick="openWalletTopup()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #FF5722, #FF3D00); border: none; border-radius: 12px; color: white; font-weight: 700; font-size: 1rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(255, 87, 34, 0.3);">
                             <i data-lucide="wallet" style="width: 20px; height: 20px; stroke: white;"></i> Add Funds
                         </button>
+                    </div>
+
+                    <!-- PROFILE SKILLS SECTION -->
+                    <div class="profile-skills-section" style="text-align: left; margin-bottom: 20px; border: 1px solid var(--border-color); border-radius: 14px; padding: 16px;">
+                        <h3>Verified Skills</h3>
+                        <div class="skills-container" id="user-skills-display">
+                            <!-- Skills with endorsement badges will render here -->
+                        </div>
+                        <div class="add-skill-input">
+                            <input 
+                                type="text" 
+                                id="add-skill-input" 
+                                placeholder="Add a skill..."
+                                autocomplete="off"
+                            >
+                            <button class="btn-small" id="add-skill-btn">Add</button>
+                        </div>
                     </div>
 
 
@@ -1781,6 +1862,120 @@
             </svg>
         </button>
     </div>
+    </div>
+
+    <!-- FILTER BOTTOM SHEET -->
+    <div class="filter-bottom-sheet" id="filter-sheet">
+        <div class="filter-sheet-content">
+            <div class="filter-sheet-header">
+                <h3>Filter Tasks</h3>
+                <button class="close-btn" id="filter-close" style="background:none; border:none; cursor:pointer;">
+                    <span class="lucide-icon" data-icon="x"></span>
+                </button>
+            </div>
+
+            <div class="filter-sheet-body">
+                <!-- Price Range Slider -->
+                <div class="filter-section">
+                    <h4>Price Range</h4>
+                    <div class="range-slider-wrapper">
+                        <input type="range" id="min-reward" class="range-input" min="0" max="10000" value="0">
+                        <input type="range" id="max-reward" class="range-input" min="0" max="10000" value="10000">
+                        <div class="range-display">
+                            ₹<span id="min-display">0</span> - ₹<span id="max-display">10,000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Distance Slider -->
+                <div class="filter-section">
+                    <h4>Max Distance (km)</h4>
+                    <div class="distance-slider">
+                        <input type="range" id="max-distance" class="range-input" min="1" max="50" value="10">
+                        <div class="distance-display">
+                            <span id="distance-display">10</span> km
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sort Options -->
+                <div class="filter-section">
+                    <h4>Sort By</h4>
+                    <div class="sort-options">
+                        <label class="sort-option">
+                            <input type="radio" name="sortBy" value="newest" checked>
+                            <span>Newest First</span>
+                        </label>
+                        <label class="sort-option">
+                            <input type="radio" name="sortBy" value="distance">
+                            <span>Nearest First</span>
+                        </label>
+                        <label class="sort-option">
+                            <input type="radio" name="sortBy" value="reward">
+                            <span>Highest Reward</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Status Filter -->
+                <div class="filter-section">
+                    <h4>Status</h4>
+                    <div class="status-filters">
+                        <label class="status-filter">
+                            <input type="checkbox" value="open" checked>
+                            <span>Open</span>
+                        </label>
+                        <label class="status-filter">
+                            <input type="checkbox" value="assigned">
+                            <span>In Progress</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-sheet-footer">
+                <button class="btn-secondary" id="reset-filters" style="padding:12px; border-radius:12px; border:1px solid #ccc; background:#f9f9f9; color:#333; cursor:pointer;">Clear Filters</button>
+                <button class="btn-primary" id="apply-filters" style="padding:12px; border-radius:12px; border:none; background:var(--primary-color); color:white; cursor:pointer;">Apply Filters</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SKILL ENDORSEMENT MODAL -->
+    <div class="modal custom-modal hidden" id="endorsement-modal" style="position:fixed; z-index:11000; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center;">
+        <div class="modal-content endorsement-modal">
+            <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h3 style="margin:0;">Endorse a Skill</h3>
+                <button class="close-btn" onclick="document.getElementById('endorsement-modal').classList.add('hidden')" style="background:none; border:none; cursor:pointer;">
+                    <span class="lucide-icon" data-icon="x"></span>
+                </button>
+            </div>
+            
+            <div class="endorsement-body">
+                <p id="endorsement-helper-name">Helper Name</p>
+                
+                <div class="skill-input-group">
+                    <label>Choose or Add a Skill</label>
+                    <input 
+                        type="text" 
+                        id="skill-input" 
+                        placeholder="e.g., Python, Plumbing, Cooking..."
+                        autocomplete="off"
+                    >
+                    <div class="skill-suggestions" id="skill-suggestions"></div>
+                </div>
+
+                <div class="endorsement-reason" style="margin-top:16px;">
+                    <p class="text-muted">You're endorsing this skill after completing a task together. This builds trust in the Helpido community.</p>
+                </div>
+            </div>
+
+            <div class="modal-footer" style="margin-top:24px; display:flex; justify-content:space-between; gap:12px;">
+                <button class="btn-secondary" onclick="document.getElementById('endorsement-modal').classList.add('hidden')" style="flex:1; padding:12px; border-radius:12px; border:1px solid #ccc; background:#f9f9f9; color:#333; cursor:pointer;">Skip</button>
+                <button class="btn-primary" id="confirm-endorsement" style="flex:1; padding:12px; border-radius:12px; border:none; background:var(--primary-color); color:white; cursor:pointer;">Endorse</button>
+            </div>
+        </div>
+    </div>
+
     <nav class="bottom-nav">
         <div class="nav-item active" id="nav-home" onclick="switchTab('home')">
             <span class="nav-icon-container"><i data-lucide="home" style="width:24px;height:24px;"></i></span>
@@ -1789,6 +1984,10 @@
         <div class="nav-item" id="nav-tasks" onclick="switchTab('tasks')">
             <span class="nav-icon-container"><i data-lucide="clipboard-list" style="width:24px;height:24px;"></i></span>
             <p>Tasks</p>
+        </div>
+        <div class="nav-item" id="nav-saved" onclick="switchTab('saved')">
+            <span class="nav-icon-container"><i data-lucide="heart" style="width:24px;height:24px;"></i></span>
+            <p>Saved</p>
         </div>
         <div class="nav-item" id="nav-profile" onclick="switchTab('profile')">
             <span class="nav-icon-container"><i data-lucide="circle-user" style="width:24px;height:24px;"></i></span>
@@ -3189,7 +3388,7 @@
             activeTab = tabName;
 
             // Highlight the nav icon immediately for responsiveness
-            ['home', 'tasks', 'profile'].forEach(tab => {
+            ['home', 'tasks', 'profile', 'saved'].forEach(tab => {
                 const nav = document.getElementById(`nav-${tab}`);
                 if (nav) nav.classList.remove('active');
             });
@@ -3197,7 +3396,7 @@
             if (activeNav) activeNav.classList.add('active');
 
             // 1. Instant Switch (No transition here to avoid visual stress)
-            ['home', 'tasks', 'profile'].forEach(tab => {
+            ['home', 'tasks', 'profile', 'saved'].forEach(tab => {
                 const el = document.getElementById(`${tab}-view`);
                 if (el) el.classList.add('hidden');
             });

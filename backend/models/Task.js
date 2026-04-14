@@ -18,15 +18,16 @@ const taskSchema = new mongoose.Schema({
     // Optional compressed Base64 image attached to the task
     imageData: { type: String, default: null },
 
-    // NEW: Geospatial Location Data for Radius Filtering
+    // Geospatial Location Data for Radius Filtering
     location: {
         type: { type: String, enum: ['Point'], default: 'Point' },
         coordinates: { type: [Number], default: [0, 0] } // Format: [longitude, latitude]
     },
-    // NEW: Robust Auto-Deletion Persistence
+
+    // Robust Auto-Deletion Persistence
     completedAt: { type: Date, default: null },
 
-    // NEW: Task Type and Destination for Rides
+    // Task Type and Destination for Rides
     taskType: { type: String, enum: ['help', 'ride'], default: 'help' },
     destination: {
         name: { type: String, default: null },
@@ -34,13 +35,39 @@ const taskSchema = new mongoose.Schema({
             type: { type: String, enum: ['Point'], default: 'Point' },
             coordinates: { type: [Number], default: [0, 0] } // Format: [longitude, latitude]
         }
-    }
+    },
+
+    // === NEW: SMART MARKETPLACE FEATURES ===
+    // Task category (strictly typed via Enum)
+    category: { 
+        type: String, 
+        enum: ['tutoring', 'delivery', 'cleaning', 'tech-support', 'repairs', 'errands', 'other'],
+        default: 'other'
+    },
+
+    // Required skills for this task (Array of Strings)
+    requiredSkills: { type: [String], default: [] },
+
 }, { timestamps: true });
 
-// CRITICAL: Tasks expire 10 minutes after completedAt is set
+// ============= CRITICAL INDICES =============
+
+// Tasks expire 10 minutes after completedAt is set
 taskSchema.index({ completedAt: 1 }, { expireAfterSeconds: 600 });
 
-// CRITICAL: This index allows MongoDB to calculate distances between tasks and users
+// This index allows MongoDB to calculate distances between tasks and users
 taskSchema.index({ location: '2dsphere' });
+
+// Index for efficient category filtering
+taskSchema.index({ category: 1 });
+
+// Index for status filtering
+taskSchema.index({ status: 1 });
+
+// Text index for keyword search on title and description
+taskSchema.index({ title: 'text', description: 'text' });
+
+// Compound index for common query patterns (status + category)
+taskSchema.index({ status: 1, category: 1 });
 
 module.exports = mongoose.model('Task', taskSchema);
